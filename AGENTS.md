@@ -28,3 +28,17 @@
 - Use synthetic or authorized data. Credit reused libraries, APIs, datasets and assets; respect licences and event rules.
 - Before submission, verify judge access to the repo/video/demo and rehearse the actual flow. Prepare a backup recording; accurately distinguish implemented features from future ideas.
 - Do not publish the private Notion page or change repository visibility without team/user direction.
+
+## Agent skills
+
+- Use GitHub Issues for `to-tickets`; see `docs/agents/issue-tracker.md`. Notion holds context, goals and decisions, not a second task backlog.
+- Keep planning proportional to this one-day event. Timebox idea grilling; prefer a few small, independently verifiable tickets. Present the proposed breakdown before publishing.
+
+## Assistant and AI usage
+
+- Act as Daniel's continuing assistant: state the next concrete steps clearly, distinguish Daniel's actions from assistant actions, and finish each substantive update with the immediate next step.
+- Before a substantial job that could use another AI channel, briefly state the proposed scope, recommended channel and reason. Consider whether a smaller model or narrower task would suffice.
+- If recommending a different channel, prepare a concise, copyable handoff before implementation: goal, constraints, repo/branch, relevant files or issue links, current state, acceptance criteria, validation commands, and the next action. Include no secrets. Do not run the same job twice in parallel.
+- Account balances and reset counts are private, changeable context. Consult Daniel's local `.agents/AGENTS.md` when available; check before relying on any reported balance.
+- Preserve manual resets for event-day work. Claude API credit is a separate fallback from Claude Pro; distinguish subscription authentication from API billing. Never switch billing, enable paid overages or spend API/Azure credit without Daniel's direction for that channel.
+- Keep ordinary small work moving here. Flag substantial implementation, long debugging loops or repeated reviews early enough to preserve a useful handoff; do not wait until limits are exhausted.
