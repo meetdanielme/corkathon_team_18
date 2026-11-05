@@ -1,0 +1,13 @@
+.DS_Store
+context/
+.agents/
+.env
+.env.*
+!.env.example
+node_modules/
+.venv/
+__pycache__/
+dist/
+build/
+.vercel/
+*.log
