@@ -31,6 +31,8 @@
 
 ## Agent skills
 
+- Shared Matt Pocock skills are committed in `.agents/skills/`: `grill-me`, `grilling`, `to-tickets` and `handoff`. Claude Code discovers the same files through the relative `.claude/skills` symlink. No global installation is needed.
+- When the host has no Skill tool, read and follow the named skill's `SKILL.md` directly; `grill-me` delegates to `grilling`. Repository event constraints take precedence over generic skill workflows.
 - Use GitHub Issues for `to-tickets`; see `docs/agents/issue-tracker.md`. Notion holds context, goals and decisions, not a second task backlog.
 - Keep planning proportional to this one-day event. Timebox idea grilling; prefer a few small, independently verifiable tickets. Present the proposed breakdown before publishing.
 

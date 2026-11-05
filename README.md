@@ -19,6 +19,8 @@ Saturday 7 November 2026 · UCC · Planning stage
 
 ## Working together
 
+Shared AI skills are included in [`.agents/skills/`](.agents/skills/README.md); Claude Code uses the same files via `.claude/skills`. Start a fresh agent session after cloning to discover them.
+
 1. Pick one user, one problem and one end-to-end demo flow.
 2. Take a small issue; agree interfaces before splitting work.
 3. Use short branches (`feat/short-name`, `fix/short-name`) and small pull requests into `main`.
