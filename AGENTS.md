@@ -1,5 +1,11 @@
 # Corkathon Team 18
 
+## Session startup and shared memory
+
+- Read `MEMORY.md` at the start of a new session for decisions, current state and open items. Follow this file for instructions; verify changeable facts before acting.
+- Keep `MEMORY.md` current when project decisions or verified milestones change. Preserve the distinction between proposals and team agreements; do not duplicate the issue backlog or include private account details.
+- Claude Code's `CLAUDE.md` points to these same instructions and memory. For provider switches, use `docs/agents/handoff-template.md` or the shared `handoff` skill.
+
 ## Event constraints
 
 - Event: Saturday 7 November 2026, UCC. All times Europe/Dublin.

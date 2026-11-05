@@ -6,6 +6,7 @@ Saturday 7 November 2026 · UCC · Planning stage
 
 ## Team workspace
 
+- [Shared agent memory](MEMORY.md) — decisions, setup status and next steps; agents start with [AGENTS.md](AGENTS.md).
 - [Team alignment page](https://app.notion.com/p/40fba34e944c8072b5e2cb90ac08bb37) — goals, roles, scope and decisions.
 - GitHub Issues — implementation tasks, each with one owner and a clear done condition.
 - [Devpost](https://corkathon.devpost.com/) — submission by **19:00 Europe/Dublin**.
