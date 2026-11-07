@@ -22,7 +22,7 @@
       </div>
       <div>
         <dt>Confidence</dt>
-        <dd><span class="badge confidence">{{ i.confidence }}</span></dd>
+        <dd><span class="badge confidence confidence-{{ i.confidence }}">{{ i.confidence }}</span></dd>
         <dd><ul class="small">{% for r in i.confidence_reasons %}<li>{{ r }}</li>{% endfor %}</ul></dd>
       </div>
       <div>

@@ -53,6 +53,8 @@ textarea { display:block; width:100%; resize:vertical; min-height:240px; font:in
 .pips i:nth-child(1) { height:5px; } .pips i:nth-child(2) { height:8px; } .pips i:nth-child(3) { height:12px; }
 .impact-low .pips i:nth-child(1), .impact-medium .pips i:nth-child(-n+2), .impact-high .pips i { opacity:1; }
 .confidence { background:transparent; border:1px solid var(--field); }
+/* Per-value hooks for confidence, to match impact. Colours are Daniel's call:
+   .confidence-low .confidence-medium .confidence-high */
 .conflict { background:var(--terra-soft); color:var(--terra-ink); }
 .stale { color:var(--terra-ink); }
 

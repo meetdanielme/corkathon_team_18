@@ -38,7 +38,7 @@
       <div class="labels">
         <span class="badge effect-{{ i.direction }}">Expected: {{ i.direction }}</span>
         <span class="badge impact impact-{{ i.impact }}"><span class="pips" aria-hidden="true"><i></i><i></i><i></i></span>Potential impact: {{ i.impact }}</span>
-        <span class="badge confidence">Confidence: {{ i.confidence }}</span>
+        <span class="badge confidence confidence-{{ i.confidence }}">Confidence: {{ i.confidence }}</span>
         {% if i.conflicts %}<span class="badge conflict">Conflicting signals</span>{% endif %}
       </div>
     </div>
