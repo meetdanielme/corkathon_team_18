@@ -15,7 +15,26 @@ flask --app "footfall.app:create_app()" run --debug
 # open http://127.0.0.1:5000
 ```
 
-Configure AI (optional; the prepared demo works without it):
+Configure AI (optional; the prepared demo works without it).
+
+The easiest option is a model running locally through [Ollama](https://ollama.com): free, no API key and no
+billing. Azure stays the preferred hosted option when a deployment is available.
+
+```bash
+ollama serve                                   # in another terminal
+ollama pull qwen3:4b-instruct-2507-q4_K_M
+export FOOTFALL_LLM=ollama                     # PowerShell: $env:FOOTFALL_LLM="ollama"
+python -m scripts.check_llm                    # expect: OK (ollama): {'ok': True}
+```
+
+A local model is slower than a hosted one, roughly 40 s per source, so a four-source refresh needs a bigger
+budget than the 90 s default or it stops early and reports a partial run:
+
+```bash
+export FOOTFALL_REFRESH_MAX_SECONDS=400
+```
+
+For Azure instead:
 
 ```bash
 cp .env.example .env        # fill in locally, never commit
