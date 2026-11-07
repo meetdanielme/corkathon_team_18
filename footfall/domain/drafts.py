@@ -1,4 +1,4 @@
-"""Supplier message drafts: a deterministic template, optional LLM rephrase, numeric guardrail."""
+"""Supplier message drafts: grounded wording variants, optional model style selection."""
 from __future__ import annotations
 
 import re
@@ -36,19 +36,41 @@ def unsupported_numbers(text: str, insight: dict) -> list[str]:
     return [n for n in NUM.findall(text) if n not in allowed]
 
 
+def styled_draft(insight: dict, style: str) -> str:
+    """All factual clauses are rendered locally; the model only chooses a style."""
+    _, baseline = template_draft(insight)
+    if style == "standard":
+        return baseline
+    f = facts_for(insight)
+    hi = f"Hi {f['contact']}," if f["contact"] else "Hi,"
+    if insight["direction"] == "decrease":
+        body = (f"{f['title']} may affect access near us ({f['window']}). "
+                "Could we check delivery timing for that day?")
+    elif f["status"] == "missed":
+        body = (f"{f['title']} is nearby ({f['window']}). The cutoff has passed. "
+                f"Would a late change to our {f['delivery_day']} order be possible?")
+    else:
+        body = (f"{f['title']} is nearby ({f['window']}). "
+                f"I may adjust our {f['delivery_day']} order before the cutoff ({f['cutoff']}). "
+                "I'll confirm quantities separately.")
+    closing = "Many thanks!" if style == "warm" else "Thanks!"
+    return f"{hi} {body} {closing}"
+
+
 def draft(insight: dict, llm=None) -> dict:
-    """Template first. If an LLM rephrase adds any number not in the facts, keep the template."""
+    """Choose grounded wording; never accept model-authored factual prose."""
     recipient, text = template_draft(insight)
     source = "template"
     if llm is not None:
         try:
             out = llm.complete_json(
-                "Rephrase this supplier message to sound natural and brief. Keep every fact. "
-                "Add no numbers, quantities, dates or times that are not already in it. "
-                'Return JSON {"text": "..."}.', text)
-            candidate = (out or {}).get("text", "").strip()
-            if candidate and not unsupported_numbers(candidate, insight):
-                text, source = candidate, "llm"
+                "Choose a wording style for this supplier message: standard, concise, or warm. "
+                'Return ONLY JSON {"style": "standard|concise|warm"}. Do not write message text.', text)
+            # Reject added prose/fields as well as malformed or unknown selections.
+            if (isinstance(out, dict) and set(out) == {"style"}
+                    and isinstance(out["style"], str)
+                    and out["style"] in {"standard", "concise", "warm"}):
+                text, source = styled_draft(insight, out["style"]), "llm"
         except Exception:
             pass
     return {"recipient_label": recipient, "text": text, "source": source}

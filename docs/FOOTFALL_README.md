@@ -46,3 +46,12 @@ python -m scripts.check_llm   # expect: OK (azure): {'ok': True}
 - **Stale** means the last check of a source failed or is older than its refresh interval. Cached events are kept, never deleted.
 - "No events" means none were found in the monitored sources, not complete local coverage.
 - Impact is an ordinal heuristic (see the design doc §6), not a forecast. Approving a draft does not send it.
+
+### Supplier draft grounding
+
+The model selects `standard`, `concise` or `warm` wording through a strict JSON style response.
+The app renders every factual clause from the selected insight and supplier deadline; model-authored
+message text is never accepted. Unknown styles, extra fields, malformed responses and provider errors
+use the deterministic template. This replaces free-form AI rephrasing and its numeric-only check.
+Owners can still edit the complete message and choose quantities themselves; saving edits clears approval.
+The internal `source=llm` value means the model selected the wording style, not that it authored facts.
