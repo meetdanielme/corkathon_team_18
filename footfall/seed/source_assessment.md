@@ -31,7 +31,25 @@ Re-fetched all four saved pages with `footfall.scout.fetch.fetch_text` on 2026-1
 | [Triskel What’s On](https://triskelartscentre.ie/whats-on/) | Cork International Film Festival 2026 | Fri 13–Sun 22 Nov (the listing overlaps the window on 13 Nov) | Unknown | Triskel Arts Centre calendar; specific screening venue not printed | No |
 | [The Everyman What’s On](https://everymancork.com/) | Disco Pigs by Enda Walsh | Sat 31 Oct–Sat 14 Nov (the listing overlaps 7–13 Nov) | Unknown on the listing | The Everyman (venue What’s On section) | No |
 
-**Baseline count:** 11 human-visible listing entries across four source pages; 4/4 pages returned readable text and, per the team's recorded refresh, all four source records reached `ok` with success timestamps. This is not a model extraction result. No live-model extraction has run, so extracted events = 0, extraction misses/false positives = not measurable yet, and rejected model findings = none recorded (not “zero false positives”). Compare the next extraction to this list and record verbatim evidence, misses, and false positives then. Do not compare prepared demo events as if they were live findings.
+**Baseline count:** 11 human-visible listing entries across four source pages; 4/4 pages returned readable text and, per the team's recorded refresh, all four source records reached `ok` with success timestamps. PR [#27](https://github.com/meetdanielme/corkathon_team_18/pull/27) reports a local-model run that fetched and extracted all four sources, persisted findings with excerpts and URLs, rejected out-of-window findings (including the Opera House panto and Christmas concert), and produced two in-window findings that passed validation but were excluded by rules r1 because they did not overlap café opening hours. The PR does not include those two records' titles or per-source extraction output, so this worksheet cannot yet establish row-level matches, misses, or false positives, or the full rejected-finding count. Do not report zero extraction results or infer event names. Prepared demo events remain separate from the live run.
+
+### Extraction comparison worksheet
+
+Prepared for the detailed output from the local-model run reported in PR #27. The extraction and evidence cells are intentionally blank because the per-source records are not included in the repository. Add the extracted title/date/time/venue as returned, then classify each row as `match`, `miss`, or `possible false positive`. A single human listing may map to multiple extracted records (or multiple listings to one run); explain those cases in the evidence column. Keep unstated times, venues and attendance unknown.
+
+| Source | Human-visible listing | Human date(s) | Human time | Human venue | Extracted title | Extracted date / time / venue | Outcome | Evidence / notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| St Peter's Cork | Day Of The Dead Mexican Offering | Until Sat 7 Nov | Unknown | St Peter's Cork calendar |  |  | Pending |  |
+| St Peter's Cork | Creative Workshop – Write and Paint Your Own Calaverita | Sat 7 Nov | 15:00 | St Peter's Cork calendar |  |  | Pending |  |
+| St Peter's Cork | The Soul Of Mexico: A Day Of The Dead Dance Celebration | Sat 7 Nov | 17:00 | St Peter's Cork calendar |  |  | Pending |  |
+| St Peter's Cork | Recomposed By Max Richter: Vivaldi: The Four Seasons | Thu 12 Nov | 19:30 | St Peter's Cork calendar |  |  | Pending |  |
+| Cork Opera House | Cork City Ballet presents The Nutcracker | Thu 5–Sat 7 Nov; overlaps 7 Nov | “Various Times”; exact starts unknown | Cork Opera House calendar |  |  | Pending |  |
+| Triskel Arts Centre | Cork Zine Fest Residency / Festival / Workshops | Thu 29 Oct–Sun 29 Nov; calendar shows it 7–13 Nov | Unknown | Triskel calendar; event-level venue not repeated |  |  | Pending |  |
+| Triskel Arts Centre | The Devils 55th Anniversary | Sun 8–Wed 11 Nov | Unknown | Triskel calendar; event-level venue not repeated |  |  | Pending |  |
+| Triskel Arts Centre | Pan’s Labyrinth 20th Anniversary | Sun 8–Wed 11 Nov | Unknown | Triskel calendar; event-level venue not repeated |  |  | Pending |  |
+| Triskel Arts Centre | 2 – Portrait of Harry Clarke (Famous Paintings and their Hidden Histories: Autumn 2026) | Tue 10 Nov | 11:00 | Triskel calendar; event-level venue not repeated |  |  | Pending |  |
+| Triskel Arts Centre | Cork International Film Festival 2026 | Fri 13–Sun 22 Nov; overlaps 13 Nov | Unknown | Triskel calendar; screening venue not printed |  |  | Pending |  |
+| The Everyman | Disco Pigs by Enda Walsh | Sat 31 Oct–Sat 14 Nov; overlaps 7–13 Nov | Unknown | The Everyman What's On page |  |  | Pending |  |
 
 Known listing limits: recurring/run listings (Nutcracker, Disco Pigs, Triskel film runs, Zine Fest, and CIFF) do not expose every individual performance/screening time or event-level attendance on these source pages. Triskel's listing does not repeat individual venues, so those stay unknown at event level pending detail-page review.
 
