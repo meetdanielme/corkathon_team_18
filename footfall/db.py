@@ -188,7 +188,12 @@ def get_events(con, at: datetime | None = None) -> list[dict]:
     for event in events:
         urls = {v["url"] for v in event["evidence"]}
         matches = [other for other in events if other["id"] != event["id"]
-                   and _same_listing(event, other)
+                   and normalise(event["title"]) == normalise(other["title"])
+                   and event["data_mode"] == other["data_mode"]
+                   and parse_dt(event.get("start_at")) is not None
+                   and parse_dt(other.get("start_at")) is not None
+                   and parse_dt(event["start_at"]).astimezone(TZ).date()
+                       == parse_dt(other["start_at"]).astimezone(TZ).date()
                    and urls.intersection(v["url"] for v in other["evidence"])]
         if matches:
             event["possible_duplicate_of"] = matches[0]["id"]
