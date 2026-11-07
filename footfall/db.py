@@ -8,6 +8,7 @@ import sqlite3
 from datetime import datetime, timedelta
 from pathlib import Path
 
+from .domain import hours as hours_mod
 from .domain.timeutil import TZ, now, parse_dt
 
 SCHEMA = Path(__file__).parent / "schema.sql"
@@ -35,6 +36,10 @@ def init(con: sqlite3.Connection) -> None:
     for col in ("address", "hours", "special_hours"):  # databases created before these columns existed
         if col not in cols:
             con.execute(f"ALTER TABLE businesses ADD COLUMN {col} TEXT")
+    loc_cols = {r["name"] for r in con.execute("PRAGMA table_info(locations)")}
+    for col in ("hours", "special_hours"):  # locations created before per-location hours
+        if col not in loc_cols:
+            con.execute(f"ALTER TABLE locations ADD COLUMN {col} TEXT")
     ensure_locations(con)
     con.commit()
 
@@ -59,8 +64,11 @@ def seed(con: sqlite3.Connection, seed_dir: Path = SEED) -> None:
                  json.dumps(b.get("special_hours") or [])))
     con.execute("DELETE FROM locations WHERE business_id=?", (b["id"],))
     for pos, loc in enumerate(b.get("locations") or []):
-        con.execute("INSERT INTO locations (business_id, position, name, address, lat, lon) VALUES (?,?,?,?,?,?)",
-                    (b["id"], pos, loc.get("name"), loc["address"], loc["lat"], loc["lon"]))
+        con.execute("""INSERT INTO locations (business_id, position, name, address, lat, lon, hours, special_hours)
+                       VALUES (?,?,?,?,?,?,?,?)""",
+                    (b["id"], pos, loc.get("name"), loc["address"], loc["lat"], loc["lon"],
+                     json.dumps(loc.get("hours") or b.get("hours")) if (loc.get("hours") or b.get("hours")) else None,
+                     json.dumps(loc.get("special_hours", b.get("special_hours") or []))))
     ensure_locations(con)
     for s in json.loads((seed_dir / "suppliers.json").read_text(encoding="utf-8")):
         con.execute("INSERT OR REPLACE INTO supplier_constraints VALUES (?,?,?,?,?,?,?,?,?)",
@@ -86,25 +94,35 @@ def get_business(con, business_id: str | None = None) -> dict:
     b["open_days"] = json.loads(b["open_days"])
     for col in ("sales_baseline", "hours", "special_hours"):
         b[col] = json.loads(b[col]) if b.get(col) else None
-    b["locations"] = [dict(r) for r in con.execute(
-        "SELECT * FROM locations WHERE business_id=? ORDER BY position", (b["id"],)).fetchall()]
+    b["locations"] = []
+    for r in con.execute("SELECT * FROM locations WHERE business_id=? ORDER BY position", (b["id"],)).fetchall():
+        loc = dict(r)  # a location without its own hours uses the business's
+        loc["hours"] = json.loads(loc["hours"]) if loc.get("hours") else hours_mod.weekly(b)
+        loc["special_hours"] = json.loads(loc["special_hours"]) if loc.get("special_hours") else (b["special_hours"] or [])
+        b["locations"].append(loc)
     return b
 
 
-BUSINESS_FIELDS = ("name", "opens", "closes", "open_days", "radius_m", "avg_spend", "sales_baseline", "hours",
-                   "special_hours")
-JSON_FIELDS = ("open_days", "sales_baseline", "hours", "special_hours")
+BUSINESS_FIELDS = ("name", "radius_m", "avg_spend", "sales_baseline")  # hours live on locations
+JSON_FIELDS = ("sales_baseline",)
 
 
 def set_locations(con, business_id: str, locations: list[dict]) -> None:
-    """Replace the business's locations. The first one is mirrored into the business row (weather, legacy)."""
+    """Replace the business's locations and their hours. The first (main) location is mirrored into the
+    business row: address, coordinates and hours, plus the opens/closes/open_days summary used by weather."""
     con.execute("DELETE FROM locations WHERE business_id=?", (business_id,))
     for pos, loc in enumerate(locations):
-        con.execute("INSERT INTO locations (business_id, position, name, address, lat, lon) VALUES (?,?,?,?,?,?)",
-                    (business_id, pos, loc.get("name") or None, loc["address"], loc["lat"], loc["lon"]))
+        con.execute("""INSERT INTO locations (business_id, position, name, address, lat, lon, hours, special_hours)
+                       VALUES (?,?,?,?,?,?,?,?)""",
+                    (business_id, pos, loc.get("name") or None, loc["address"], loc["lat"], loc["lon"],
+                     json.dumps(loc["hours"]), json.dumps(loc.get("special_hours") or [])))
     main = locations[0]
-    con.execute("UPDATE businesses SET address=?, lat=?, lon=? WHERE id=?",
-                (main["address"], main["lat"], main["lon"], business_id))
+    legacy = hours_mod.legacy_fields(main["hours"])
+    con.execute("""UPDATE businesses SET address=?, lat=?, lon=?, hours=?, special_hours=?, opens=?, closes=?,
+                   open_days=? WHERE id=?""",
+                (main["address"], main["lat"], main["lon"], json.dumps(main["hours"]),
+                 json.dumps(main.get("special_hours") or []), legacy["opens"], legacy["closes"],
+                 json.dumps(legacy["open_days"]), business_id))
     con.commit()
 
 

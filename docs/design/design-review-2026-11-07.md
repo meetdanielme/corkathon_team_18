@@ -21,7 +21,7 @@ Impact uses a separate coloured meter (teal, amber, red segments). Icons come fr
 | # | Comment (short) | Change |
 | --- | --- | --- |
 | 1 | Impact pips look like signal bars; want colourful urgency | Coloured 3-segment impact meter; urgency moved to the coloured cutoff status |
-| 2, 5, 7, 16 | Drop "demo"/"fictional" labels | Removed from seed titles, venues, business name and page copy. One small **Sample data** tag stays in the header status (Gate M1 requires prepared data to be visibly labelled) |
+| 2, 5, 7, 16 | Drop "demo"/"fictional" labels | Removed from seed titles, venues, business name and page copy (the header's Sample data tag was removed in the second review) |
 | 3 | Status top right: refresh button, green indicator, "Last updated" | Header status pill: coloured dot, "Updated 12 min ago", refresh icon button, on every page |
 | 4 | Remove filler header text | Removed |
 | 6 | Business as a card with change options | Business card on Home with address and radius, hours, Change links |
@@ -39,6 +39,15 @@ Impact uses a separate coloured meter (teal, amber, red segments). Icons come fr
 | — | Follow-up: no latitude/longitude; allow several addresses | Locations are address rows only, looked up on OpenStreetMap Nominatim when saved (unchanged addresses are never re-looked-up). A business can have several; events are measured from the nearest, which the reason and map name |
 | — | Follow-up: several opening hours, and holidays | Weekly ranges per day (split days allowed) plus dated special days (closed, or different hours) that replace them. The rules use the real schedule: overlap sums across ranges, closures filter events with the holiday name, and the timeline shows each range |
 | 21 | Business / settings page | New `/business` page: profile, location, radius, hours, days, average spend, supplier rules, data controls, inline validation |
+
+## Second Figma review (5 comments, 7 November)
+
+| Comment | Change |
+| --- | --- |
+| Two locations aren't clearly separate (Home) | One numbered block per location: pin badge, name, address, its own hours and next special day |
+| Each location should have its own opening hours; hours per location (Business) | Weekly ranges and holidays now belong to each location. Business page: one card per location with Opening Hours and Holidays & Special Days. Rules use the nearest location's schedule; the timeline shades when any location is open |
+| Refresh button breaks / scaling | The global button rule (44 px min-height, padding) stretched the 36 px circle into an oval. Now a 30 px circle that sits evenly in the status pill, in the app and in Figma |
+| No "Sample data" labels | Removed from the header and the update message; the confidence reason reads "Not yet checked against a live source". The source is still listed under Business → Data. Gate M1's "prepared data visibly labelled" needs the team's agreement to this |
 
 ## Web interface guidelines (vercel-labs/web-interface-guidelines, fetched 7 Nov 2026)
 

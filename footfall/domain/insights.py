@@ -100,7 +100,7 @@ def confidence_for(event: dict) -> tuple[str, list[str]]:
     if not any(e.get("excerpt") for e in event.get("evidence", [])):
         low.append("No supporting excerpt from the source")
     if event.get("data_mode") == "prepared":
-        medium.append("Sample data, not a live retrieval")
+        medium.append("Not yet checked against a live source")
     elif event.get("verification") != "verified":
         medium.append("Not yet verified against the source page")
     if not event.get("end_at"):
@@ -152,11 +152,14 @@ def evaluate(business: dict, event: dict, suppliers: list[dict], weather: dict[s
     day = start.date()
     if not (now.date() <= day < now.date() + timedelta(days=HORIZON_DAYS)):
         return Exclusion(eid, title, "Outside the 7-day view")
-    ranges, special = hours_mod.ranges_for(business, day)
+    sched = near if near.get("hours") is not None else business  # the nearest location's own hours
+    ranges, special = hours_mod.ranges_for(sched, day)
+    where = f" at {place}" if place != "the café" else ""
     if not ranges:
-        return Exclusion(eid, title, f"Café is closed for {special}" if special else f"Café is closed on {fmt_day(day)}")
+        return Exclusion(eid, title, f"Café is closed{where} for {special}" if special
+                         else f"Café is closed{where} on {fmt_day(day)}")
     w0, w1, basis = demand_window(start, end)
-    ov = sum(overlap_minutes(w0, w1, o0, o1) for o0, o1 in hours_mod.windows(business, day))
+    ov = sum(overlap_minutes(w0, w1, o0, o1) for o0, o1 in hours_mod.windows(sched, day))
     label = f"{w0:%H:%M}-{w1:%H:%M}"
     if ov == 0:
         return Exclusion(eid, title, f"Window {label} does not overlap opening hours {hours_mod.label(ranges)}")

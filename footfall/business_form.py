@@ -1,7 +1,8 @@
 """Parse and validate the Business page form.
 
-Repeated rows (addresses, opening ranges, special days) arrive as parallel lists:
-loc_name/loc_address, {day}_start/{day}_end, special_date/special_label/special_mode/special_start/special_end.
+Each location card posts a hidden loc_key (l0, l1, n3, ...) and fields prefixed with it:
+{key}_name, {key}_address, {key}_{day}_start/_end (repeated per range),
+{key}_special_date/_label/_mode/_start/_end (repeated per special day).
 """
 from __future__ import annotations
 
@@ -32,6 +33,12 @@ def _ranges(starts: list[str], ends: list[str]) -> tuple[list[list[str]], str | 
     return pairs, None
 
 
+def _special_state(specials: list[dict]) -> list[dict]:
+    return [{"date": x["date"], "label": x.get("label", ""), "mode": "hours" if x.get("ranges") else "closed",
+             "start": x["ranges"][0][0] if x.get("ranges") else "", "end": x["ranges"][0][1] if x.get("ranges") else ""}
+            for x in specials]
+
+
 def state_from_business(b: dict) -> dict:
     """What the form shows on first load."""
     base = b.get("sales_baseline") or {}
@@ -41,13 +48,49 @@ def state_from_business(b: dict) -> dict:
         "avg_spend": "" if b.get("avg_spend") is None else b["avg_spend"],
         "customers_per_hour": base.get("customers_per_hour") or "",
         **{f"uplift_{k}": v for k, v in uplift.items()},
-        "locations": [{"name": loc.get("name") or "", "address": loc["address"]} for loc in b.get("locations") or []]
-        or [{"name": "", "address": ""}],
-        "hours": hours_mod.weekly(b),
-        "special": [{"date": s["date"], "label": s.get("label", ""), "mode": "hours" if s.get("ranges") else "closed",
-                     "start": s["ranges"][0][0] if s.get("ranges") else "",
-                     "end": s["ranges"][0][1] if s.get("ranges") else ""} for s in b.get("special_hours") or []],
+        "locations": [{"key": f"l{i}", "name": loc.get("name") or "", "address": loc["address"],
+                       "hours": hours_mod.weekly(loc), "special": _special_state(loc.get("special_hours") or [])}
+                      for i, loc in enumerate(b.get("locations") or [])],
     }
+
+
+def _location(form, key: str, errors: dict) -> dict:
+    """One location card: name, address, weekly ranges and special days (validated, not yet looked up)."""
+    loc = {"key": key, "name": form.get(f"{key}_name", "").strip(), "address": form.get(f"{key}_address", "").strip(),
+           "hours": {}, "special": [], "special_hours": []}
+    for d in WEEKDAYS:
+        rng, err = _ranges(form.getlist(f"{key}_{d}_start"), form.getlist(f"{key}_{d}_end"))
+        loc["hours"][d] = rng
+        if err:
+            errors[f"{key}_hours_{d}"] = err
+    if not any(loc["hours"].values()):
+        errors[f"{key}_hours"] = "Add opening hours for at least one day."
+    seen = set()
+    cols = [form.getlist(f"{key}_special_{c}") for c in ("date", "label", "mode", "start", "end")]
+    for d, label, mode, a, b in zip(*cols):
+        row = {"date": d.strip(), "label": label.strip(), "mode": mode, "start": a.strip(), "end": b.strip()}
+        if not row["date"] and not row["label"]:
+            continue
+        loc["special"].append(row)
+        err_key = f"{key}_special_{len(loc['special']) - 1}"
+        try:
+            date.fromisoformat(row["date"])
+        except ValueError:
+            errors[err_key] = "Choose a date for this special day."
+            continue
+        if row["date"] in seen:
+            errors[err_key] = "This date is already listed."
+            continue
+        seen.add(row["date"])
+        ranges = []
+        if mode == "hours":
+            ranges, err = _ranges([row["start"]], [row["end"]])
+            if err or not ranges:
+                errors[err_key] = err or "Enter the opening and closing time, or mark the day closed."
+                continue
+        loc["special_hours"].append({"date": row["date"], "label": row["label"] or "Special hours", "ranges": ranges})
+    loc["special_hours"].sort(key=lambda x: x["date"])
+    return loc
 
 
 def parse(form, existing_locations: list[dict], geocoder) -> tuple[dict, list[dict], dict, dict]:
@@ -62,73 +105,33 @@ def parse(form, existing_locations: list[dict], geocoder) -> tuple[dict, list[di
     else:
         errors["name"] = "Enter the business name."
 
-    # Locations: look up only addresses that are new or changed
+    # Locations, each with its own hours. Look up only addresses that are new or changed.
     known = {loc["address"].strip().lower(): loc for loc in existing_locations}
-    rows = [{"name": n.strip(), "address": a.strip()} for n, a in zip(form.getlist("loc_name"), form.getlist("loc_address"))]
-    rows = [r for r in rows if r["address"] or r["name"]]
-    state["locations"] = rows or [{"name": "", "address": ""}]
+    cards = [_location(form, key, errors) for key in form.getlist("loc_key")]
+    cards = [c for c in cards if c["address"] or c["name"]]
+    state["locations"] = cards
     locations = []
-    for i, r in enumerate(rows):
-        if not r["address"]:
-            errors[f"loc_{i}"] = "Enter an address, or remove this location."
+    for c in cards:
+        k = c["key"]
+        if not c["address"]:
+            errors[f"{k}_address"] = "Enter an address, or remove this location."
             continue
-        match = known.get(r["address"].lower())
+        match = known.get(c["address"].lower())
         if match:
-            locations.append({**r, "lat": match["lat"], "lon": match["lon"]})
-            continue
-        try:
-            found = geocoder(r["address"])
-        except GeocodeUnavailable:
-            errors[f"loc_{i}"] = "Couldn't look up this address right now. Check your connection and save again."
-            continue
-        if not found:
-            errors[f"loc_{i}"] = "Couldn't find this address. Add the street and town, for example Washington Street, Cork."
-            continue
-        locations.append({**r, "lat": found[0], "lon": found[1]})
-    if not rows:
-        errors["locations"] = "Add at least one address."
-
-    # Weekly opening hours
-    week = {}
-    for d in WEEKDAYS:
-        rng, err = _ranges(form.getlist(f"{d}_start"), form.getlist(f"{d}_end"))
-        week[d] = rng
-        if err:
-            errors[f"hours_{d}"] = err
-    state["hours"] = week
-    if not any(week.values()):
-        errors["hours"] = "Add opening hours for at least one day."
-    fields["hours"] = week
-    fields.update(hours_mod.legacy_fields(week))
-
-    # Special days (holidays): closed, or one range of different hours
-    specials, seen = [], set()
-    cols = [form.getlist(k) for k in ("special_date", "special_label", "special_mode", "special_start", "special_end")]
-    state["special"] = []
-    for i, (d, label, mode, a, b) in enumerate(zip(*cols)):
-        row = {"date": d.strip(), "label": label.strip(), "mode": mode, "start": a.strip(), "end": b.strip()}
-        if not row["date"] and not row["label"]:
-            continue
-        state["special"].append(row)
-        idx = len(state["special"]) - 1
-        try:
-            date.fromisoformat(row["date"])
-        except ValueError:
-            errors[f"special_{idx}"] = "Choose a date for this special day."
-            continue
-        if row["date"] in seen:
-            errors[f"special_{idx}"] = "This date is already listed."
-            continue
-        seen.add(row["date"])
-        ranges = []
-        if mode == "hours":
-            ranges, err = _ranges([row["start"]], [row["end"]])
-            if err or not ranges:
-                errors[f"special_{idx}"] = err or "Enter the opening and closing time, or mark the day closed."
+            coords = (match["lat"], match["lon"])
+        else:
+            try:
+                coords = geocoder(c["address"])
+            except GeocodeUnavailable:
+                errors[f"{k}_address"] = "Couldn't look up this address right now. Check your connection and save again."
                 continue
-        specials.append({"date": row["date"], "label": row["label"] or "Special hours", "ranges": ranges})
-    fields["special_hours"] = sorted(specials, key=lambda s: s["date"])
-
+            if not coords:
+                errors[f"{k}_address"] = "Couldn't find this address. Add the street and town, for example Washington Street, Cork."
+                continue
+        locations.append({"name": c["name"], "address": c["address"], "lat": coords[0], "lon": coords[1],
+                          "hours": c["hours"], "special_hours": c["special_hours"]})
+    if not cards:
+        errors["locations"] = "Add at least one location."
     try:
         radius = int(state["radius_m"])
         if not 100 <= radius <= 5000:

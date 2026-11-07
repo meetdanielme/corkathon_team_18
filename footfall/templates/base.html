@@ -25,7 +25,6 @@
           <span class="status-verb{% if run_state == "ok" %} is-ok{% endif %}">{% if run_state == "ok" %}Updated{% elif run_state == "partial" %}Partly updated{% else %}Update failed{% endif %}</span>
           <time datetime="{{ run.started_at|iso }}" title="{{ run.started_at|when }}">{{ run.started_at|ago }}</time>
           {% else %}Not updated yet{% endif %}
-          {% if "prepared" in modes %}<span class="status-mode">Sample data</span>{% endif %}
         </span>
         <form method="post" action="{{ url_for('refresh') }}" data-busy>
           <input type="hidden" name="mode" value="{{ 'live' if llm_enabled else 'prepared' }}">
