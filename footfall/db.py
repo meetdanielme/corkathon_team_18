@@ -170,11 +170,14 @@ def source_is_stale(src: dict, at: datetime) -> bool:
 def get_events(con, at: datetime | None = None) -> list[dict]:
     at = at or now()
     sources = {s["id"]: s for s in get_sources(con)}
+    evidence = {}
+    for row in con.execute("SELECT * FROM event_evidence ORDER BY retrieved_at").fetchall():
+        item = dict(row)
+        evidence.setdefault(item["event_id"], []).append(item)
     events = []
     for r in con.execute("SELECT * FROM events").fetchall():
         e = dict(r)
-        ev = [dict(x) for x in con.execute("SELECT * FROM event_evidence WHERE event_id=? ORDER BY retrieved_at",
-                                           (e["id"],)).fetchall()]
+        ev = evidence.get(e["id"], [])
         e["evidence"] = ev
         if e["data_mode"] == "prepared":
             e["stale"] = False
