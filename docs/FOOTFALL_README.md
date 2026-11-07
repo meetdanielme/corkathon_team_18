@@ -64,7 +64,16 @@ FOOTFALL_LLM=none python -m scripts.check_llm   # expect: NOT CONFIGURED
 
 ## Honesty labels
 
-- **Prepared** data is fictional demo data and is always labelled as such.
+- **Prepared** data is fictional sample data. Event titles read naturally, and the header status always shows a **Sample data** label while it is loaded.
 - **Stale** means the last check of a source failed or is older than its refresh interval. Cached events are kept, never deleted.
 - "No events" means none were found in the monitored sources, not complete local coverage.
 - Impact is an ordinal heuristic (see the design doc §6), not a forecast. Approving a draft does not send it.
+
+After pulling changes to `footfall/seed/`, run `python -m scripts.reset_demo` so your local database picks up the new sample data.
+
+## Credits
+
+- [Remix Icon](https://remixicon.com/) 4.5.0, Apache License 2.0, loaded from jsDelivr.
+- [Leaflet](https://leafletjs.com/) 1.9.4, BSD 2-Clause, loaded from cdnjs; map tiles © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors (ODbL), shown with attribution on the map.
+- Address lookup: [OpenStreetMap Nominatim](https://nominatim.org/) (data © OpenStreetMap contributors, ODbL). Footfall calls it only when a new or changed address is saved, with an identifying User-Agent, in line with the [usage policy](https://operations.osmfoundation.org/policies/nominatim/).
+- [Schibsted Grotesk](https://fonts.google.com/specimen/Schibsted+Grotesk), SIL Open Font License, from Google Fonts.

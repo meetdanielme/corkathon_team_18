@@ -8,9 +8,10 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 from datetime import date, datetime, timedelta
 
+from . import hours as hours_mod
 from .cutoffs import cutoff_for, serving_delivery
 from .geo import haversine_m
-from .timeutil import at, fmt, fmt_day, parse_dt, weekday
+from .timeutil import fmt, fmt_day, parse_dt, weekday
 
 RULE_VERSION = "r1"
 PRE_BUFFER_MIN = 60          # assumed arrival buffer before an event
@@ -47,6 +48,7 @@ class Insight:
     action_deadline: dict | None
     suggested_action: str
     conflicts: list[str] = field(default_factory=list)
+    location: dict | None = None  # the business location nearest the event
     rule_version: str = RULE_VERSION
 
     def to_dict(self) -> dict:
@@ -98,7 +100,7 @@ def confidence_for(event: dict) -> tuple[str, list[str]]:
     if not any(e.get("excerpt") for e in event.get("evidence", [])):
         low.append("No supporting excerpt from the source")
     if event.get("data_mode") == "prepared":
-        medium.append("Prepared demo data, not a live retrieval")
+        medium.append("Sample data, not a live retrieval")
     elif event.get("verification") != "verified":
         medium.append("Not yet verified against the source page")
     if not event.get("end_at"):
@@ -141,26 +143,28 @@ def evaluate(business: dict, event: dict, suppliers: list[dict], weather: dict[s
     end = parse_dt(event.get("end_at"))
     if event.get("access") == "restricted":
         return Exclusion(eid, title, "Private or restricted event, so not a public demand signal")
-    dist = haversine_m(business["lat"], business["lon"], event["lat"], event["lon"])
+    locations = business.get("locations") or [business]
+    near = min(locations, key=lambda loc: haversine_m(loc["lat"], loc["lon"], event["lat"], event["lon"]))
+    dist = haversine_m(near["lat"], near["lon"], event["lat"], event["lon"])
+    place = (near.get("name") or near.get("address") or "the café") if len(locations) > 1 else "the café"
     if dist > business["radius_m"]:
         return Exclusion(eid, title, f"{round(dist)} m away, outside the {business['radius_m']} m radius")
     day = start.date()
     if not (now.date() <= day < now.date() + timedelta(days=HORIZON_DAYS)):
         return Exclusion(eid, title, "Outside the 7-day view")
-    if weekday(day) not in business["open_days"]:
-        return Exclusion(eid, title, f"Café is closed on {fmt_day(day)}")
+    ranges, special = hours_mod.ranges_for(business, day)
+    if not ranges:
+        return Exclusion(eid, title, f"Café is closed for {special}" if special else f"Café is closed on {fmt_day(day)}")
     w0, w1, basis = demand_window(start, end)
-    o0, o1 = at(day, business["opens"]), at(day, business["closes"])
-    ov = overlap_minutes(w0, w1, o0, o1)
+    ov = sum(overlap_minutes(w0, w1, o0, o1) for o0, o1 in hours_mod.windows(business, day))
     label = f"{w0:%H:%M}-{w1:%H:%M}"
     if ov == 0:
-        return Exclusion(eid, title, f"Window {label} does not overlap opening hours "
-                                     f"{business['opens']}-{business['closes']}")
+        return Exclusion(eid, title, f"Window {label} does not overlap opening hours {hours_mod.label(ranges)}")
 
     direction = "decrease" if event.get("category") in DECREASE_CATEGORIES else "increase"
     impact, pts = impact_for(dist, ov, event.get("attendance"))
     conf, conf_reasons = confidence_for(event)
-    reasons = [f"{round(dist)} m from the café (radius {business['radius_m']} m). Proximity is relevance "
+    reasons = [f"{round(dist)} m from {place} (radius {business['radius_m']} m). Proximity is relevance "
                f"evidence, not proof of extra customers",
                f"Window {label} overlaps opening hours by {ov} min"]
     wx = weather.get(day.isoformat())
@@ -190,7 +194,8 @@ def evaluate(business: dict, event: dict, suppliers: list[dict], weather: dict[s
         distance_m=round(dist), overlap_min=ov, direction=direction, impact=impact, impact_points=pts,
         confidence=conf, confidence_reasons=conf_reasons, reasons=reasons, sources=sources,
         data_mode=event.get("data_mode", "live"), deadlines=dls, action_deadline=action,
-        suggested_action=suggestion)
+        suggested_action=suggestion,
+        location={k: near.get(k) for k in ("name", "address", "lat", "lon")})
 
 
 IMPACT_RANK = {"high": 3, "medium": 2, "low": 1}

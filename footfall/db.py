@@ -31,15 +31,37 @@ def connect(path: str) -> sqlite3.Connection:
 
 def init(con: sqlite3.Connection) -> None:
     con.executescript(SCHEMA.read_text(encoding="utf-8"))
+    cols = {r["name"] for r in con.execute("PRAGMA table_info(businesses)")}
+    for col in ("address", "hours", "special_hours"):  # databases created before these columns existed
+        if col not in cols:
+            con.execute(f"ALTER TABLE businesses ADD COLUMN {col} TEXT")
+    ensure_locations(con)
     con.commit()
+
+
+def ensure_locations(con) -> None:
+    """Give every business at least one location, taken from its own address and coordinates."""
+    for b in con.execute("SELECT * FROM businesses WHERE id NOT IN (SELECT business_id FROM locations)").fetchall():
+        con.execute("INSERT INTO locations (business_id, position, name, address, lat, lon) VALUES (?,?,?,?,?,?)",
+                    (b["id"], 0, None, b["address"] or b["name"], b["lat"], b["lon"]))
 
 
 def seed(con: sqlite3.Connection, seed_dir: Path = SEED) -> None:
     """Load the fictional café, its supplier constraints and the source directory. Idempotent."""
     b = json.loads((seed_dir / "business.json").read_text(encoding="utf-8"))
-    con.execute("INSERT OR REPLACE INTO businesses VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+    con.execute("""INSERT OR REPLACE INTO businesses (id, name, lat, lon, timezone, opens, closes, open_days,
+                   radius_m, sales_baseline, avg_spend, demo_label, address, hours, special_hours)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                 (b["id"], b["name"], b["lat"], b["lon"], b["timezone"], b["opens"], b["closes"],
-                 json.dumps(b["open_days"]), b["radius_m"], None, b.get("avg_spend"), b.get("demo_label")))
+                 json.dumps(b["open_days"]), b["radius_m"],
+                 json.dumps(b["sales_baseline"]) if b.get("sales_baseline") else None, b.get("avg_spend"), b.get("demo_label"),
+                 b.get("address"), json.dumps(b["hours"]) if b.get("hours") else None,
+                 json.dumps(b.get("special_hours") or [])))
+    con.execute("DELETE FROM locations WHERE business_id=?", (b["id"],))
+    for pos, loc in enumerate(b.get("locations") or []):
+        con.execute("INSERT INTO locations (business_id, position, name, address, lat, lon) VALUES (?,?,?,?,?,?)",
+                    (b["id"], pos, loc.get("name"), loc["address"], loc["lat"], loc["lon"]))
+    ensure_locations(con)
     for s in json.loads((seed_dir / "suppliers.json").read_text(encoding="utf-8")):
         con.execute("INSERT OR REPLACE INTO supplier_constraints VALUES (?,?,?,?,?,?,?,?,?)",
                     (s["id"], b["id"], s["supplier"], s.get("contact_label"), s["delivery_day"],
@@ -62,7 +84,45 @@ def get_business(con, business_id: str | None = None) -> dict:
            else con.execute("SELECT * FROM businesses LIMIT 1")).fetchone()
     b = dict(row)
     b["open_days"] = json.loads(b["open_days"])
+    for col in ("sales_baseline", "hours", "special_hours"):
+        b[col] = json.loads(b[col]) if b.get(col) else None
+    b["locations"] = [dict(r) for r in con.execute(
+        "SELECT * FROM locations WHERE business_id=? ORDER BY position", (b["id"],)).fetchall()]
     return b
+
+
+BUSINESS_FIELDS = ("name", "opens", "closes", "open_days", "radius_m", "avg_spend", "sales_baseline", "hours",
+                   "special_hours")
+JSON_FIELDS = ("open_days", "sales_baseline", "hours", "special_hours")
+
+
+def set_locations(con, business_id: str, locations: list[dict]) -> None:
+    """Replace the business's locations. The first one is mirrored into the business row (weather, legacy)."""
+    con.execute("DELETE FROM locations WHERE business_id=?", (business_id,))
+    for pos, loc in enumerate(locations):
+        con.execute("INSERT INTO locations (business_id, position, name, address, lat, lon) VALUES (?,?,?,?,?,?)",
+                    (business_id, pos, loc.get("name") or None, loc["address"], loc["lat"], loc["lon"]))
+    main = locations[0]
+    con.execute("UPDATE businesses SET address=?, lat=?, lon=? WHERE id=?",
+                (main["address"], main["lat"], main["lon"], business_id))
+    con.commit()
+
+
+def update_business(con, business_id: str, fields: dict) -> None:
+    """Owner edits from the business page. Only the listed fields can change."""
+    vals = {k: (json.dumps(v) if k in JSON_FIELDS else v)
+            for k, v in fields.items() if k in BUSINESS_FIELDS}
+    if vals:
+        con.execute(f"UPDATE businesses SET {', '.join(f'{k}=?' for k in vals)} WHERE id=?",
+                    (*vals.values(), business_id))
+        con.commit()
+
+
+def draft_states(con) -> dict[str, dict]:
+    """Latest draft per insight: {insight_id: {"id", "approved_at"}}."""
+    rows = con.execute("""SELECT id, insight_id, approved_at FROM drafts d
+                          WHERE id = (SELECT MAX(id) FROM drafts WHERE insight_id = d.insight_id)""").fetchall()
+    return {r["insight_id"]: {"id": r["id"], "approved_at": r["approved_at"]} for r in rows}
 
 
 def get_suppliers(con, business_id: str) -> list[dict]:
