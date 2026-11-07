@@ -113,6 +113,35 @@
   <p class="revenue-note"><i class="ri-information-line" aria-hidden="true"></i>Based on your own numbers{% if rev.customers_per_hour %} (about {{ rev.customers_per_hour }} customers an hour){% endif %}. A rough guide, not a prediction.</p>
 </section>
 
+{% if clashes %}
+<section aria-labelledby="clash-h">
+  <h2 id="clash-h">Deliveries This Could Block</h2>
+  <p class="small muted">Access only. This doesn't change the customer estimate above.</p>
+  {% for c in clashes %}
+  <div class="card clash">
+    <p class="att"><i class="ri-truck-line" aria-hidden="true"></i><span>
+      <strong>{{ c.supplier }} drop {{ c.delivery_window }}</strong>
+      <span>{{ c.day_label }} · road closed {{ c.closure_window_label }}</span></span></p>
+    <ul class="icon-list">
+      <li><i class="ri-road-map-line" aria-hidden="true"></i>{{ c.closure_title }}, {{ c.distance_m }} m away</li>
+      <li><i class="ri-time-line" aria-hidden="true"></i>Ask them to arrive before <strong>{{ c.suggested_drop_label }}</strong></li>
+    </ul>
+    {% for s in c.sources %}
+      {% if c.data_mode != "prepared" and s.url %}
+      <p class="small muted"><a href="{{ s.url }}" rel="noopener" target="_blank">{{ s.url.split("//")[-1].split("/")[0] }}</a>
+        {% if s.retrieved_at %}· checked {{ s.retrieved_at|ago }}{% endif %}</p>
+      {% elif c.data_mode == "prepared" %}
+      <p class="small muted">Prepared demo closure. Check the organiser's latest information before acting.</p>
+      {% endif %}
+    {% endfor %}
+    <form method="post" action="{{ url_for('make_clash_draft', cid=c.id) }}">
+      <button class="btn btn-ghost"><i class="ri-mail-line" aria-hidden="true"></i>Draft a message to {{ c.supplier }}</button>
+    </form>
+  </div>
+  {% endfor %}
+</section>
+{% endif %}
+
 <section aria-labelledby="why-h">
   <h2 id="why-h">Why It Showed Up</h2>
   <ul class="icon-list why">{% for r in i.reasons %}<li><i class="{{ r|reason_icon }}" aria-hidden="true"></i>{{ r }}</li>{% endfor %}</ul>
