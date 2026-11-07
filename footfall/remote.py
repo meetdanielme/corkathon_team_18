@@ -34,8 +34,20 @@ class Cursor:
 
 
 class Connection:
-    def __init__(self, raw):
+    def __init__(self, raw, reconnect=None):
         self.raw = raw
+        self._reconnect = reconnect
+
+    def reconnect(self):
+        """Renew an idle server stream only at an explicit committed boundary."""
+        if self._reconnect is None:
+            return
+        if self.raw.in_transaction:
+            raise RuntimeError("Cannot reconnect an uncommitted database transaction")
+        try:
+            self.raw.close()
+        finally:
+            self.raw = self._reconnect()
 
     def execute(self, sql, parameters=()):
         return Cursor(self.raw.execute(sql, parameters))

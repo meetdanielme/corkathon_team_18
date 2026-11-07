@@ -77,8 +77,14 @@ def run_live(con, llm, at: datetime | None = None, fetcher=fetch_text, limits: d
         con.execute("UPDATE sources SET last_attempt_at=? WHERE id=?", (stamp, src["id"]))
         con.commit()  # release the write lock before network/model calls
         try:
-            final_url, text = fetcher(src["url"])
-            found = extract_events(llm, src, text, w0.date().isoformat(), w1.date().isoformat())
+            try:
+                final_url, text = fetcher(src["url"])
+                found = extract_events(llm, src, text, w0.date().isoformat(), w1.date().isoformat())
+            finally:
+                # Hosted libSQL streams can expire while the external model is working.
+                # No source writes are pending at this boundary; do not retry a write.
+                if reconnect := getattr(con, "reconnect", None):
+                    reconnect()
             kept = 0
             for f in found["events"]:
                 clean, why = validate_finding(f, text, w0, w1)

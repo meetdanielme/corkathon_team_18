@@ -10,7 +10,7 @@ Vercel runs the Flask WSGI entry point in `app.py`. Azure credentials and the Fl
 
 ## AI allowance
 
-The public demo has a shared **20-call lifetime allowance**, reserved atomically in Turso before each Azure request. This is shared across visitors and deployments, so cold starts cannot reset it. Failed attempts count conservatively. SDK retries are disabled, timeout is 60 seconds, completion length is at most 2048 tokens. The allowance is an abuse/spend bound, not an Azure-enforced €5 cutoff or an exact currency meter. Once exhausted, live extraction reports errors and drafts retain deterministic templates. Prepared mode stays usable.
+The public demo has a shared **40-call lifetime allowance**, reserved atomically in Turso before each Azure request. This is shared across visitors and deployments, so cold starts cannot reset it. Failed attempts count conservatively. SDK retries are disabled, timeout is 60 seconds, completion length is at most 2048 tokens. The allowance is an abuse/spend bound, not an Azure-enforced €5 cutoff or an exact currency meter. Once exhausted, live extraction reports errors and drafts retain deterministic templates. Prepared mode stays usable.
 
 Do not reset the allowance or raise the setting without Daniel’s direction. Do not enable paid Vercel or Turso plans. Azure usage consumes Daniel’s credit; a free host does not make model calls free.
 
@@ -35,3 +35,5 @@ Credentials must already exist in the target Vercel project. Another project or 
 - Hosted live refresh is verified separately against Azure and the four saved sources. Honest source validation errors remain visible; deployment is not extraction-accuracy signoff.
 - Initial hosted test exposed a remote transaction idle/lock issue. Refresh now commits the source-attempt timestamp before network/model calls. The model call budget is calculated per refresh, rather than lifetime of a warm worker.
 - Prepared source records remain labelled fictional. All users of this single demo share the same fictional café and draft records; this is not a multi-tenant account system.
+
+Daniel explicitly increased the shared allowance to 40 total calls on 7 November after diagnosing refresh warnings. Remote connections are renewed after network/model work, at a committed boundary; writes are never blindly retried.
