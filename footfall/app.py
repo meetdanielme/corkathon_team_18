@@ -5,6 +5,7 @@ Run:  flask --app "footfall.app:create_app()" run --debug
 from __future__ import annotations
 
 import os
+import json
 import re
 
 from flask import (Flask, abort, flash, g, jsonify, redirect, render_template, request, send_from_directory,
@@ -259,6 +260,58 @@ def create_app(db_path: str | None = None, clock=None, llm: LLM | None = None, f
         draft_id = db.create_draft(con(), iid, d["recipient_label"], d["text"], d["source"])
         return redirect(url_for("draft", draft_id=draft_id))
 
+    @app.get("/orders")
+    def orders():
+        rows = con().execute("SELECT * FROM drafts ORDER BY updated_at DESC, id DESC").fetchall()
+        return render_template("orders.html", orders=[dict(r) for r in rows])
+
+    @app.route("/suppliers/<sid>/edit", methods=["GET", "POST"])
+    def edit_supplier(sid):
+        c = con()
+        b = db.get_business(c)
+        s = next((s for s in db.get_suppliers(c, b["id"]) if s["id"] == sid), None)
+        if s is None:
+            abort(404)
+        errors = []
+        if request.method == "POST":
+            v = request.form
+            rule_type = v.get("rule_type", "")
+            rule = {"type": rule_type, "time": v.get("cutoff_time", "")}
+            s.update(supplier=v.get("supplier", "").strip(), contact_label=v.get("contact_label", "").strip(),
+                     delivery_day=v.get("delivery_day", ""), delivery_window=v.get("delivery_window", "").strip())
+            if not s["supplier"] or len(s["supplier"]) > 200:
+                errors.append("Enter a supplier name (up to 200 characters).")
+            if s["delivery_day"] not in WEEKDAYS:
+                errors.append("Choose a delivery day.")
+            time_pattern = r"(?:[01]\d|2[0-3]):[0-5]\d"
+            if not re.fullmatch(time_pattern, rule["time"]):
+                errors.append("Enter a valid order cutoff time.")
+            window = s["delivery_window"]
+            if window and (not re.fullmatch(time_pattern + "-" + time_pattern, window) or window[:5] >= window[6:]):
+                errors.append("Use a delivery window such as 07:30-08:00, with the end after the start.")
+            if rule_type == "weekday":
+                rule["day"] = v.get("cutoff_day", "")
+                if rule["day"] not in WEEKDAYS:
+                    errors.append("Choose the cutoff weekday.")
+            elif rule_type == "business_days_before":
+                rule["closed"] = v.getlist("closed")
+                try:
+                    rule["n"] = int(v.get("days_before", ""))
+                    if not 1 <= rule["n"] <= 30 or len(set(rule["closed"])) == 7 or any(d not in WEEKDAYS for d in rule["closed"]):
+                        raise ValueError
+                except ValueError:
+                    errors.append("Use 1–30 working days before delivery and leave at least one working day open.")
+            else:
+                errors.append("Choose a cutoff rule.")
+            s["cutoff_rule"] = rule
+            if not errors:
+                c.execute("UPDATE supplier_constraints SET supplier=?, contact_label=?, delivery_day=?, delivery_window=?, cutoff_rule=? WHERE id=? AND business_id=?",
+                          (s["supplier"], s["contact_label"] or None, s["delivery_day"], window or None, json.dumps(rule), sid, b["id"]))
+                c.commit()
+                flash("Supplier details saved. Order deadlines now use these settings. Existing order messages are unchanged.")
+                return redirect(url_for("business", _anchor="sup-h"))
+        return render_template("supplier_edit.html", s=s, errors=errors, weekdays=WEEKDAYS), (400 if errors else 200)
+
     @app.get("/drafts/<int:draft_id>")
     def draft(draft_id):
         d = db.get_draft(con(), draft_id) or abort(404)
@@ -268,8 +321,14 @@ def create_app(db_path: str | None = None, clock=None, llm: LLM | None = None, f
 
     @app.post("/drafts/<int:draft_id>")
     def save_draft(draft_id):
-        db.get_draft(con(), draft_id) or abort(404)
-        db.update_draft(con(), draft_id, request.form["text"].strip())
+        d = db.get_draft(con(), draft_id) or abort(404)
+        text = request.form.get("text", "").strip()
+        recipient = request.form.get("recipient_label", d["recipient_label"]).strip()
+        if not text or not recipient or len(recipient) > 200 or len(text) > 20000:
+            d.update(text=text, recipient_label=recipient)
+            return render_template("draft.html", d=d, i=None, cd=None,
+                                   error="Enter a recipient (up to 200 characters) and a message (up to 20,000 characters)."), 400
+        db.update_draft(con(), draft_id, text, recipient)
         flash("Saved. Approve the message again when you're happy with it.")
         return redirect(url_for("draft", draft_id=draft_id))
 

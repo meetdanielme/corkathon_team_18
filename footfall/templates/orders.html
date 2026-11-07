@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Orders · Footfall{% endblock %}
+{% block content %}
+<p class="back"><a href="{{ url_for('index') }}">Back to the Week</a></p>
+<h1>Orders</h1>
+<p>Review and edit your saved order messages. Messages are never sent automatically.</p>
+<section class="panel">
+{% for o in orders %}
+<article class="panel">
+<h2>Order to {{ o.recipient_label }}</h2>
+<p class="small">{{ 'Approved' if o.approved_at else 'Needs approval' }} · Updated {{ o.updated_at|when }}</p>
+<p style="white-space:pre-wrap;overflow-wrap:anywhere">{{ o.text }}</p>
+<a class="btn btn-ghost" href="{{ url_for('draft', draft_id=o.id) }}">Edit Order</a>
+</article>
+{% else %}
+<p>No saved orders yet. Open an event in your week and prepare an order message to get started.</p>
+<a class="btn" href="{{ url_for('index') }}">View Your Week</a>
+{% endfor %}
+</section>
+{% endblock %}
