@@ -47,6 +47,11 @@
       {% endif %}
     </div>
   </header>
+  <nav class="workspace-nav" aria-label="Workspace">
+    <a href="{{ url_for('index') }}">Your Week</a>
+    <a href="{{ url_for('orders') }}"{% if request.endpoint in ['orders', 'draft', 'save_draft'] %} aria-current="page"{% endif %}>Orders</a>
+    <a href="{{ url_for('business', _anchor='sup-h') }}">Suppliers</a>
+  </nav>
   {% endblock %}
   <main id="main"{% block main_attrs %}{% endblock %}>
     {% block flashes %}{% with msgs = get_flashed_messages() %}{% if msgs %}<div aria-live="polite">{% for m in msgs %}<p class="flash" role="status"><i class="ri-information-line" aria-hidden="true"></i>{{ m }}</p>{% endfor %}</div>{% endif %}{% endwith %}{% endblock %}

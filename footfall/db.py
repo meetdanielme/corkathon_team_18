@@ -258,9 +258,9 @@ def get_draft(con, draft_id: int) -> dict | None:
     return dict(r) if r else None
 
 
-def update_draft(con, draft_id: int, text: str) -> None:
-    con.execute("UPDATE drafts SET text=?, updated_at=?, approved_at=NULL WHERE id=?",
-                (text, now().isoformat(), draft_id))
+def update_draft(con, draft_id: int, text: str, recipient: str | None = None) -> None:
+    con.execute("UPDATE drafts SET text=?, recipient_label=COALESCE(?, recipient_label), updated_at=?, approved_at=NULL WHERE id=?",
+                (text, recipient, now().isoformat(), draft_id))
     con.commit()
 
 

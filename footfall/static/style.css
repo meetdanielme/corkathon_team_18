@@ -641,3 +641,7 @@ select[aria-invalid="true"] { border-color:var(--now); }
 }
 @media (prefers-reduced-motion:reduce) { *,*::before,*::after { transition:none !important; animation:none !important; } }
 @media (pointer:fine) { html { overscroll-behavior:none; } }
+
+.workspace-nav { display: flex; flex-wrap: wrap; gap: 1.5rem; padding: .75rem max(1rem, calc((100% - 1200px) / 2)); border-bottom: 1px solid #e5e7eb; }
+.workspace-nav a { color: inherit; font-weight: 500; }
+.workspace-nav a[aria-current="page"] { text-decoration: underline; text-underline-offset: .3em; }
