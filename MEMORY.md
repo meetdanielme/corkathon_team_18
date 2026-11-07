@@ -13,6 +13,7 @@ Last updated: 7 November 2026. Shared project context, not a chat transcript.
 - The Footfall MVP is now implemented in `footfall/` with Flask, SQLite, Jinja and a bounded saved-source refresh flow.
 - Issue #11 has four selected Cork venue listing pages in `footfall/seed/sources.json`, each within 1 km, readable with the existing fetcher, and listing events in 7–13 Nov; twelve candidates are assessed in `footfall/seed/source_assessment.md`. All four selected robots paths allow the project user agent and all pages fetched as public HTML. Independent teammate review is pending.
 - Issue #11 was merged into `main` through PR #23 on 2026-11-07 (squash commit `1fd4177`).
+- Gate M1 was independently checked from Daniel's issue-12 screenshots and recorded on issue #12. The human baseline for issue #14 now lists 11 visible entries across the four selected pages; extraction remains unrun because no Azure/model credentials are available. The issue-16 data-story slide reports 4/4 readable fetches, 8 rejected candidates and limitations without claiming model findings.
 
 ## People and purpose
 
