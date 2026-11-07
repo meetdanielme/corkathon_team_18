@@ -1,4 +1,16 @@
-/* Placeholder styles: Daniel owns the visual design and replaces this file. */
+/* Placeholder styles: Daniel owns the visual design and replaces this file.
+
+   Styling hooks available in the templates (M3 wants colour + icon + words per status):
+     layout    .top .brand main .profile .refresh .insights .excluded .review .facts .scenario
+     lists     .excluded-list .review-list
+     card      .card .card-head .labels .dir-increase .dir-decrease
+     status    .mode-prepared .mode-live .stale .conflict
+               .effect-increase .effect-decrease
+               .impact-low .impact-medium .impact-high
+               .confidence-low .confidence-medium .confidence-high
+               .deadline-upcoming .deadline-urgent .deadline-missed
+     draft     .status-draft .status-approved .btn .btn-save .btn-approve .btn-copy
+   Mobile check at 380 px: .card-head is flex, and .facts th has a fixed 170 px width. */
 body { font: 16px/1.5 system-ui, sans-serif; margin: 0; color: #1d1d1b; background: #fafaf7; }
 .top { padding: 12px 20px; border-bottom: 1px solid #ddd; background: #fff; }
 .brand { font-weight: 600; text-decoration: none; color: #0f6e56; }
@@ -15,3 +27,7 @@ main { max-width: 760px; margin: 0 auto; padding: 20px; }
 .flash { background: #e6f1fb; padding: 8px 12px; border-radius: 8px; }
 textarea { width: 100%; font: inherit; } button { font: inherit; padding: 6px 12px; margin: 6px 6px 6px 0; }
 .stale { color: #a32d2d; }
+
+/* Neutral defaults for the new hooks so nothing is unstyled before the redesign. */
+.impact, .confidence, .effect { font-weight: 600; }
+.status-approved { color: #0f6e56; } .status-draft { color: #5f5e5a; }

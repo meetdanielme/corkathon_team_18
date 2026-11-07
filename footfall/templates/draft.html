@@ -6,13 +6,13 @@
 <p class="muted small">Drafted from: {{ d.source }}. Footfall never sends messages.</p>
 <form method="post" action="{{ url_for('save_draft', draft_id=d.id) }}">
   <textarea id="text" name="text" rows="6">{{ d.text }}</textarea>
-  <button>Save edits</button>
+  <button class="btn btn-save">Save edits</button>
 </form>
-<form method="post" action="{{ url_for('approve', draft_id=d.id) }}"><button>Approve</button></form>
-<p>
+<form method="post" action="{{ url_for('approve', draft_id=d.id) }}"><button class="btn btn-approve">Approve</button></form>
+<p class="status {% if d.approved_at %}status-approved{% else %}status-draft{% endif %}">
   Status: {% if d.approved_at %}<strong>Approved {{ d.approved_at|when }}, not sent</strong>{% else %}Not approved{% endif %}
 </p>
-<button type="button" id="copy" {% if not d.approved_at %}disabled title="Approve first"{% endif %}>Copy message</button>
+<button type="button" class="btn btn-copy" id="copy" {% if not d.approved_at %}disabled title="Approve first"{% endif %}>Copy message</button>
 <span id="copied" class="muted" role="status"></span>
 <script>
   document.getElementById('copy').onclick = async () => {
