@@ -1,6 +1,7 @@
 """SQLite access. One small module so every owner reads and writes the same contract."""
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
@@ -207,7 +208,7 @@ def upsert_event(con, ev: dict, evidence: dict, at: datetime) -> tuple[str, bool
     row = con.execute("SELECT id FROM events WHERE norm_key=?", (key,)).fetchone()
     created = row is None
     if created:
-        eid = "ev_" + re.sub(r"[^a-z0-9]+", "_", key)[:60]
+        eid = "ev_" + re.sub(r"[^a-z0-9]+", "_", key)[:40] + "_" + hashlib.sha256(key.encode()).hexdigest()[:20]
         dup = None
         title_n, rest = key.split("|", 1)
         for other in con.execute("SELECT id, norm_key FROM events").fetchall():

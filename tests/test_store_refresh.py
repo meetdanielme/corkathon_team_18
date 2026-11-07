@@ -138,3 +138,38 @@ def test_call_limit_is_per_refresh_on_a_reused_worker(con):
         assert run['sources_succeeded'] == 1
         assert run['llm_calls'] == 1
     assert llm.calls == 2
+
+
+def test_outside_window_is_successful_source_check_not_warning(con):
+    old = {**FINDING, 'start_at': '2026-10-01T19:30:00+00:00'}
+    count = len(db.get_sources(con))
+    model = FakeLLM([{'events': [old], 'uncertainties': []}] * count)
+    run = rf.run_live(con, model, at=NOW, fetcher=lambda url: (url, PAGE))
+    assert run['status'] == 'ok'
+    assert run['sources_succeeded'] == count
+    assert run['events_upserted'] == 0
+    assert run['errors'] == []
+    assert all(s['status'] == 'ok' and s['last_success_at'] for s in db.get_sources(con))
+
+
+def test_long_event_ids_include_date_and_venue_without_prefix_collisions(con):
+    title = 'Creative Workshop Write and Paint Your Own Calaverita ' * 2
+    evidence = {'url': 'https://example.org/event', 'retrieved_at': NOW.isoformat(), 'excerpt': title}
+    first = {'title': title, 'start_at': '2026-11-10T15:00:00+00:00', 'venue_name': "St Peter's Cork"}
+    second = {**first, 'start_at': '2026-11-11T15:00:00+00:00'}
+    a, made_a = db.upsert_event(con, first, evidence, NOW)
+    b, made_b = db.upsert_event(con, second, evidence, NOW)
+    assert made_a and made_b and a != b
+    assert db.upsert_event(con, first, evidence, NOW) == (a, False)
+    assert db.upsert_event(con, second, evidence, NOW) == (b, False)
+    assert con.execute('SELECT count(*) FROM events').fetchone()[0] == 2
+
+
+def test_existing_legacy_event_id_is_preserved_on_refresh(con):
+    legacy = 'ev_legacy_truncated_id'
+    key = db.norm_key(FINDING['title'], FINDING['start_at'], FINDING['venue_name'])
+    con.execute('''INSERT INTO events (id,title,norm_key,start_at,venue_name,first_seen_at,last_seen_at)
+                   VALUES (?,?,?,?,?,?,?)''',
+                (legacy,FINDING['title'],key,FINDING['start_at'],FINDING['venue_name'],NOW.isoformat(),NOW.isoformat()))
+    evidence = {'url': 'https://example.org/event', 'retrieved_at': NOW.isoformat(), 'excerpt': PAGE}
+    assert db.upsert_event(con,FINDING,evidence,NOW) == (legacy,False)
