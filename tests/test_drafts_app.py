@@ -3,7 +3,7 @@ from footfall.app import create_app
 from footfall.domain import drafts
 from footfall.scout.refresh import run_prepared
 
-from .conftest import NOW, FakeLLM
+from .conftest import NOW, FakeLLM, sign_in
 
 INSIGHT = {"title": "Graduation ceremony (fictional demo)", "window_label": "Thu 12 Nov 10:00-14:00",
            "direction": "increase", "action_deadline": {"supplier": "Bakery", "contact_label": "Declan (bakery)",
@@ -28,8 +28,8 @@ def test_llm_rephrase_without_new_numbers_is_kept():
 
 def test_full_browser_flow(tmp_path):
     app = create_app(db_path=str(tmp_path / "a.sqlite3"), clock=lambda: NOW, llm=FakeLLM(enabled=False))
-    c = app.test_client()
-    assert c.get("/").status_code == 200
+    c = sign_in(app.test_client())
+    assert c.get("/app").status_code == 200
     page = c.post("/refresh", data={"mode": "prepared"}, follow_redirects=True).get_data(as_text=True)
     assert "Sample data" not in page and "Graduation ceremony" in page and "Not relevant" in page
     data = c.get("/api/insights").get_json()

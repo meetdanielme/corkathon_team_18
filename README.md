@@ -57,4 +57,6 @@ Sources: supplied organiser email and Hacker Guide; [official rules](https://cor
 
 ## Shared hosted demo
 
-Footfall can run on Vercel with Azure Luna and persistent Turso storage. See [hosting setup, limits and validation](docs/team/vercel-hosting.md). Local SQLite remains available; Azure/Turso credentials are supplied only through server environment variables. Deployment changes are in PR #29.
+Footfall can run on Vercel with Azure Luna and persistent Turso storage. See [hosting setup, limits and validation](docs/team/vercel-hosting.md). Local SQLite remains available; Azure/Turso credentials are supplied only through server environment variables.
+
+`/` is the public marketing page. `/login` is a **simulated** sign-in: any email and password (or "Continue with the demo café") opens the dashboard at `/app`. Nothing is stored server-side; set `FLASK_SECRET_KEY` in hosted environments so session cookies are signed with a real secret. Deployment changes are in PR #29.
