@@ -21,9 +21,12 @@ def test_llm_rephrase_with_new_number_is_rejected():
     assert d["source"] == "template" and "40" not in d["text"]
 
 
-def test_llm_rephrase_without_new_numbers_is_kept():
-    good = "Hi Declan, graduation nearby Thu 12 Nov 10:00-14:00; I may tweak the order before Wed 11 Nov 16:00."
-    assert drafts.draft(INSIGHT, llm=FakeLLM([{"text": good}]))["source"] == "llm"
+def test_model_can_select_grounded_wording():
+    result = drafts.draft(INSIGHT, llm=FakeLLM([{"style": "concise"}]))
+    assert result["source"] == "llm"
+    assert result["text"] == drafts.styled_draft(INSIGHT, "concise")
+    assert "Wed 11 Nov 16:00" in result["text"]
+    assert "confirm quantities separately" in result["text"]
 
 
 def test_full_browser_flow(tmp_path):

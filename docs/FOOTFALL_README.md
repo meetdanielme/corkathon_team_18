@@ -77,3 +77,12 @@ After pulling changes to `footfall/seed/`, run `python -m scripts.reset_demo` so
 - [Leaflet](https://leafletjs.com/) 1.9.4, BSD 2-Clause, loaded from cdnjs; map tiles © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors (ODbL), shown with attribution on the map.
 - Address lookup: [OpenStreetMap Nominatim](https://nominatim.org/) (data © OpenStreetMap contributors, ODbL). Footfall calls it only when a new or changed address is saved, with an identifying User-Agent, in line with the [usage policy](https://operations.osmfoundation.org/policies/nominatim/).
 - [Schibsted Grotesk](https://fonts.google.com/specimen/Schibsted+Grotesk), SIL Open Font License, from Google Fonts.
+
+### Supplier draft grounding
+
+The model selects `standard`, `concise` or `warm` wording through a strict JSON style response.
+The app renders every factual clause from the selected insight and supplier deadline; model-authored
+message text is never accepted. Unknown styles, extra fields, malformed responses and provider errors
+use the deterministic template. This replaces free-form AI rephrasing and its numeric-only check.
+Owners can still edit the complete message and choose quantities themselves; saving edits clears approval.
+The internal `source=llm` value means the model selected the wording style, not that it authored facts.
