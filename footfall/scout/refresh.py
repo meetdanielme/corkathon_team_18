@@ -42,7 +42,7 @@ def run_prepared(con, at: datetime | None = None, path: Path = PREPARED) -> dict
     at = at or tz_now()
     run_id = _start_run(con, "prepared", at)
     n = 0
-    for item in json.loads(path.read_text()):
+    for item in json.loads(path.read_text(encoding="utf-8")):
         ev = {**item["event"], "data_mode": "prepared", "verification": "prepared"}
         _, created = db.upsert_event(con, ev, {"url": item["evidence"]["url"], "retrieved_at": at.isoformat(),
                                                "excerpt": item["evidence"].get("excerpt"), "source_id": None,
