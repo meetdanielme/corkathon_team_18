@@ -1,23 +1,50 @@
 {% extends "base.html" %}
 {% block title %}Draft · Footfall{% endblock %}
 {% block content %}
-<p><a href="{{ url_for('index') }}">← Back</a></p>
-<h1>Message to {{ d.recipient_label }}</h1>
-<p class="muted small">Drafted from: {{ d.source }}. Footfall never sends messages.</p>
-<form method="post" action="{{ url_for('save_draft', draft_id=d.id) }}">
-  <textarea id="text" name="text" rows="6">{{ d.text }}</textarea>
-  <button>Save edits</button>
-</form>
-<form method="post" action="{{ url_for('approve', draft_id=d.id) }}"><button>Approve</button></form>
-<p>
-  Status: {% if d.approved_at %}<strong>Approved {{ d.approved_at|when }}, not sent</strong>{% else %}Not approved{% endif %}
+<p class="back"><a href="{{ url_for('insight', iid=d.insight_id) }}">← Back to insight</a></p>
+<section class="page-head">
+  <div>
+    <p class="eyebrow">Supplier message · {{ d.source }} draft</p>
+    <h1>Message to {{ d.recipient_label }}</h1>
+    <p class="muted">Drafted from: {{ d.source }}. Footfall never sends messages: edit, approve, then copy it into WhatsApp or email yourself.</p>
+  </div>
+</section>
+<ol class="steps" aria-label="Progress">
+  <li class="done">Edit</li>
+  <li class="{% if d.approved_at %}done{% else %}current{% endif %}">Approve</li>
+  <li class="{% if d.approved_at %}current{% endif %}">Copy</li>
+</ol>
+<div class="editor">
+<p class="status {% if d.approved_at %}status-approved{% endif %}">
+  Status: {% if d.approved_at %}<strong>Approved {{ d.approved_at|when }}, not sent</strong>{% else %}<strong>Not approved</strong> · not sent{% endif %}
 </p>
-<button type="button" id="copy" {% if not d.approved_at %}disabled title="Approve first"{% endif %}>Copy message</button>
-<span id="copied" class="muted" role="status"></span>
+<form method="post" action="{{ url_for('save_draft', draft_id=d.id) }}">
+  <label for="text">Review and edit your message</label>
+  <textarea id="text" name="text" rows="6">{{ d.text }}</textarea>
+  <button class="secondary">Save edits</button>
+  <p class="muted small" id="edit-status" role="status">Save any changes before approving. Editing clears approval.</p>
+</form>
+<div class="actions">
+  <form method="post" action="{{ url_for('approve', draft_id=d.id) }}"><button id="approve" {% if d.approved_at %}class="secondary"{% endif %}>Approve</button></form>
+  <button type="button" id="copy" {% if not d.approved_at %}disabled title="Approve first"{% endif %}>Copy message</button>
+</div>
+<p id="copied" class="muted" role="status"></p>
+</div>
 <script>
+  const text = document.getElementById('text');
+  text.addEventListener('input', () => {
+    document.getElementById('approve').disabled = true;
+    document.getElementById('copy').disabled = true;
+    document.getElementById('edit-status').textContent = 'Unsaved changes. Save edits, then approve again.';
+    document.getElementById('copied').textContent = '';
+  });
   document.getElementById('copy').onclick = async () => {
-    await navigator.clipboard.writeText(document.getElementById('text').value);
-    document.getElementById('copied').textContent = 'Copied. Paste it into WhatsApp or email.';
+    try {
+      await navigator.clipboard.writeText(text.value);
+      document.getElementById('copied').textContent = 'Copied. Paste it into WhatsApp or email. Not sent.';
+    } catch {
+      document.getElementById('copied').textContent = 'Could not copy. Select the message and copy it manually.';
+    }
   };
 </script>
 {% endblock %}

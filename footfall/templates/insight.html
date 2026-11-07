@@ -1,23 +1,62 @@
 {% extends "base.html" %}
 {% block title %}{{ i.title }} · Footfall{% endblock %}
 {% block content %}
-<p><a href="{{ url_for('index') }}">← Back</a></p>
-<h1>{{ i.title }}</h1>
-<p><span class="badge mode-{{ i.data_mode }}">{{ i.data_mode }} data</span> <span class="badge">rules {{ i.rule_version }}</span></p>
-<table class="facts">
-  <tr><th>Relevant window</th><td>{{ i.window_label }}<br><span class="muted small">{{ i.window_basis }}</span></td></tr>
-  <tr><th>Expected effect</th><td>{{ i.direction }}</td></tr>
-  <tr><th>Potential impact</th><td>{{ i.impact }} <span class="muted small">(heuristic points: distance {{ i.impact_points.distance }}, overlap {{ i.impact_points.overlap }}, attendance {{ i.impact_points.attendance }} = {{ i.impact_points.total }}; not a measured uplift)</span></td></tr>
-  <tr><th>Confidence</th><td>{{ i.confidence }}<ul>{% for r in i.confidence_reasons %}<li>{{ r }}</li>{% endfor %}</ul></td></tr>
-  <tr><th>Reasons</th><td><ul>{% for r in i.reasons %}<li>{{ r }}</li>{% endfor %}</ul></td></tr>
-  {% if i.conflicts %}<tr><th>Conflicts</th><td><ul>{% for c in i.conflicts %}<li>{{ c }}</li>{% endfor %}</ul></td></tr>{% endif %}
-  <tr><th>Sources and freshness</th><td><ul>{% for s in i.sources %}<li><a href="{{ s.url }}" rel="noopener" target="_blank">{{ s.url }}</a> · retrieved {{ s.retrieved_at|when }}{% if s.stale %} · <strong class="stale">stale</strong>{% endif %}{% if s.excerpt %}<blockquote>{{ s.excerpt }}</blockquote>{% endif %}</li>{% endfor %}</ul></td></tr>
-  <tr><th>Action deadline</th><td>{% if i.action_deadline %}<span class="badge deadline-{{ i.action_deadline.status }}">{{ i.action_deadline.supplier }}: {{ i.action_deadline.cutoff_label }} ({{ i.action_deadline.status }})</span> for delivery {{ i.action_deadline.delivery_day }}<br><span class="muted small">{{ i.action_deadline.evidence }}</span>{% else %}No known supplier constraint applies.{% endif %}</td></tr>
-  <tr><th>Suggested response</th><td>{{ i.suggested_action }}</td></tr>
-</table>
+<p class="back"><a href="{{ url_for('index') }}">← Your week</a></p>
+<section class="page-head">
+  <div>
+    <p class="eyebrow">Insight · rules {{ i.rule_version }}</p>
+    <h1>{{ i.title }}</h1>
+    <p class="when-lg">{{ i.window_label }} · {{ i.distance_m }} m away</p>
+    <p><span class="badge mode-{{ i.data_mode }}">{{ i.data_mode }} data</span></p>
+  </div>
+</section>
 
-<form method="post" action="{{ url_for('make_draft', iid=i.id) }}"><button>{% if draft %}New draft message{% else %}Draft a message{% endif %}</button></form>
-{% if draft %}<p><a href="{{ url_for('draft', draft_id=draft.id) }}">Open latest draft</a></p>{% endif %}
+<div class="split">
+  <section class="panel summary dir-{{ i.direction }}" aria-label="Summary">
+    <dl class="summary-grid">
+      <div><dt>Expected effect</dt><dd><span class="badge effect-{{ i.direction }}">{{ i.direction }}</span></dd></div>
+      <div>
+        <dt>Potential impact</dt>
+        <dd><span class="badge impact impact-{{ i.impact }}"><span class="pips" aria-hidden="true"><i></i><i></i><i></i></span>{{ i.impact }}</span></dd>
+        <dd class="muted small">Heuristic points: distance {{ i.impact_points.distance }}, overlap {{ i.impact_points.overlap }}, attendance {{ i.impact_points.attendance }} = {{ i.impact_points.total }}. Not a measured uplift.</dd>
+      </div>
+      <div>
+        <dt>Confidence</dt>
+        <dd><span class="badge confidence">{{ i.confidence }}</span></dd>
+        <dd><ul class="small">{% for r in i.confidence_reasons %}<li>{{ r }}</li>{% endfor %}</ul></dd>
+      </div>
+      <div>
+        <dt>Relevant window</dt>
+        <dd>{{ i.window_label }}</dd>
+        <dd class="muted small">{{ i.window_basis }}</dd>
+      </div>
+    </dl>
+  </section>
+
+  <aside class="panel deadline-card {% if i.action_deadline %}deadline-{{ i.action_deadline.status }}{% endif %}" aria-label="Action deadline">
+    {% if i.action_deadline %}
+    <p class="eyebrow">Act before</p>
+    <p class="deadline-time">{{ i.action_deadline.cutoff_label }}</p>
+    <p>{{ i.action_deadline.supplier }} cutoff ({{ i.action_deadline.status }}) for delivery {{ i.action_deadline.delivery_day }}</p>
+    <p class="muted small">{{ i.action_deadline.evidence }}</p>
+    {% else %}
+    <p class="eyebrow">Action deadline</p>
+    <p>No known supplier constraint applies.</p>
+    {% endif %}
+    <p class="suggested">{{ i.suggested_action }}</p>
+    <form method="post" action="{{ url_for('make_draft', iid=i.id) }}"><button>{% if draft %}New draft message{% else %}Draft a message{% endif %}</button></form>
+    {% if draft %}<p class="small"><a href="{{ url_for('draft', draft_id=draft.id) }}">Open latest draft</a></p>{% endif %}
+  </aside>
+</div>
+
+<section>
+  <h2>Why this matters</h2>
+  <table class="facts">
+    <tr><th>Reasons</th><td><ul>{% for r in i.reasons %}<li>{{ r }}</li>{% endfor %}</ul></td></tr>
+    {% if i.conflicts %}<tr><th>Conflicts</th><td><ul>{% for c in i.conflicts %}<li>{{ c }}</li>{% endfor %}</ul></td></tr>{% endif %}
+    <tr><th>Sources and freshness</th><td><ul>{% for s in i.sources %}<li><a href="{{ s.url }}" rel="noopener" target="_blank">{{ s.url }}</a> · retrieved {{ s.retrieved_at|when }}{% if s.stale %} · <strong class="stale">stale</strong>{% endif %}{% if s.excerpt %}<blockquote>{{ s.excerpt }}</blockquote>{% endif %}</li>{% endfor %}</ul></td></tr>
+  </table>
+</section>
 
 <details class="scenario">
   <summary>Optional revenue scenario (illustrative)</summary>

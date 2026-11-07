@@ -1,50 +1,65 @@
 {% extends "base.html" %}
 {% block content %}
-<section class="profile">
-  <h1>{{ business.name }}</h1>
-  <p class="muted">{{ business.demo_label }} · open {{ business.opens }}–{{ business.closes }} · radius {{ business.radius_m }} m · Europe/Dublin</p>
-  <p>
-    {% for m in modes|sort %}<span class="badge mode-{{ m }}">{{ m }} data</span>{% endfor %}
-    {% if not modes %}<span class="badge">no events loaded yet</span>{% endif %}
-  </p>
+<section class="page-head">
+  <div>
+    <p class="eyebrow">{{ business.name }} · Cork</p>
+    <h1>Your week, in context</h1>
+    <p class="muted">{{ business.demo_label }} · open {{ business.opens }}–{{ business.closes }} · radius {{ business.radius_m }} m · Europe/Dublin</p>
+    <p>
+      {% for m in modes|sort %}<span class="badge mode-{{ m }}">{{ m }} data</span>{% endfor %}
+      {% if not modes %}<span class="badge">no events loaded yet</span>{% endif %}
+    </p>
+  </div>
+  <form class="refresh-actions" method="post" action="{{ url_for('refresh') }}">
+    <button name="mode" value="prepared">Load prepared demo data</button>
+    <button name="mode" value="live" class="secondary" {% if not llm_enabled %}title="FOOTFALL_LLM not configured; live extraction will record errors"{% endif %}>Refresh saved sources (live)</button>
+  </form>
 </section>
 
-<section class="refresh">
-  <form method="post" action="{{ url_for('refresh') }}">
-    <button name="mode" value="prepared">Load prepared demo data</button>
-    <button name="mode" value="live" {% if not llm_enabled %}title="FOOTFALL_LLM not configured; live extraction will record errors"{% endif %}>Refresh saved sources (live)</button>
-  </form>
+<section class="refresh-status">
   {% if run %}
-  <p class="muted">Last refresh: {{ run.mode }} · {{ run.status }} · {{ run.started_at|when }} ·
+  <p><strong>Last refresh</strong> · {{ run.mode }} · {{ run.status }} · {{ run.started_at|when }} ·
      sources {{ run.sources_succeeded }}/{{ run.sources_attempted }} · events upserted {{ run.events_upserted }}</p>
   {% if run.errors %}<details><summary>{{ run.errors|length }} refresh issue(s)</summary><ul>{% for e in run.errors %}<li>{{ e }}</li>{% endfor %}</ul></details>{% endif %}
+  {% else %}
+  <p><strong>Not refreshed yet.</strong> Load prepared demo data or refresh saved sources.</p>
   {% endif %}
   <p class="muted small">"No events" means none found in the monitored sources, not complete local coverage.</p>
 </section>
 
 <section>
   <h2>Next 7 days</h2>
+  <p class="muted">Local signals for your café. Select an insight to review the evidence and your next decision.</p>
   {% for i in insights %}
-  <a class="card dir-{{ i.direction }}" href="{{ url_for('insight', iid=i.id) }}">
-    <div class="card-head"><strong>{{ i.title }}</strong><span class="badge mode-{{ i.data_mode }}">{{ i.data_mode }}</span></div>
-    <div>{{ i.window_label }} · {{ i.distance_m }} m away</div>
-    <div class="labels">
-      <span class="badge">Effect: {{ i.direction }}</span>
-      <span class="badge">Impact: {{ i.impact }}</span>
-      <span class="badge">Confidence: {{ i.confidence }}</span>
-      {% if i.action_deadline %}<span class="badge deadline-{{ i.action_deadline.status }}">{{ i.action_deadline.supplier }} cutoff {{ i.action_deadline.cutoff_label }} ({{ i.action_deadline.status }})</span>{% endif %}
-      {% if i.conflicts %}<span class="badge conflict">Conflicting signals</span>{% endif %}
+  <a class="card insight-card dir-{{ i.direction }}" href="{{ url_for('insight', iid=i.id) }}">
+    <div class="card-main">
+      <div class="card-head"><strong class="card-title">{{ i.title }}</strong><span class="badge mode-{{ i.data_mode }}">{{ i.data_mode }}</span></div>
+      <p class="when">{{ i.window_label }} · {{ i.distance_m }} m away</p>
+      <div class="labels">
+        <span class="badge effect-{{ i.direction }}">Expected: {{ i.direction }}</span>
+        <span class="badge impact impact-{{ i.impact }}"><span class="pips" aria-hidden="true"><i></i><i></i><i></i></span>Potential impact: {{ i.impact }}</span>
+        <span class="badge confidence">Confidence: {{ i.confidence }}</span>
+        {% if i.conflicts %}<span class="badge conflict">Conflicting signals</span>{% endif %}
+      </div>
     </div>
+    {% if i.action_deadline %}
+    <div class="card-deadline deadline-{{ i.action_deadline.status }}">
+      <span class="eyebrow">Act before</span>
+      <strong>{{ i.action_deadline.cutoff_label }}</strong>
+      <span class="small">{{ i.action_deadline.supplier }} cutoff · {{ i.action_deadline.status }}</span>
+    </div>
+    {% endif %}
   </a>
   {% else %}
-  <p>No relevant events in the monitored sources for the next 7 days.</p>
+  <p class="empty">No relevant events in the monitored sources for the next 7 days.</p>
   {% endfor %}
 </section>
 
-<section>
+<section class="quiet">
   <h2>Filtered out</h2>
-  <ul>{% for e in excluded %}<li><strong>{{ e.title }}</strong>: {{ e.reason }}</li>{% else %}<li>Nothing filtered.</li>{% endfor %}</ul>
+  <p class="muted small">Not shown as insights. Each has a reason you can check.</p>
+  <ul class="quiet-list">{% for e in excluded %}<li><strong>{{ e.title }}</strong><span>{{ e.reason }}</span></li>{% else %}<li>Nothing filtered.</li>{% endfor %}</ul>
   <h2>Needs review</h2>
-  <ul>{% for r in review %}<li><strong>{{ r.title }}</strong>: missing {{ r.missing|join(", ") }}</li>{% else %}<li>Nothing to review.</li>{% endfor %}</ul>
+  <ul class="quiet-list">{% for r in review %}<li><strong>{{ r.title }}</strong><span>Missing {{ r.missing|join(", ") }}</span></li>{% else %}<li>Nothing to review.</li>{% endfor %}</ul>
 </section>
 {% endblock %}
