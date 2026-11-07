@@ -102,14 +102,14 @@
 
   <section class="panel" id="location" aria-labelledby="location-h">
     <h2 id="location-h"><i class="ri-map-pin-2-line" aria-hidden="true"></i>Locations &amp; Opening Hours</h2>
-    <p class="hint panel-intro">Each location has its own address and hours. Events are measured from the nearest one; Footfall looks up each address on OpenStreetMap when you save.</p>
+    <p class="hint panel-intro">Each location has its own address and opening hours. We measure events from whichever location is closest.</p>
     <div class="locs" data-locs>
       {% for loc in f.locations %}{{ location_card(loc) }}{% endfor %}
     </div>
     {{ err('locations') }}
     <button type="button" class="btn btn-ghost" data-add-loc><i class="ri-add-line" aria-hidden="true"></i>Add Location</button>
     <div class="field radius">
-      <label for="radius_m">Watch radius around each location (metres)</label>
+      <label for="radius_m">How far away should we look for events? (metres)</label>
       <div class="range-row">
         <input id="radius_range" type="range" min="100" max="5000" step="100" value="{{ f.radius_m }}" aria-label="Watch radius slider" aria-controls="radius_m">
         <input id="radius_m" name="radius_m" type="number" min="100" max="5000" step="50" inputmode="numeric" autocomplete="off" value="{{ f.radius_m }}"{{ inv('radius_m') }}>
@@ -119,8 +119,8 @@
   </section>
 
   <section class="panel" id="revenue" aria-labelledby="revenue-h">
-    <h2 id="revenue-h"><i class="ri-money-euro-circle-line" aria-hidden="true"></i>Revenue Assumptions</h2>
-    <p class="hint panel-intro">Your own numbers. Footfall uses them to turn an event's impact into a percentage and an estimate in euro; they are not a forecast.</p>
+    <h2 id="revenue-h"><i class="ri-money-euro-circle-line" aria-hidden="true"></i>Your Numbers</h2>
+    <p class="hint panel-intro">Footfall uses these to estimate what an event could mean for your takings. They're your own estimates, not a prediction.</p>
     <div class="field-row">
       <div class="field">
         <label for="customers_per_hour">Usual customers per hour</label>
@@ -134,17 +134,17 @@
       </div>
     </div>
     <fieldset class="field">
-      <legend>Change in customers for each impact level (%)</legend>
+      <legend>How many more customers to expect, by effect size (%)</legend>
       <div class="uplift-row">
         {% for level in ["low", "medium", "high"] %}
         <label class="uplift imp-{{ level }}">
-          <span class="impact"><span class="meter" aria-hidden="true"><i></i><i></i><i></i></span>{{ level|capitalize }}</span>
+          <span class="impact"><span class="meter" aria-hidden="true"><i></i><i></i><i></i></span>{{ {"low": "Small", "medium": "Medium", "high": "Big"}[level] }} effect</span>
           <span class="uplift-input"><input name="uplift_{{ level }}" type="number" min="0" max="100" step="1" inputmode="numeric" autocomplete="off" value="{{ f['uplift_' ~ level] }}"{{ inv('uplift_' ~ level) }}><span aria-hidden="true">%</span></span>
           {{ err('uplift_' ~ level) }}
         </label>
         {% endfor %}
       </div>
-      <p class="hint">Applied as more customers, or fewer for events like road closures.</p>
+      <p class="hint">For events that keep people away, like road closures, we use the same numbers as fewer customers.</p>
     </fieldset>
   </section>
 
@@ -157,7 +157,7 @@
 <template id="tpl-special">{{ special_row("__K__", "__I__", {"date": "", "label": "", "mode": "closed", "start": "", "end": ""}) }}</template>
 
 <section class="panel" aria-labelledby="sup-h">
-  <h2 id="sup-h"><i class="ri-truck-line" aria-hidden="true"></i>Supplier Order Rules</h2>
+  <h2 id="sup-h"><i class="ri-truck-line" aria-hidden="true"></i>Supplier Order Deadlines</h2>
   <div class="table-wrap">
     <table class="table">
       <thead><tr><th scope="col">Supplier</th><th scope="col">Contact</th><th scope="col">Delivers</th><th scope="col">Order by</th></tr></thead>
@@ -173,29 +173,29 @@
       </tbody>
     </table>
   </div>
-  <p class="hint">Order rules are your own assumptions until a supplier confirms them.</p>
+  <p class="hint">These are our best understanding of your order deadlines. Check them with your suppliers.</p>
 </section>
 
 <section class="panel" aria-labelledby="data-h">
-  <h2 id="data-h"><i class="ri-database-2-line" aria-hidden="true"></i>Data</h2>
+  <h2 id="data-h"><i class="ri-database-2-line" aria-hidden="true"></i>Event Updates</h2>
   <dl class="facts">
-    <div><dt>Last update</dt><dd>{% if run %}<time datetime="{{ run.started_at|iso }}">{{ run.started_at|when }}</time> ({{ run.status }}){% else %}Never{% endif %}</dd></div>
-    <div><dt>Source</dt><dd>{{ "Sample data" if run and run.mode == "prepared" else "Live sources" if run else "—" }}</dd></div>
+    <div><dt>Last checked</dt><dd>{% if run %}<time datetime="{{ run.started_at|iso }}">{{ run.started_at|when }}</time> {% if run.status != "ok" %} (some listings couldn't be checked){% endif %}{% else %}Never{% endif %}</dd></div>
+    <div><dt>Source</dt><dd>{{ "Example week" if run and run.mode == "prepared" else "Event listings" if run else "—" }}</dd></div>
     <div><dt>Events found</dt><dd>{{ run.events_upserted if run else 0 }}</dd></div>
-    <div><dt>Monitored sources</dt><dd>{{ sources }}{% if run and run.mode == "live" %} ({{ run.sources_succeeded }} of {{ run.sources_attempted }} checked){% endif %}</dd></div>
+    <div><dt>Event listings we follow</dt><dd>{{ sources }}{% if run and run.mode == "live" %} ({{ run.sources_succeeded }} checked last time){% endif %}</dd></div>
   </dl>
-  {% if run and run.errors %}<details class="notice notice-warn"><summary>{{ run.errors|length }} refresh issue{{ "s" if run.errors|length != 1 }}</summary><ul>{% for e in run.errors %}<li>{{ e }}</li>{% endfor %}</ul></details>{% endif %}
+  {% if run and run.errors %}<details class="notice notice-warn"><summary>{{ run.errors|length }} event listing{{ "s" if run.errors|length != 1 }} couldn't be checked</summary><ul>{% for e in run.errors %}<li>{{ e }}</li>{% endfor %}</ul></details>{% endif %}
   <div class="data-actions">
     <form method="post" action="{{ url_for('refresh') }}" data-busy>
       <input type="hidden" name="mode" value="prepared"><input type="hidden" name="next" value="{{ url_for('business') }}">
-      <button class="btn btn-ghost"><i class="ri-inbox-archive-line" aria-hidden="true"></i>Load Sample Data</button>
+      <button class="btn btn-ghost"><i class="ri-inbox-archive-line" aria-hidden="true"></i>Load Example Week</button>
     </form>
     <form method="post" action="{{ url_for('refresh') }}" data-busy>
       <input type="hidden" name="mode" value="live"><input type="hidden" name="next" value="{{ url_for('business') }}">
-      <button class="btn btn-ghost" {% if not llm_enabled %}aria-describedby="live-why"{% endif %}><i class="ri-global-line" aria-hidden="true"></i>Check Live Sources</button>
+      <button class="btn btn-ghost" {% if not llm_enabled %}aria-describedby="live-why"{% endif %}><i class="ri-global-line" aria-hidden="true"></i>Check for New Events</button>
     </form>
   </div>
-  {% if not llm_enabled %}<p class="hint" id="live-why">AI extraction isn't configured (FOOTFALL_LLM), so a live check will record errors.</p>{% endif %}
+  {% if not llm_enabled %}<p class="hint" id="live-why">Automatic event checking isn't switched on yet, so this won't find new events.</p>{% endif %}
 </section>
 
 <script>

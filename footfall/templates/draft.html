@@ -34,7 +34,7 @@
       <textarea id="text" name="text" rows="7" autocomplete="off" spellcheck="true">{{ d.text }}</textarea>
       <div class="composer-foot">
         <span class="count" aria-live="off"><span id="count">{{ d.text|length }}</span> characters</span>
-        <span class="small" id="edit-status" role="status">Saving an edit clears approval.</span>
+        <span class="small" id="edit-status" role="status">If you change the message, you'll need to approve it again.</span>
         <button class="btn btn-ghost btn-sm"><i class="ri-save-3-line" aria-hidden="true"></i>Save Edits</button>
       </div>
     </form>
@@ -66,7 +66,7 @@
     dirty = true; count.textContent = text.value.length;
     document.getElementById('approve').disabled = true;
     document.querySelectorAll('.js-copy').forEach(b => b.disabled = true);
-    document.getElementById('edit-status').textContent = 'Unsaved changes. Save edits, then approve again.';
+    document.getElementById('edit-status').textContent = 'You’ve made changes. Save them, then approve the message again.';
     document.getElementById('copied').textContent = '';
   });
   document.getElementById('edit-form').addEventListener('submit', () => { dirty = false; });
@@ -78,7 +78,7 @@
       out.innerHTML = '<i class="ri-checkbox-circle-fill" aria-hidden="true"></i> Copied. Paste it into WhatsApp or email. Not sent.';
     } catch {
       text.select();
-      out.textContent = 'Copy blocked by the browser. The message is selected: press Ctrl+C or ⌘C.';
+      out.textContent = 'Your browser didn’t let us copy. The message is selected, so press Ctrl+C (or ⌘C on a Mac).';
     }
   }));
 </script>
