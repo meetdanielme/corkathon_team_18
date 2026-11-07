@@ -28,6 +28,11 @@
 - Prioritize open source, free plans and GitHub Student Developer Pack options. Prefer established project tooling. Consider free/student options before paid services or new hosted infrastructure.
 - Prefer rg/fd, bat, jq/yq, ruff, shellcheck/shfmt and the project's package manager when available; standard tools are acceptable fallbacks.
 
+## Product copy
+
+- Use realistic, everyday product language throughout the website and app. Avoid labels such as “fictional”, “sample”, “demo”, or similar placeholder wording in customer-facing copy, names and messages.
+- Describe stored records as saved events and source refreshes as source refreshes. Keep provenance and uncertainty accurate; do not imply saved records or supplier assumptions have been independently verified. Keep technical fixture terminology in internal documentation and metadata.
+
 ## Data and delivery
 
 - Keep context/, personal contact details, the full team roster, credentials and .env files out of Git. Never commit API keys; provide placeholder-only .env.example if needed on the day.

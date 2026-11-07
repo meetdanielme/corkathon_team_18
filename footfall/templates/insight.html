@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% from "_timeline.html" import timeline %}
 {% from "_bits.html" import effect, impact, confidence %}
-{% block title %}{{ i.title }} · Footfall{% endblock %}
+{% block title %}{{ i.title|short }} · Footfall{% endblock %}
 {% block head %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 {% endblock %}
@@ -14,7 +14,7 @@
 <header class="ihead">
   <span class="cat-badge" aria-hidden="true"><i class="{{ i.category|category_icon }}"></i></span>
   <div>
-    <h1>{{ i.title }}</h1>
+    <h1>{{ i.title|short }}</h1>
     <ul class="meta-chips">
       <li><i class="ri-calendar-event-line" aria-hidden="true"></i>{{ day }}</li>
       <li><i class="ri-time-line" aria-hidden="true"></i>{{ hours }}</li>
@@ -119,12 +119,14 @@
   {% for c in i.conflicts %}<p class="warn"><i class="ri-error-warning-fill" aria-hidden="true"></i>{{ c }}</p>{% endfor %}
   {% for s in i.sources %}
   <figure class="source">
+    {% if i.data_mode != "prepared" %}
     {% if s.excerpt %}<blockquote>{{ s.excerpt }}</blockquote>{% endif %}
     <figcaption>
       <a href="{{ s.url }}" rel="noopener" target="_blank"><i class="ri-links-line" aria-hidden="true"></i>{{ s.url.split("//")[-1].split("/")[0] }}</a>
       <span>Checked <time datetime="{{ s.retrieved_at|iso }}" title="{{ s.retrieved_at|when }}">{{ s.retrieved_at|ago }}</time></span>
       {% if s.stale %}<span class="badge-stale"><i class="ri-cloud-off-line" aria-hidden="true"></i>We couldn't check this page recently</span>{% endif %}
     </figcaption>
+    {% else %}<figcaption>Saved event record. Check the organiser’s latest information before acting.</figcaption>{% endif %}
   </figure>
   {% endfor %}
 </section>
