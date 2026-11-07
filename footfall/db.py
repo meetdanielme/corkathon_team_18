@@ -20,9 +20,11 @@ def connect(path: str) -> sqlite3.Connection:
     if url := os.getenv("TURSO_DATABASE_URL"):
         import libsql
         from .remote import Connection
-        con = Connection(libsql.connect(url, auth_token=os.environ["TURSO_AUTH_TOKEN"]))
-        con.execute("PRAGMA foreign_keys = ON")
-        return con
+        def fresh_connection():
+            raw = libsql.connect(url, auth_token=os.environ["TURSO_AUTH_TOKEN"])
+            raw.execute("PRAGMA foreign_keys = ON")
+            return raw
+        return Connection(fresh_connection(), reconnect=fresh_connection)
     if os.getenv("VERCEL"):
         raise RuntimeError("Hosted deployment requires TURSO_DATABASE_URL and TURSO_AUTH_TOKEN")
     con = sqlite3.connect(path)

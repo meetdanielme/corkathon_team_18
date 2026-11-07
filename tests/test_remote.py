@@ -29,3 +29,32 @@ def test_allowance_is_shared_and_stops_before_sdk_call(tmp_path, monkeypatch):
         c.execute('INSERT INTO ai_allowance VALUES (1,1)')
     with pytest.raises(ValueError, match='allowance reached'):
         LLM('azure').complete_json('JSON', 'ping')
+
+
+def test_reconnect_after_network_preserves_committed_records(tmp_path):
+    import libsql
+    path = str(tmp_path / 'reconnect.sqlite3')
+    factory = lambda: libsql.connect(path)
+    with Connection(factory(), reconnect=factory) as c:
+        c.execute('CREATE TABLE sample (value TEXT)')
+        c.execute("INSERT INTO sample VALUES ('persisted')")
+        c.commit()
+        c.reconnect()
+        assert c.execute('SELECT value FROM sample').fetchone()[0] == 'persisted'
+
+
+def test_refresh_renews_connection_after_each_model_call(con):
+    from footfall.scout.refresh import run_live
+    from .conftest import FakeLLM, NOW
+    calls = []
+    class Hosted:
+        def __getattr__(self, key):
+            return getattr(con, key)
+        def reconnect(self):
+            assert not con.in_transaction
+            calls.append('reconnected')
+    count = len(db.get_sources(con))
+    run = run_live(Hosted(), FakeLLM([{'events': [], 'uncertainties': []}] * count),
+                   at=NOW, fetcher=lambda url: (url, 'empty page'))
+    assert run['status'] == 'ok'
+    assert len(calls) == count
