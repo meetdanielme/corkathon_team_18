@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import sqlite3
 from datetime import datetime, timedelta
@@ -15,6 +16,14 @@ SEED = Path(__file__).parent / "seed"
 
 
 def connect(path: str) -> sqlite3.Connection:
+    if url := os.getenv("TURSO_DATABASE_URL"):
+        import libsql
+        from .remote import Connection
+        con = Connection(libsql.connect(url, auth_token=os.environ["TURSO_AUTH_TOKEN"]))
+        con.execute("PRAGMA foreign_keys = ON")
+        return con
+    if os.getenv("VERCEL"):
+        raise RuntimeError("Hosted deployment requires TURSO_DATABASE_URL and TURSO_AUTH_TOKEN")
     con = sqlite3.connect(path)
     con.row_factory = sqlite3.Row
     con.execute("PRAGMA foreign_keys = ON")

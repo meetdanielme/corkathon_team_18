@@ -128,3 +128,13 @@ def test_live_and_prepared_events_stay_distinguishable(con):
     assert modes.get("prepared", 0) >= 1 and modes.get("live", 0) == 1
     # A live run must not relabel or drop the prepared demo rows.
     assert sorted(modes) == ["live", "prepared"]
+
+
+def test_call_limit_is_per_refresh_on_a_reused_worker(con):
+    llm = FakeLLM([{'events': [], 'uncertainties': []}] * 2)
+    for _ in range(2):
+        run = rf.run_live(con, llm, at=NOW, fetcher=lambda url: (url, PAGE),
+                          limits={'max_sources': 1, 'max_llm_calls': 1})
+        assert run['sources_succeeded'] == 1
+        assert run['llm_calls'] == 1
+    assert llm.calls == 2

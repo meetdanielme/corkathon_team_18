@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "flask",
+  "functions": {
+    "app.py": {
+      "maxDuration": 180
+    }
+  },
+  "buildCommand": "python scripts/prepare_vercel.py"
+}

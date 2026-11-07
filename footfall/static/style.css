@@ -380,7 +380,10 @@ select { min-height:44px; padding:10px 12px; border:1px solid var(--line-strong)
   .dcard-go { display:none; }
 }
 @media (max-width:640px) {
-  .top { padding:10px 16px; }
+  .top { padding:10px 16px; display:grid; grid-template-columns:1fr auto; gap:8px; }
+  .top-right { display:contents; }
+  .top .status { grid-column:1 / -1; grid-row:2; }
+  .top .biz-link { grid-column:2; grid-row:1; }
   .biz-link span { display:none; }
   .status-verb.is-ok { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
   .status-text { overflow:visible; }
