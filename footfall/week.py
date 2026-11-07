@@ -7,8 +7,10 @@ from __future__ import annotations
 import re
 from datetime import datetime, timedelta
 
+from .domain import hours as hours_mod
 from .domain.insights import HORIZON_DAYS, demand_window
-from .domain.timeutil import TZ, at, parse_dt, weekday
+from .domain.timeutil import TZ, at, parse_dt
+from .present import countdown
 
 AXIS_START_H, AXIS_END_H = 6, 24
 TICKS = list(range(AXIS_START_H, AXIS_END_H + 1, 2))
@@ -16,6 +18,21 @@ TICKS = list(range(AXIS_START_H, AXIS_END_H + 1, 2))
 
 def short_title(title: str) -> str:
     return re.sub(r"\s*\((fictional )?demo\)\s*$", "", title)
+
+
+def short_reason(reason: str) -> str:
+    """A few words for the timeline bar; the full reason stays in the bar's title and accessible name."""
+    r = reason.lower()
+    if "overlap" in r:
+        return "Outside hours"
+    if "radius" in r:
+        m = re.match(r"(\d+) m away", reason)
+        return f"{int(m.group(1)) / 1000:.1f} km away" if m else "Too far away"
+    if "private" in r or "restricted" in r:
+        return "Private event"
+    if "closed" in r:
+        return "Café closed"
+    return "Filtered out"
 
 
 def _pct(dt: datetime, day) -> float:
@@ -43,18 +60,18 @@ def _assign_lanes(bars: list[dict]) -> int:
     return max(1, len(lanes))
 
 
-def build_week(business: dict, result: dict, events: list[dict], now: datetime, only_day: str | None = None) -> dict:
+def build_week(business: dict, result: dict, events: list[dict], now: datetime, only_day: str | None = None,
+               drafts: dict | None = None) -> dict:
     by_id = {e["id"]: e for e in events}
     days = []
     for n in range(HORIZON_DAYS):
         day = (now.astimezone(TZ) + timedelta(days=n)).date()
         if only_day and day.isoformat() != only_day:
             continue
-        is_open = weekday(day) in business["open_days"]
+        ranges, special = hours_mod.ranges_for(business, day)
         row = {"date": day.isoformat(), "weekday": f"{day:%a}", "daynum": day.day, "month": f"{day:%b}",
-               "today": n == 0, "open": is_open, "bars": [], "cutoffs": []}
-        if is_open:
-            row["hours"] = _span(day, at(day, business["opens"]), at(day, business["closes"]))
+               "today": n == 0, "open": bool(ranges), "special": special, "bars": [], "cutoffs": [],
+               "hours": [_span(day, o0, o1) for o0, o1 in hours_mod.windows(business, day)]}
         for i in result["insights"]:
             if i.day == row["date"]:
                 bar = _span(day, parse_dt(i.window_start), parse_dt(i.window_end))
@@ -66,7 +83,7 @@ def build_week(business: dict, result: dict, events: list[dict], now: datetime, 
             if start and start.astimezone(TZ).date() == day:
                 w0, w1, _ = demand_window(start, parse_dt(ev.get("end_at")))
                 bar = _span(day, w0, w1)
-                bar.update(kind="excluded", title=short_title(x.title), reason=x.reason)
+                bar.update(kind="excluded", title=short_title(x.title), reason=x.reason, why=short_reason(x.reason))
                 row["bars"].append(bar)
         seen = set()
         for i in result["insights"]:
@@ -76,9 +93,10 @@ def build_week(business: dict, result: dict, events: list[dict], now: datetime, 
             cutoff = parse_dt(d["cutoff"])
             if cutoff.astimezone(TZ).date() == day:
                 seen.add((d["supplier"], d["cutoff"]))
+                cd = countdown(d, now, (drafts or {}).get(i.id))
                 row["cutoffs"].append({"left": round(_pct(cutoff, day), 2), "supplier": d["supplier"],
                                        "time": f"{cutoff.astimezone(TZ):%H:%M}", "for_day": d["delivery_day"],
-                                       "status": d["status"]})
+                                       "status": d["status"], "level": cd["level"], "icon": cd["icon"]})
         row["lanes"] = _assign_lanes(row["bars"])
         days.append(row)
     ticks = [{"label": f"{h:02d}:00" if h < 24 else "24:00",

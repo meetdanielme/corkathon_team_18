@@ -13,7 +13,20 @@ CREATE TABLE IF NOT EXISTS businesses (
   radius_m INTEGER NOT NULL,
   sales_baseline TEXT,              -- optional JSON, owner-supplied
   avg_spend REAL,                   -- optional, owner-supplied
-  demo_label TEXT
+  demo_label TEXT,
+  address TEXT,                     -- main location's address (mirrors locations position 0)
+  hours TEXT,                       -- JSON weekly ranges, see footfall/domain/hours.py
+  special_hours TEXT                -- JSON dated exceptions (holidays)
+);
+
+CREATE TABLE IF NOT EXISTS locations (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  business_id TEXT NOT NULL REFERENCES businesses(id),
+  position INTEGER NOT NULL,        -- 0 = main location, mirrored into businesses.address/lat/lon
+  name TEXT,                        -- optional label, e.g. "Washington St"
+  address TEXT NOT NULL,
+  lat REAL NOT NULL,                -- looked up from the address, never typed by the owner
+  lon REAL NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS supplier_constraints (

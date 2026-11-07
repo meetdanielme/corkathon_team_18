@@ -1,66 +1,82 @@
 {% extends "base.html" %}
 {% from "_timeline.html" import timeline %}
+{% from "_bits.html" import effect, impact, confidence, status %}
 {% block content %}
-<section class="intro">
-  <div>
-    <h1>The week ahead</h1>
-    <p class="lede">{{ business.name }}, open {{ business.opens }} to {{ business.closes }}. Watching events within {{ business.radius_m }} m.</p>
-    {% if "prepared" in modes %}<p class="data-note">Showing prepared data: every event here is fictional, for the demo.</p>
-    {% elif modes %}<p class="data-note data-live">Showing live data from saved sources.</p>
-    {% else %}<p class="data-note">No events loaded yet. Load the prepared data or refresh from sources.</p>{% endif %}
+<section class="hero">
+  <div class="hero-main">
+    <div>
+      <h1>The Week Ahead</h1>
+      {% set first, last = week.days[0], week.days[-1] %}
+      <p class="hero-dates"><i class="ri-calendar-2-line" aria-hidden="true"></i>{{ first.weekday }} {{ first.daynum }}{{ " " ~ first.month if first.month != last.month }} – {{ last.weekday }} {{ last.daynum }} {{ last.month }}</p>
+    </div>
+    <ul class="stats">
+      <li class="stat stat-events"><i class="ri-calendar-event-fill" aria-hidden="true"></i><strong>{{ insights|length }}</strong><span>events nearby</span></li>
+      <li class="stat {{ 'stat-warn' if attention else 'stat-ok' }}"><i class="{{ 'ri-alarm-warning-fill' if attention else 'ri-truck-line' }}" aria-hidden="true"></i><strong>{{ attention if attention else cutoffs }}</strong><span>{{ "orders due soon" if attention else "orders to plan" }}</span></li>
+      <li class="stat stat-ok"><i class="ri-checkbox-circle-fill" aria-hidden="true"></i><strong>{{ done }}</strong><span>approved</span></li>
+      {% if review %}<li class="stat stat-warn"><i class="ri-question-line" aria-hidden="true"></i><strong>{{ review|length }}</strong><span>to check</span></li>{% endif %}
+    </ul>
   </div>
-  <div class="refresh">
-    <form method="post" action="{{ url_for('refresh') }}">
-      <button name="mode" value="prepared">Load prepared data</button>
-      <button name="mode" value="live" class="secondary" {% if not llm_enabled %}title="FOOTFALL_LLM not configured; live extraction will record errors"{% endif %}>Refresh from sources</button>
-    </form>
-    {% if run %}
-    <p>Last refreshed {{ run.started_at|when }} using {{ run.mode }} data: {{ run.status }}, {{ run.events_upserted }} events from {{ run.sources_succeeded }} of {{ run.sources_attempted }} sources.</p>
-    {% if run.errors %}<details><summary>{{ run.errors|length }} refresh issue(s)</summary><ul>{% for e in run.errors %}<li>{{ e }}</li>{% endfor %}</ul></details>{% endif %}
-    {% endif %}
-    <p>An empty week means nothing turned up in the monitored sources, not that nothing is happening.</p>
-  </div>
+  <aside class="biz-card" aria-label="Your business">
+    <div class="biz-head">
+      <span class="biz-avatar" aria-hidden="true"><i class="ri-store-2-fill"></i></span>
+      <strong>{{ business.name }}</strong>
+    </div>
+    <dl>
+      <div class="biz-row">
+        <dt><i class="ri-map-pin-2-line" aria-hidden="true"></i><span class="visually-hidden">Locations</span></dt>
+        <dd>
+          {% for loc in business.locations %}<span class="biz-line">{% if loc.name %}<b>{{ loc.name }}</b> {% endif %}{{ loc.address }}</span>{% endfor %}
+          <span>Watching events within {{ business.radius_m|dist }}{{ " of each" if business.locations|length > 1 }}</span>
+        </dd>
+        <a href="{{ url_for('business') }}#location">Change<span class="visually-hidden"> locations and radius</span></a>
+      </div>
+      <div class="biz-row">
+        <dt><i class="ri-time-line" aria-hidden="true"></i><span class="visually-hidden">Opening hours</span></dt>
+        <dd>
+          {% for days, rng in hours_summary %}<span class="biz-line"><b>{{ days }}</b> {{ rng }}</span>{% endfor %}
+          {% if next_special %}<span class="biz-special"><i class="ri-calendar-close-line" aria-hidden="true"></i>{{ next_special.label }}: {{ next_special.ranges|map("join", "–")|join(", ") if next_special.ranges else "Closed" }}</span>{% endif %}
+        </dd>
+        <a href="{{ url_for('business') }}#hours">Change<span class="visually-hidden"> opening hours</span></a>
+      </div>
+    </dl>
+  </aside>
 </section>
+
+{% if run and run.errors %}
+<details class="notice notice-warn"><summary><i class="ri-error-warning-line" aria-hidden="true"></i>{{ run.errors|length }} source{{ "s" if run.errors|length != 1 }} could not be checked</summary><ul>{% for e in run.errors %}<li>{{ e }}</li>{% endfor %}</ul></details>
+{% endif %}
 
 {{ timeline(week) }}
 
-<section class="decisions">
-  <h2>Decisions due</h2>
-  {% for i in insights %}
-  <a class="decision tl-{{ i.direction }}" href="{{ url_for('insight', iid=i.id) }}">
-    <div class="decision-when">
-      {% if i.action_deadline %}
-      <span class="small">Order by</span>
-      <strong class="mark-{{ i.action_deadline.status }}">{{ i.action_deadline.cutoff_label }}</strong>
-      <span class="small">{{ i.action_deadline.supplier }}, {{ i.action_deadline.status }}</span>
-      {% else %}
-      <span class="small">No supplier cutoff</span>
-      {% endif %}
+<section class="decisions" aria-labelledby="decisions-h">
+  <h2 id="decisions-h">Decisions Due</h2>
+  {% for c in cards %}{% set i = c.i %}
+  <article class="dcard lvl-{{ c.cd.level }}">
+    {{ status(c.cd) }}
+    <div class="dcard-body">
+      <h3><i class="{{ i.category|category_icon }}" aria-hidden="true"></i><a class="stretch" href="{{ url_for('insight', iid=i.id) }}">{{ i.title }}</a></h3>
+      <p class="meta"><span><i class="ri-time-line" aria-hidden="true"></i>{{ i.window_label }}</span><span><i class="ri-map-pin-range-line" aria-hidden="true"></i>{{ i.distance_m|dist }} away</span></p>
+      {% if i.conflicts %}<p class="warn"><i class="ri-error-warning-fill" aria-hidden="true"></i>Overlaps a signal pointing the other way</p>{% endif %}
     </div>
-    <div class="decision-what">
-      <strong class="decision-title">{{ i.title }}<span class="data-tag">{{ i.data_mode }}</span></strong>
-      <span>{{ i.window_label }}, {{ i.distance_m }} m away</span>
-      {% if i.conflicts %}<span class="conflict">Overlaps a signal pointing the other way</span>{% endif %}
+    <div class="dcard-measures">
+      {{ effect(i.direction) }}
+      {{ impact(i.impact) }}
+      {{ confidence(i.confidence) }}
     </div>
-    <ul class="measures">
-      <li>Expected <b>{{ i.direction }}</b></li>
-      <li class="impact-{{ i.impact }}"><span class="pips" aria-hidden="true"><i></i><i></i><i></i></span>Impact <b>{{ i.impact }}</b></li>
-      <li>Confidence <b>{{ i.confidence }}</b></li>
-    </ul>
-  </a>
-  {% else %}
-  <p class="empty">No relevant events in the monitored sources for the next 7 days.</p>
+    <i class="ri-arrow-right-s-line dcard-go" aria-hidden="true"></i>
+  </article>
   {% endfor %}
-</section>
-
-<section class="aside-lists">
-  <div>
-    <h2>Filtered out</h2>
-    <dl>{% for e in excluded %}<dt>{{ e.title }}</dt><dd>{{ e.reason }}</dd>{% else %}<dt>Nothing filtered.</dt>{% endfor %}</dl>
-  </div>
-  <div>
-    <h2>Needs checking</h2>
-    <dl>{% for r in review %}<dt>{{ r.title }}</dt><dd>Missing {{ r.missing|join(", ") }}</dd>{% else %}<dt>Nothing to check.</dt>{% endfor %}</dl>
-  </div>
+  {% for r in review %}
+  <article class="dcard lvl-check">
+    <span class="att lvl-check"><i class="ri-question-line" aria-hidden="true"></i><span><strong>Needs checking</strong><span>Not on the timeline yet</span></span></span>
+    <div class="dcard-body">
+      <h3><i class="ri-calendar-close-line" aria-hidden="true"></i>{{ r.title }}</h3>
+      <p class="meta"><span><i class="ri-error-warning-line" aria-hidden="true"></i>Missing {{ r.missing|join(" and ") }}</span></p>
+    </div>
+  </article>
+  {% endfor %}
+  {% if not cards and not review %}
+  <p class="empty"><i class="ri-calendar-check-line" aria-hidden="true"></i>Nothing in the monitored sources affects the next 7 days. That doesn't mean nothing is happening nearby.</p>
+  {% endif %}
 </section>
 {% endblock %}
