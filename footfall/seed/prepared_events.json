@@ -1,10 +1,10 @@
 [
  {
   "event": {
-   "title": "Graduation ceremony (fictional demo)",
+   "title": "Graduation ceremony",
    "start_at": "2026-11-12T11:00:00+00:00",
    "end_at": "2026-11-12T13:00:00+00:00",
-   "venue_name": "University campus hall (demo)",
+   "venue_name": "University campus hall",
    "lat": 51.8935,
    "lon": -8.4919,
    "category": "conferring",
@@ -18,10 +18,10 @@
  },
  {
   "event": {
-   "title": "Street market (fictional demo)",
+   "title": "Street market",
    "start_at": "2026-11-13T10:00:00+00:00",
    "end_at": null,
-   "venue_name": "Washington Street east (demo)",
+   "venue_name": "Washington Street east",
    "lat": 51.8978,
    "lon": -8.477,
    "category": "market",
@@ -35,10 +35,10 @@
  },
  {
   "event": {
-   "title": "Road closure for filming (fictional demo)",
+   "title": "Road closure for filming",
    "start_at": "2026-11-13T08:00:00+00:00",
    "end_at": "2026-11-13T12:00:00+00:00",
-   "venue_name": "Washington Street (demo)",
+   "venue_name": "Washington Street",
    "lat": 51.8979,
    "lon": -8.4805,
    "category": "road_closure",
@@ -52,10 +52,10 @@
  },
  {
   "event": {
-   "title": "Evening concert (fictional demo)",
+   "title": "Evening concert",
    "start_at": "2026-11-11T20:00:00+00:00",
    "end_at": "2026-11-11T22:30:00+00:00",
-   "venue_name": "Concert hall (demo)",
+   "venue_name": "Concert hall",
    "lat": 51.8985,
    "lon": -8.479,
    "category": "concert",
@@ -69,10 +69,10 @@
  },
  {
   "event": {
-   "title": "Suburban festival (fictional demo)",
+   "title": "Suburban festival",
    "start_at": "2026-11-10T12:00:00+00:00",
    "end_at": "2026-11-10T17:00:00+00:00",
-   "venue_name": "Suburb park (demo)",
+   "venue_name": "Suburb park",
    "lat": 51.8879,
    "lon": -8.5891,
    "category": "festival",
@@ -86,10 +86,10 @@
  },
  {
   "event": {
-   "title": "Private function (fictional demo)",
+   "title": "Private function",
    "start_at": "2026-11-09T12:00:00+00:00",
    "end_at": "2026-11-09T15:00:00+00:00",
-   "venue_name": "Hotel function room (demo)",
+   "venue_name": "Hotel function room",
    "lat": 51.898,
    "lon": -8.4795,
    "category": "other",
@@ -103,10 +103,10 @@
  },
  {
   "event": {
-   "title": "Community talk, date to be confirmed (fictional demo)",
+   "title": "Community talk",
    "start_at": null,
    "end_at": null,
-   "venue_name": "Community hall (demo)",
+   "venue_name": "Community hall",
    "lat": null,
    "lon": null,
    "category": "community",

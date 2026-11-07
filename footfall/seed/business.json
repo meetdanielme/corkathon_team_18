@@ -1,13 +1,20 @@
 {
   "id": "brids-kitchen",
-  "name": "Bríd's Kitchen (fictional demo café)",
+  "name": "Bríd's Kitchen",
+  "address": "Washington Street, Cork",
+  "locations": [{"name": "Washington St", "address": "Washington Street, Cork", "lat": 51.8977, "lon": -8.4800}],
   "lat": 51.8977,
   "lon": -8.4800,
   "timezone": "Europe/Dublin",
   "opens": "08:00",
   "closes": "16:00",
   "open_days": ["mon", "tue", "wed", "thu", "fri", "sat"],
+  "hours": {"mon": [["08:00", "16:00"]], "tue": [["08:00", "16:00"]], "wed": [["08:00", "16:00"]],
+            "thu": [["08:00", "16:00"]], "fri": [["08:00", "16:00"]], "sat": [["08:00", "16:00"]], "sun": []},
+  "special_hours": [{"date": "2026-12-25", "label": "Christmas Day", "ranges": []},
+                    {"date": "2026-12-26", "label": "St Stephen's Day", "ranges": []}],
   "radius_m": 1000,
-  "avg_spend": null,
+  "avg_spend": 7.5,
+  "sales_baseline": {"customers_per_hour": 12, "uplift_pct": {"low": 5, "medium": 10, "high": 20}},
   "demo_label": "Fictional business for the Corkathon demo"
 }

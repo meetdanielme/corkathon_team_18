@@ -1,5 +1,7 @@
 # Footfall - prepared journey design (issue #12)
 
+> Superseded on 7 November 2026 by the attention-colour redesign. See [design-review-2026-11-07.md](design-review-2026-11-07.md).
+
 Layout and visual rules for the three screens, implemented in `footfall/templates/` and `footfall/static/style.css`. Produced with the `frontend-design` skill, replacing the first pass that read as templated.
 
 ## Concept

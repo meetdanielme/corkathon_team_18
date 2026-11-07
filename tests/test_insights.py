@@ -34,7 +34,7 @@ def test_graduation_window_impact_and_deadline(con):
     g = by_title(build(con)["insights"], "Graduation")
     assert g.window_label == "Thu 12 Nov 10:00-14:00"
     assert g.impact == "medium" and g.impact_points == {"distance": 1, "overlap": 2, "attendance": 0, "total": 3}
-    assert g.confidence == "medium" and any("Prepared" in r for r in g.confidence_reasons)
+    assert g.confidence == "medium" and any("Sample data" in r for r in g.confidence_reasons)
     assert g.action_deadline["supplier"] == "Bakery"
     assert g.action_deadline["cutoff"] == "2026-11-11T16:00:00+00:00"
     assert g.action_deadline["status"] == "upcoming"
