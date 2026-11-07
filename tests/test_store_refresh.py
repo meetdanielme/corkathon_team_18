@@ -42,7 +42,7 @@ def test_live_refresh_validates_persists_and_records_failure(con):
     source_count = len(db.get_sources(con))
     run = rf.run_live(con, llm, at=NOW, fetcher=fetcher_ok)
     assert run["status"] == "partial" and run["sources_attempted"] == source_count and run["sources_succeeded"] == 1
-    assert any("excerpt not found" in e for e in run["errors"])
+    assert not any("excerpt not found" in e for e in run["errors"])
     assert any("simulated outage" in e for e in run["errors"])
     evs = db.get_events(con, NOW)
     assert [e["title"] for e in evs] == ["Recomposed By Max Richter: Vivaldi: The Four Seasons"]
@@ -83,6 +83,8 @@ def test_validate_rejects_out_of_window_and_unverbatim():
     assert ok and ok["start_at"].startswith("2026-11-12")
     bad, why = validate_finding({**FINDING, "start_at": "2027-01-01T10:00:00"}, PAGE, NOW, NOW + timedelta(days=7))
     assert bad is None and "outside" in why
+    bad, why = validate_finding({**FINDING, "excerpt": "not on the page"}, PAGE, NOW, NOW + timedelta(days=7))
+    assert bad is None and "verbatim" in why
 
 
 @pytest.mark.parametrize("url", ["http://127.0.0.1/", "http://localhost/", "file:///etc/passwd",
@@ -158,6 +160,16 @@ def test_outside_window_is_successful_source_check_not_warning(con):
     assert run['events_upserted'] == 0
     assert run['errors'] == []
     assert all(s['status'] == 'ok' and s['last_success_at'] for s in db.get_sources(con))
+
+
+def test_unverbatim_excerpt_is_dropped_without_warning(con):
+    count = len(db.get_sources(con))
+    invented = {**FINDING, 'title': 'The Devils 55th Anniversary', 'excerpt': 'not on the page'}
+    model = FakeLLM([{'events': [invented], 'uncertainties': []}] * count)
+    run = rf.run_live(con, model, at=NOW, fetcher=lambda url: (url, PAGE))
+    assert run['status'] == 'ok' and run['errors'] == []
+    assert run['events_upserted'] == 0
+    assert con.execute("SELECT COUNT(*) FROM events WHERE data_mode='live'").fetchone()[0] == 0
 
 
 def test_long_event_ids_include_date_and_venue_without_prefix_collisions(con):
