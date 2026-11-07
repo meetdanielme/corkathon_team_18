@@ -46,3 +46,22 @@ def test_ambiguous_missing_venue_is_not_auto_merged(con):
     missing = next(e for e in events if e["venue_name"] is None)
     assert missing["possible_duplicate_of"]
     assert any("another listing" in reason for reason in confidence_for(missing)[1])
+
+
+def test_conflicting_same_day_listings_are_flagged_without_merging(con):
+    first, _ = save(con, listing())
+    other = listing(venue_name="Cork")
+    other["start_at"] = "2026-11-10T12:00:00+00:00"
+    second, created = save(con, other)
+    assert created and first != second
+    events = db.get_events(con, NOW)
+    assert len(events) == 2
+    assert all(e["possible_duplicate_of"] for e in events)
+
+
+def test_same_title_on_different_days_is_not_flagged(con):
+    save(con, listing())
+    other = listing()
+    other["start_at"] = "2026-11-11T11:00:00+00:00"
+    save(con, other)
+    assert all(not e["possible_duplicate_of"] for e in db.get_events(con, NOW))
