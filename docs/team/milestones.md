@@ -20,7 +20,7 @@ organisers).
 
 - **Rajeev**
   - [ ] Push the starter to your branch; open a PR to `main`.
-  - [ ] Run `pip install -r requirements.txt && pytest -q` and confirm 26 passed.
+  - [ ] Run `pip install -r requirements.txt && pytest -q` and confirm 32 passed.
   - [ ] Run the app and load prepared data; share a screenshot in the channel.
 - **Daniel**
   - [ ] Create the GitHub Issues from the backlog at the bottom of this file and assign owners.
@@ -34,6 +34,12 @@ organisers).
 - [ ] `pytest -q` passes on at least one teammate's machine.
 - [ ] The radius, impact mapping and ownership are agreed in writing.
 - [ ] Azure works or doesn't, and the answer is known. If it doesn't, the decision is made: Claude fallback, or prepared-only.
+
+> **Azure answer (7 Nov, Rajeev):** no Azure credentials were available on the build machine, so the decision
+> is **prepared-only**. `python -m scripts.check_llm` reaches the Azure code path and fails with a connection
+> error against a placeholder endpoint, so the adapter itself is wired correctly and only needs real values.
+> Consequences: Task 10's live extraction and Task 11's LLM rephrase stay off, and drafts come from the
+> template. The Claude fallback was not used; spending that credit is still Daniel's call.
 
 ---
 
@@ -150,7 +156,7 @@ organisers).
 
 | # | Title | Owner | Done when |
 |---|---|---|---|
-| 1 | Starter runs on all machines | Rajeev | `pytest -q` shows 26 passed on 2 machines |
+| 1 | Starter runs on all machines | Rajeev | `pytest -q` shows 32 passed on 2 machines |
 | 2 | Azure adapter verified | Rajeev + Daniel | `LLM('azure').complete_json(...)` returns a dict |
 | 3 | Real sources directory | Olan | ≥ 4 verified rows in `sources.json`, no EXAMPLE rows |
 | 4 | Visual design for 3 screens | Daniel | `style.css` replaced; screenshot posted |
