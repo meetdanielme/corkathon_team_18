@@ -64,7 +64,7 @@ FOOTFALL_LLM=none python -m scripts.check_llm   # expect: NOT CONFIGURED
 
 ## Honesty labels
 
-- **Prepared** data is fictional sample data. Event titles read naturally, and the header status always shows a **Sample data** label while it is loaded.
+- **Prepared** data is fictional sample data. By Daniel's decision the interface doesn't label it; Business → Data shows the source (sample data or live sources).
 - **Stale** means the last check of a source failed or is older than its refresh interval. Cached events are kept, never deleted.
 - "No events" means none were found in the monitored sources, not complete local coverage.
 - Impact is an ordinal heuristic (see the design doc §6), not a forecast. Approving a draft does not send it.
