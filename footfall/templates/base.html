@@ -4,10 +4,16 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Footfall{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;700;800&display=swap">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-  <header class="top"><a href="{{ url_for('index') }}" class="brand">Footfall</a></header>
+  <header class="top">
+    <a href="{{ url_for('index') }}" class="wordmark">Footfall</a>
+    <span class="top-note">For independent cafés in Cork</span>
+  </header>
   <main>
     {% with msgs = get_flashed_messages() %}{% for m in msgs %}<p class="flash" role="status">{{ m }}</p>{% endfor %}{% endwith %}
     {% block content %}{% endblock %}

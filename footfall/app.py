@@ -15,6 +15,7 @@ from .domain.timeutil import fmt, now, parse_dt
 from .llm import LLM
 from .scout import refresh as refresh_mod
 from . import weather as weather_mod
+from .week import build_week, short_title
 
 
 def create_app(db_path: str | None = None, clock=None, llm: LLM | None = None, fetcher=None,
@@ -46,6 +47,8 @@ def create_app(db_path: str | None = None, clock=None, llm: LLM | None = None, f
         dt = parse_dt(value) if isinstance(value, str) else value
         return fmt(dt) if dt else "unknown"
 
+    app.add_template_filter(short_title, "short")
+
     def compute():
         c = con()
         b = db.get_business(c)
@@ -66,8 +69,9 @@ def create_app(db_path: str | None = None, clock=None, llm: LLM | None = None, f
         b, result = compute()
         c = con()
         modes = {r["data_mode"] for r in c.execute("SELECT DISTINCT data_mode FROM events").fetchall()}
+        week = build_week(b, result, db.get_events(c, clock()), clock())
         return render_template("index.html", business=b, run=db.last_run(c), modes=modes, now=clock(),
-                               llm_enabled=model.enabled, **result)
+                               llm_enabled=model.enabled, week=week, **result)
 
     @app.post("/refresh")
     def refresh():
@@ -93,8 +97,10 @@ def create_app(db_path: str | None = None, clock=None, llm: LLM | None = None, f
         i = find_insight(iid)
         c = con()
         existing = c.execute("SELECT * FROM drafts WHERE insight_id=? ORDER BY id DESC LIMIT 1", (iid,)).fetchone()
+        b, result = compute()
+        week = build_week(b, result, db.get_events(c, clock()), clock(), only_day=i.day)
         return render_template("insight.html", i=i, draft=dict(existing) if existing else None,
-                               business=db.get_business(c))
+                               business=b, week=week)
 
     @app.post("/insights/<path:iid>/draft")
     def make_draft(iid):
