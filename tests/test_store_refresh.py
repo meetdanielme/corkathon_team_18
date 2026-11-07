@@ -82,3 +82,49 @@ def test_validate_rejects_out_of_window_and_unverbatim():
 def test_fetch_blocks_non_public(url):
     with pytest.raises(FetchError):
         check_public(url)
+
+
+def _clean_finding():
+    """One valid finding, no invented second event, so a run has no expected errors."""
+    return {"events": [FINDING], "uncertainties": []}
+
+
+def test_repeat_live_refresh_creates_no_duplicate_events_or_evidence(con):
+    """Gate M2: a repeat refresh updates records without visible duplicates."""
+    first = rf.run_live(con, FakeLLM([_clean_finding()]), at=NOW, fetcher=fetcher_ok)
+    events_1 = con.execute("SELECT COUNT(*) FROM events WHERE data_mode='live'").fetchone()[0]
+    evidence_1 = con.execute("SELECT COUNT(*) FROM event_evidence").fetchone()[0]
+    assert first["events_upserted"] >= 1 and events_1 == 1
+
+    second = rf.run_live(con, FakeLLM([_clean_finding()]), at=NOW, fetcher=fetcher_ok)
+
+    events_2 = con.execute("SELECT COUNT(*) FROM events WHERE data_mode='live'").fetchone()[0]
+    evidence_2 = con.execute("SELECT COUNT(*) FROM event_evidence").fetchone()[0]
+    assert events_2 == events_1, "the same event was inserted twice instead of being matched on norm_key"
+    # Evidence is append-only but unique per (event, url, excerpt), so an identical re-read adds nothing.
+    assert evidence_2 == evidence_1, "identical evidence was appended twice"
+    assert second["status"] == first["status"]
+
+
+def test_live_event_carries_url_and_retrieval_time(con):
+    """Gate M2: a refresh persists events with provenance and freshness."""
+    rf.run_live(con, FakeLLM([_clean_finding()]), at=NOW, fetcher=fetcher_ok)
+
+    row = con.execute("""SELECT v.url, v.retrieved_at, v.excerpt, e.first_seen_at, e.last_seen_at
+                         FROM event_evidence v JOIN events e ON e.id = v.event_id
+                         WHERE e.data_mode='live'""").fetchone()
+    assert row is not None, "a live event was stored with no evidence row"
+    assert row["url"].startswith("http") and row["retrieved_at"]
+    assert row["excerpt"] in PAGE, "the stored excerpt is not verbatim from the fetched page"
+    assert row["first_seen_at"] and row["last_seen_at"]
+
+
+def test_live_and_prepared_events_stay_distinguishable(con):
+    """Gate M2: live, cached and prepared data can be told apart."""
+    rf.run_prepared(con, at=NOW)
+    rf.run_live(con, FakeLLM([_clean_finding()]), at=NOW, fetcher=fetcher_ok)
+
+    modes = dict(con.execute("SELECT data_mode, COUNT(*) FROM events GROUP BY data_mode").fetchall())
+    assert modes.get("prepared", 0) >= 1 and modes.get("live", 0) == 1
+    # A live run must not relabel or drop the prepared demo rows.
+    assert sorted(modes) == ["live", "prepared"]
