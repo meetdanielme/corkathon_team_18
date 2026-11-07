@@ -11,6 +11,10 @@ class OutsideWindow(str):
     """Normal eligibility exclusion, distinct from invalid source evidence."""
 
 
+class UnverifiedExcerpt(str):
+    """Model quoted text not on the page: dropped quietly, never stored or shown as a warning."""
+
+
 def _squash(s: str) -> str:
     return re.sub(r"\s+", " ", s or "").strip().lower()
 
@@ -23,7 +27,7 @@ def validate_finding(f: dict, page_text: str, window_start: datetime, window_end
         return None, "missing title"
     excerpt = (f.get("excerpt") or "").strip()
     if not excerpt or _squash(excerpt) not in _squash(page_text):
-        return None, f"excerpt not found verbatim on page for '{title}'"
+        return None, UnverifiedExcerpt(f"excerpt not found verbatim on page for '{title}'")
     try:
         start = parse_dt(f.get("start_at"))
         end = parse_dt(f.get("end_at"))
