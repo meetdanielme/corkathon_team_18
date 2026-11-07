@@ -3,50 +3,28 @@
 Footfall helps café owners see local demand changes coming, understand why they matter, and act before their
 ordering deadlines. Corkathon Team 18 MVP. It uses one fictional café: Bríd's Kitchen, Washington Street, Cork.
 
+## Live demo
+
+[Open the deployed Footfall app](https://footfall-team18.vercel.app/). A 7 Nov dashboard check observed `Partly updated`; refresh status varied between three source checks incomplete and one refresh issue. Those snapshots predate the duplicate-handling updates in PRs #49 and #50, and are not current production verification. See the [source assessment](../footfall/seed/source_assessment.md) for dates, evidence and limits.
+
 ## Run it
 
 ```bash
 python -m venv .venv
 # Windows: .venv\Scripts\activate     macOS/Linux: source .venv/bin/activate
 pip install -r requirements.txt
-pytest -q                                    # expect: 32 passed
+pytest -q                                    # expect: 26 passed
 python -m scripts.reset_demo                 # fresh DB with prepared demo data
 flask --app "footfall.app:create_app()" run --debug
 # open http://127.0.0.1:5000
 ```
 
-Configure AI (optional; the prepared demo works without it).
-
-The easiest option is a model running locally through [Ollama](https://ollama.com): free, no API key and no
-billing. Azure stays the preferred hosted option when a deployment is available.
-
-```bash
-ollama serve                                   # in another terminal
-ollama pull qwen3:4b-instruct-2507-q4_K_M
-export FOOTFALL_LLM=ollama                     # PowerShell: $env:FOOTFALL_LLM="ollama"
-python -m scripts.check_llm                    # expect: OK (ollama): {'ok': True}
-```
-
-A local model is slower than a hosted one, roughly 40 s per source, so a four-source refresh needs a bigger
-budget than the 90 s default or it stops early and reports a partial run:
-
-```bash
-export FOOTFALL_REFRESH_MAX_SECONDS=400
-```
-
-For Azure instead:
+Configure AI (optional; the prepared demo works without it):
 
 ```bash
 cp .env.example .env        # fill in locally, never commit
-python -m scripts.check_llm   # expect: OK (azure): {'ok': True}
-```
-
-`.env` is read at startup by the app and both scripts. Real environment variables take precedence, so you
-can still override a single run without editing the file:
-
-```bash
 # PowerShell: $env:FOOTFALL_LLM="azure"; $env:AZURE_OPENAI_ENDPOINT="..."  (etc.)
-FOOTFALL_LLM=none python -m scripts.check_llm   # expect: NOT CONFIGURED
+python -m scripts.check_llm   # expect: OK (azure): {'ok': True}
 ```
 
 ## What's where
@@ -64,19 +42,10 @@ FOOTFALL_LLM=none python -m scripts.check_llm   # expect: NOT CONFIGURED
 
 ## Honesty labels
 
-- **Prepared** data is fictional sample data. By Daniel's decision the interface doesn't label it; Business → Data shows the source (sample data or live sources).
+- **Prepared** data is fictional demo data and is always labelled as such.
 - **Stale** means the last check of a source failed or is older than its refresh interval. Cached events are kept, never deleted.
 - "No events" means none were found in the monitored sources, not complete local coverage.
 - Impact is an ordinal heuristic (see the design doc §6), not a forecast. Approving a draft does not send it.
-
-After pulling changes to `footfall/seed/`, run `python -m scripts.reset_demo` so your local database picks up the new sample data.
-
-## Credits
-
-- [Remix Icon](https://remixicon.com/) 4.5.0, Apache License 2.0, loaded from jsDelivr.
-- [Leaflet](https://leafletjs.com/) 1.9.4, BSD 2-Clause, loaded from cdnjs; map tiles © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors (ODbL), shown with attribution on the map.
-- Address lookup: [OpenStreetMap Nominatim](https://nominatim.org/) (data © OpenStreetMap contributors, ODbL). Footfall calls it only when a new or changed address is saved, with an identifying User-Agent, in line with the [usage policy](https://operations.osmfoundation.org/policies/nominatim/).
-- [Schibsted Grotesk](https://fonts.google.com/specimen/Schibsted+Grotesk), SIL Open Font License, from Google Fonts.
 
 ### Supplier draft grounding
 
