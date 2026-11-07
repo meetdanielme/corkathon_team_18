@@ -1,0 +1,59 @@
+{% extends "_auth.html" %}
+{% block title %}Sign up · Footfall{% endblock %}
+{% block demo_note %}Accounts aren't saved, so after signing up you'll explore our demo business.{% endblock %}
+{% block card %}
+    <div>
+      <h1 id="auth-h">Create your Footfall account</h1>
+      <p class="muted">See the week ahead for your business in a few minutes.</p>
+    </div>
+    <p class="plan-pill"><i class="ri-price-tag-3-line" aria-hidden="true"></i><span>Plan: <b>{{ plans[plan] }}</b>{% if plan in ("essentials", "multi") %} · 14-day free trial{% endif %}</span><a href="{{ url_for('pricing') }}">Change</a></p>
+    <form class="auth-form" method="post" action="{{ url_for('signup') }}" novalidate data-auth>
+      <input type="hidden" name="plan" value="{{ plan }}">
+      <div class="field">
+        <label for="name">Your name</label>
+        <input id="name" name="name" autocomplete="name" value="{{ f.name }}" data-rule="required" data-empty="Enter your name."
+               aria-describedby="name-error"{% if errors.name %} aria-invalid="true"{% endif %}>
+        {{ field_error("name", errors) }}
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="business">Business name</label>
+          <input id="business" name="business" autocomplete="organization" value="{{ f.business }}" data-rule="required"
+                 data-empty="Enter your business name." aria-describedby="business-error"{% if errors.business %} aria-invalid="true"{% endif %}>
+          {{ field_error("business", errors) }}
+        </div>
+        <div class="field">
+          <label for="type">Type of business</label>
+          <select id="type" name="type" data-rule="required" data-empty="Choose the kind of business you run."
+                  aria-describedby="type-error"{% if errors.type %} aria-invalid="true"{% endif %}>
+            <option value="">Choose…</option>
+            {% for t in types %}<option{% if f.type == t %} selected{% endif %}>{{ t }}</option>{% endfor %}
+          </select>
+          {{ field_error("type", errors) }}
+        </div>
+      </div>
+      <div class="field">
+        <label for="email">Work email</label>
+        <input id="email" name="email" type="email" autocomplete="email" inputmode="email" spellcheck="false"
+               placeholder="you@yourbusiness.ie" value="{{ f.email }}" data-rule="email"
+               data-empty="Enter an email address like name@yourbusiness.ie." data-msg="Enter an email address like name@yourbusiness.ie."
+               aria-describedby="email-error"{% if errors.email %} aria-invalid="true"{% endif %}>
+        {{ field_error("email", errors) }}
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <div class="pw">
+          <input id="password" name="password" type="password" autocomplete="new-password" data-rule="min8"
+                 data-empty="Use at least 8 characters." data-msg="Use at least 8 characters."
+                 aria-describedby="password-hint password-error"{% if errors.password %} aria-invalid="true"{% endif %}>
+          <button type="button" class="pw-toggle" aria-controls="password" aria-pressed="false" data-pw-toggle>
+            <i class="ri-eye-line" aria-hidden="true"></i><span>Show</span>
+          </button>
+        </div>
+        <p class="hint" id="password-hint">At least 8 characters.</p>
+        {{ field_error("password", errors) }}
+      </div>
+      <button class="btn-lg auth-submit">Create account<i class="ri-arrow-right-line" aria-hidden="true"></i></button>
+    </form>
+    <p class="small">Already have an account? <a href="{{ url_for('login') }}">Log in</a></p>
+{% endblock %}

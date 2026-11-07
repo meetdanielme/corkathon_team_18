@@ -59,4 +59,4 @@ Sources: supplied organiser email and Hacker Guide; [official rules](https://cor
 
 Footfall can run on Vercel with Azure Luna and persistent Turso storage. See [hosting setup, limits and validation](docs/team/vercel-hosting.md). Local SQLite remains available; Azure/Turso credentials are supplied only through server environment variables.
 
-`/` is the public marketing page. `/login` is a **simulated** sign-in: any email and password (or "Continue with the demo café") opens the dashboard at `/app`. Nothing is stored server-side; set `FLASK_SECRET_KEY` in hosted environments so session cookies are signed with a real secret. Deployment changes are in PR #29.
+`/` is the public marketing page and `/pricing` shows proposed plans (no payments are taken). `/login` and `/signup` are **simulated**: any email and password, a completed sign-up form, or "Continue with the demo business" opens the dashboard at `/app` for the fictional demo business. Nothing is stored server-side; set `FLASK_SECRET_KEY` in hosted environments so session cookies are signed with a real secret. Deployment changes are in PR #29.

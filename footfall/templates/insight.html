@@ -26,7 +26,7 @@
 
 <div class="igrid">
   <section class="map-card" aria-label="Where it is">
-    <div id="map" class="map" role="region" aria-label="Map of your café and the venue" data-cafe="{{ here.lat }},{{ here.lon }}" data-event="{{ event.lat }},{{ event.lon }}" data-radius="{{ business.radius_m }}" data-icon="{{ i.category|category_icon }}" data-direction="{{ i.direction }}">
+    <div id="map" class="map" role="region" aria-label="Map of your business and the venue" data-cafe="{{ here.lat }},{{ here.lon }}" data-event="{{ event.lat }},{{ event.lon }}" data-radius="{{ business.radius_m }}" data-icon="{{ i.category|category_icon }}" data-direction="{{ i.direction }}">
       <p class="map-fallback"><i class="ri-map-2-line" aria-hidden="true"></i>Map not available right now</p>
     </div>
     <div class="map-foot">
@@ -144,7 +144,7 @@
     const pin = (cls, icon) => L.divIcon({ className: '', html: `<span class="pin ${cls}"><i class="${icon}"></i></span>`, iconSize: [36, 36], iconAnchor: [18, 18] });
     L.circle(cafe, { radius: +el.dataset.radius, color: '#2B44A8', weight: 1, fillOpacity: 0.04, dashArray: '4 4' }).addTo(map);
     L.polyline([cafe, ev], { color: '#18202B', weight: 2, dashArray: '6 6' }).addTo(map);
-    L.marker(cafe, { icon: pin('pin-cafe', 'ri-store-2-fill'), title: 'Your café' }).addTo(map);
+    L.marker(cafe, { icon: pin('pin-cafe', 'ri-store-2-fill'), title: 'Your business' }).addTo(map);
     L.marker(ev, { icon: pin('pin-event pin-' + el.dataset.direction, el.dataset.icon.replace('-line', '-fill')), title: 'Event venue' }).addTo(map);
     map.fitBounds([cafe, ev], { padding: [48, 48] });
   })();

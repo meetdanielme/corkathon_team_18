@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#ffffff">
   <title>{% block title %}Footfall{% endblock %}</title>
+  <link rel="icon" href="{{ url_for('favicon') }}" sizes="48x48">
+  <link rel="icon" href="{{ url_for('static', filename='brand/logo-mark.svg') }}" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='brand/apple-touch-icon.png') }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
@@ -17,7 +20,7 @@
   <a class="skip" href="#main">Skip to Content</a>
   {% block header %}
   <header class="top">
-    <a href="{{ url_for('index') }}" class="wordmark" translate="no">Footfall</a>
+    <a href="{{ url_for('index') }}" class="wordmark" translate="no"><img src="{{ url_for('static', filename='brand/logo-mark.svg') }}" alt="" width="28" height="28">Footfall</a>
     <div class="top-right">
       <div class="status status-{{ run_state }}">
         <span class="status-dot" aria-hidden="true"></span>
@@ -39,7 +42,7 @@
       {% if user %}
       <form class="user" method="post" action="{{ url_for('logout') }}">
         <span class="user-avatar" aria-hidden="true" title="Signed in as {{ user }}">{{ user[:1] }}</span>
-        <button class="icon-btn icon-btn-quiet" aria-label="Sign Out {{ user }}" title="Sign out"><i class="ri-logout-box-r-line" aria-hidden="true"></i></button>
+        <button class="icon-btn icon-btn-quiet" aria-label="Log Out {{ user }}" title="Log out"><i class="ri-logout-box-r-line" aria-hidden="true"></i></button>
       </form>
       {% endif %}
     </div>
