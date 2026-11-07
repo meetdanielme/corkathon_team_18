@@ -7,15 +7,15 @@ from footfall.scout.validate import validate_finding
 
 from .conftest import NOW, FakeLLM
 
-PAGE = "Events. Open day Thursday 12 November 2026, 10:00-13:00 at UCC main campus. All welcome."
-FINDING = {"title": "Open day", "start_at": "2026-11-12T10:00:00+00:00", "end_at": "2026-11-12T13:00:00+00:00",
-           "venue_name": "UCC main campus", "category": "community", "access": "public", "attendance": None,
-           "excerpt": "Open day Thursday 12 November 2026, 10:00-13:00 at UCC main campus."}
+PAGE = "What's on. Recomposed By Max Richter: Vivaldi: The Four Seasons Thu 12 Nov 2026 19:30 at St Peter's Cork."
+FINDING = {"title": "Recomposed By Max Richter: Vivaldi: The Four Seasons", "start_at": "2026-11-12T19:30:00+00:00",
+           "end_at": None, "venue_name": "St Peter's Cork", "category": "music", "access": "public", "attendance": None,
+           "excerpt": "Recomposed By Max Richter: Vivaldi: The Four Seasons Thu 12 Nov 2026 19:30 at St Peter's Cork."}
 FAKE = {"events": [FINDING, {**FINDING, "title": "Invented", "excerpt": "not on the page"}], "uncertainties": []}
 
 
 def fetcher_ok(url):
-    if "ucc" in url:
+    if "stpeterscork" in url:
         return url, PAGE
     raise FetchError("simulated outage")
 
@@ -31,13 +31,15 @@ def test_repeat_prepared_refresh_creates_no_duplicates(con):
 
 def test_live_refresh_validates_persists_and_records_failure(con):
     llm = FakeLLM([FAKE])
+    source_count = len(db.get_sources(con))
     run = rf.run_live(con, llm, at=NOW, fetcher=fetcher_ok)
-    assert run["status"] == "partial" and run["sources_attempted"] == 2 and run["sources_succeeded"] == 1
+    assert run["status"] == "partial" and run["sources_attempted"] == source_count and run["sources_succeeded"] == 1
     assert any("excerpt not found" in e for e in run["errors"])
     assert any("simulated outage" in e for e in run["errors"])
     evs = db.get_events(con, NOW)
-    assert [e["title"] for e in evs] == ["Open day"]
-    assert evs[0]["lat"] == 51.8935 and evs[0]["verification"] == "verified" and evs[0]["stale"] is False
+    assert [e["title"] for e in evs] == ["Recomposed By Max Richter: Vivaldi: The Four Seasons"]
+    assert evs[0]["lat"] == 51.8995487  # Venue point from the refreshed St Peter's source record.
+    assert evs[0]["verification"] == "verified" and evs[0]["stale"] is False
 
 
 def test_failed_source_keeps_cached_events_and_marks_stale(con):

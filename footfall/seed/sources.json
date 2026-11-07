@@ -1,26 +1,50 @@
 [
- {
-  "id": "example-ucc",
-  "org_name": "University College Cork",
-  "venue_name": "UCC main campus",
-  "url": "https://www.ucc.ie/en/",
-  "type": "university",
-  "lat": 51.8935,
-  "lon": -8.4919,
-  "access_notes": null,
-  "refresh_interval_h": 24,
-  "provenance": "EXAMPLE ROW - Olan: replace with the verified events/calendar page URL"
- },
- {
-  "id": "example-council",
-  "org_name": "Cork City Council",
-  "venue_name": "Cork city centre",
-  "url": "https://www.corkcity.ie/en/",
-  "type": "council",
-  "lat": 51.8985,
-  "lon": -8.4756,
-  "access_notes": null,
-  "refresh_interval_h": 24,
-  "provenance": "EXAMPLE ROW - Olan: replace with the verified news/traffic notices page URL"
- }
+  {
+    "id": "st-peters-cork-events",
+    "org_name": "St Peter's Cork",
+    "venue_name": "St Peter's Cork",
+    "url": "https://stpeterscork.ie/events",
+    "type": "church",
+    "lat": 51.8995487,
+    "lon": -8.4788617,
+    "access_notes": "Public HTML venue events page; no account or login required. Existing bounded fetcher returned readable dated events. robots.txt returned HTTP 200 and permits this URL for FootfallHackathonBot/0.1. Reviewed public venue pages; no automated-fetch restriction was found. Venue point resolved with OpenStreetMap Photon from the published venue name and North Main Street address; approximate mapped place point.",
+    "refresh_interval_h": 24,
+    "provenance": "Found from St Peter's Cork official site navigation to What's On and verified with the repo fetcher on 2026-11-07. Page lists events including Recomposed by Max Richter on 12 Nov 2026 at 19:30. Coordinates checked against OpenStreetMap Photon on 2026-11-07."
+  },
+  {
+    "id": "cork-opera-house-whats-on",
+    "org_name": "Cork Opera House",
+    "venue_name": "Cork Opera House",
+    "url": "https://www.corkoperahouse.ie/whats-on/",
+    "type": "venue",
+    "lat": 51.9003,
+    "lon": -8.4726,
+    "access_notes": "Public HTML What’s On listing; no account or login required. Existing bounded fetcher returned event names and dates in readable text. robots.txt returned HTTP 200 and permits this URL for FootfallHackathonBot/0.1. Public ticket terms were reviewed; no automated-fetch restriction was found.",
+    "refresh_interval_h": 24,
+    "provenance": "Found via Cork Opera House's official What’s On navigation and verified with the repo fetcher on 2026-11-07. Page lists Cork City Ballet presents The Nutcracker through 7 Nov 2026. Venue coordinates are published on the official How to Find Us page."
+  },
+  {
+    "id": "triskel-whats-on",
+    "org_name": "Triskel Arts Centre",
+    "venue_name": "Triskel Arts Centre",
+    "url": "https://triskelartscentre.ie/whats-on/",
+    "type": "venue",
+    "lat": 51.8978138,
+    "lon": -8.4776339,
+    "access_notes": "Public HTML What’s On listing; no account or login required. Existing bounded fetcher returned event names and November dates in readable text. robots.txt returned HTTP 200 and permits this URL for FootfallHackathonBot/0.1. Published ticket Terms & Conditions contain audience/ticket rules and no automated-fetch restriction was found.",
+    "refresh_interval_h": 24,
+    "provenance": "Found via Triskel's official What's On navigation and verified with the repo fetcher on 2026-11-07. Listing includes The Devils and Pan’s Labyrinth from 8–11 Nov and a Harry Clarke event on 10 Nov 2026. Venue point taken from the Google Maps embed on Triskel's official directions page."
+  },
+  {
+    "id": "everyman-whats-on",
+    "org_name": "The Everyman",
+    "venue_name": "The Everyman",
+    "url": "https://everymancork.com/",
+    "type": "venue",
+    "lat": 51.9014229,
+    "lon": -8.468497,
+    "access_notes": "Public HTML homepage with a What’s On event listing; no account or login required. Existing bounded fetcher returned event names and dates in readable text. robots.txt returned HTTP 200 and permits this URL for FootfallHackathonBot/0.1. Public ticket Terms & Conditions were reviewed; no automated-fetch restriction was found.",
+    "refresh_interval_h": 24,
+    "provenance": "Found via The Everyman's official What’s On section and verified with the repo fetcher on 2026-11-07. Listing includes Disco Pigs, Sat 31 Oct–Sat 14 Nov 2026, which is running during the 7–13 Nov window. Venue address geocoded with OpenStreetMap Photon on 2026-11-07."
+  }
 ]
