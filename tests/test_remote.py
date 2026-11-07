@@ -1,9 +1,13 @@
+import pytest
+
 from footfall.remote import Connection
 from footfall import db
 
 
 def test_remote_driver_preserves_rows_drafts_and_reconnect(tmp_path):
-    import libsql
+    # The driver has no wheel for Python 3.13+ and building it needs Rust, so skip rather than
+    # fail where it is absent. Vercel pins 3.12, so this still runs on the deployment target.
+    libsql = pytest.importorskip("libsql", reason="libsql not installed; remote/Turso path not exercised")
     path = str(tmp_path / 'remote.sqlite3')
     with Connection(libsql.connect(path)) as c:
         db.init(c)
