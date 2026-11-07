@@ -27,7 +27,7 @@
 
 ## Status of this plan
 
-Tasks 1–8 are **already implemented and passing** in this branch (26 tests). An executor runs each task's
+Tasks 1–8 are **already implemented and passing** in this branch (32 tests). An executor runs each task's
 verification step (Step 4) and treats any failure as a regression to fix before moving on. The full code is
 included so a reviewer can check each task in isolation. Tasks 9–12 are **new work** scheduled into milestones
 M1–M4 (`docs/team/milestones.md`).
@@ -2321,7 +2321,7 @@ Run: `FOOTFALL_DB=/tmp/reset.sqlite3 python -m scripts.reset_demo`
 Expected: `Rebuilt /tmp/reset.sqlite3: prepared run ok, 7 events`
 
 Run: `pytest -q`
-Expected: `26 passed`
+Expected: `32 passed`
 
 - [ ] **Step 5: Commit**
 
@@ -2362,7 +2362,7 @@ Expected: `OK (azure): {'ok': True}`. On `FAILED`, read the error. A 404 usually
 
 - [ ] **Step 4: Re-run the check**
 
-Run: `python -m scripts.check_llm` (expect OK), then `pytest -q` (expect `26 passed`)
+Run: `python -m scripts.check_llm` (expect OK), then `pytest -q` (expect `32 passed`)
 
 - [ ] **Step 5: Commit (only if `llm.py` changed)**
 
@@ -2446,7 +2446,7 @@ git commit -m "data: verified Cork source directory"
 - Consumes: everything.
 - Produces: a ticked Gate M4 and a `v1-freeze` tag.
 
-- [ ] **Step 1:** Run `pytest -q`. Expected: `26 passed`.
+- [ ] **Step 1:** Run `pytest -q`. Expected: `32 passed`.
 - [ ] **Step 2:** Run `python -m scripts.reset_demo`, then `flask --app "footfall.app:create_app()" run`.
 - [ ] **Step 3:** Walk demo steps 1–7 (design doc §3) and tick each Gate M4 box, using these expected values with prepared data:
   - **Graduation:** "Thu 12 Nov 10:00-14:00", impact medium, confidence medium, Bakery cutoff **Wed 11 Nov 16:00**.
