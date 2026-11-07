@@ -50,9 +50,15 @@ class LLM:
 
         client = AzureOpenAI(azure_endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],
                              api_key=os.environ["AZURE_OPENAI_API_KEY"],
-                             api_version=os.getenv("AZURE_OPENAI_API_VERSION", "2024-10-21"))
+                             api_version=os.getenv("AZURE_OPENAI_API_VERSION", "2024-10-21"),
+                             timeout=60, max_retries=0)
+        options = {}
+        if effort := os.getenv("AZURE_OPENAI_REASONING_EFFORT"):
+            options["reasoning_effort"] = effort
         r = client.chat.completions.create(
-            model=os.environ["AZURE_OPENAI_DEPLOYMENT"], temperature=0,
+            model=os.environ["AZURE_OPENAI_DEPLOYMENT"],
+            max_completion_tokens=int(os.getenv("AZURE_OPENAI_MAX_COMPLETION_TOKENS", "2048")),
+            **options,
             response_format={"type": "json_object"},
             messages=[{"role": "system", "content": system}, {"role": "user", "content": user}])
         return r.choices[0].message.content

@@ -70,3 +70,11 @@ Last updated: 7 November 2026. Shared project context, not a chat transcript.
 ## Maintaining this file
 
 Keep this a short current-state record. Update it when a decision, verified milestone or next step changes; distinguish proposals from agreements and date material changes. Do not paste chat logs, secrets, personal balances or a copy of the issue backlog. Link owning sources instead. Current user instructions and live verified sources take precedence over this snapshot.
+
+## Azure provider direction — 7 November 2026
+
+- Daniel authorized Azure setup through his CLI with a €5 setup/verification maximum, then explicitly selected Luna. Local configuration now selects Azure deployment `gpt-6-luna`; this supersedes the earlier Ollama/manual-chat selection for app AI usage. No automatic fallback or new infrastructure.
+- Credentials live only in Daniel’s ignored local `.env`; never copy into shared docs. See [setup and run command](docs/team/azure-setup.md).
+- Azure adapter verification and real-source refresh results are recorded in PR evidence. Future calls need to stay within Daniel’s authorized scope; request-token limits are not a currency hard cap.
+
+- Verified Luna live refresh: four fetched sources, six stored events, two relevant insights; partial with three rejected findings. Known date-range/evidence-association limits in [setup report](docs/team/azure-setup.md); not a completed accuracy gate. No background server left running.
