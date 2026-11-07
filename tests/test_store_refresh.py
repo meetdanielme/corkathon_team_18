@@ -7,15 +7,15 @@ from footfall.scout.validate import validate_finding
 
 from .conftest import NOW, FakeLLM
 
-PAGE = "Events. Open day Thursday 12 November 2026, 10:00-13:00 at UCC main campus. All welcome."
-FINDING = {"title": "Open day", "start_at": "2026-11-12T10:00:00+00:00", "end_at": "2026-11-12T13:00:00+00:00",
-           "venue_name": "UCC main campus", "category": "community", "access": "public", "attendance": None,
-           "excerpt": "Open day Thursday 12 November 2026, 10:00-13:00 at UCC main campus."}
+PAGE = "What's on. Recomposed By Max Richter: Vivaldi: The Four Seasons Thu 12 Nov 2026 19:30 at St Peter's Cork."
+FINDING = {"title": "Recomposed By Max Richter: Vivaldi: The Four Seasons", "start_at": "2026-11-12T19:30:00+00:00",
+           "end_at": None, "venue_name": "St Peter's Cork", "category": "music", "access": "public", "attendance": None,
+           "excerpt": "Recomposed By Max Richter: Vivaldi: The Four Seasons Thu 12 Nov 2026 19:30 at St Peter's Cork."}
 FAKE = {"events": [FINDING, {**FINDING, "title": "Invented", "excerpt": "not on the page"}], "uncertainties": []}
 
 
 def fetcher_ok(url):
-    if "ucc" in url:
+    if "stpeterscork" in url:
         return url, PAGE
     raise FetchError("simulated outage")
 
@@ -31,13 +31,15 @@ def test_repeat_prepared_refresh_creates_no_duplicates(con):
 
 def test_live_refresh_validates_persists_and_records_failure(con):
     llm = FakeLLM([FAKE])
+    source_count = len(db.get_sources(con))
     run = rf.run_live(con, llm, at=NOW, fetcher=fetcher_ok)
-    assert run["status"] == "partial" and run["sources_attempted"] == 2 and run["sources_succeeded"] == 1
+    assert run["status"] == "partial" and run["sources_attempted"] == source_count and run["sources_succeeded"] == 1
     assert any("excerpt not found" in e for e in run["errors"])
     assert any("simulated outage" in e for e in run["errors"])
     evs = db.get_events(con, NOW)
-    assert [e["title"] for e in evs] == ["Open day"]
-    assert evs[0]["lat"] == 51.8935 and evs[0]["verification"] == "verified" and evs[0]["stale"] is False
+    assert [e["title"] for e in evs] == ["Recomposed By Max Richter: Vivaldi: The Four Seasons"]
+    assert evs[0]["lat"] == 51.8995487  # Venue point from the refreshed St Peter's source record.
+    assert evs[0]["verification"] == "verified" and evs[0]["stale"] is False
 
 
 def test_failed_source_keeps_cached_events_and_marks_stale(con):
@@ -80,3 +82,49 @@ def test_validate_rejects_out_of_window_and_unverbatim():
 def test_fetch_blocks_non_public(url):
     with pytest.raises(FetchError):
         check_public(url)
+
+
+def _clean_finding():
+    """One valid finding, no invented second event, so a run has no expected errors."""
+    return {"events": [FINDING], "uncertainties": []}
+
+
+def test_repeat_live_refresh_creates_no_duplicate_events_or_evidence(con):
+    """Gate M2: a repeat refresh updates records without visible duplicates."""
+    first = rf.run_live(con, FakeLLM([_clean_finding()]), at=NOW, fetcher=fetcher_ok)
+    events_1 = con.execute("SELECT COUNT(*) FROM events WHERE data_mode='live'").fetchone()[0]
+    evidence_1 = con.execute("SELECT COUNT(*) FROM event_evidence").fetchone()[0]
+    assert first["events_upserted"] >= 1 and events_1 == 1
+
+    second = rf.run_live(con, FakeLLM([_clean_finding()]), at=NOW, fetcher=fetcher_ok)
+
+    events_2 = con.execute("SELECT COUNT(*) FROM events WHERE data_mode='live'").fetchone()[0]
+    evidence_2 = con.execute("SELECT COUNT(*) FROM event_evidence").fetchone()[0]
+    assert events_2 == events_1, "the same event was inserted twice instead of being matched on norm_key"
+    # Evidence is append-only but unique per (event, url, excerpt), so an identical re-read adds nothing.
+    assert evidence_2 == evidence_1, "identical evidence was appended twice"
+    assert second["status"] == first["status"]
+
+
+def test_live_event_carries_url_and_retrieval_time(con):
+    """Gate M2: a refresh persists events with provenance and freshness."""
+    rf.run_live(con, FakeLLM([_clean_finding()]), at=NOW, fetcher=fetcher_ok)
+
+    row = con.execute("""SELECT v.url, v.retrieved_at, v.excerpt, e.first_seen_at, e.last_seen_at
+                         FROM event_evidence v JOIN events e ON e.id = v.event_id
+                         WHERE e.data_mode='live'""").fetchone()
+    assert row is not None, "a live event was stored with no evidence row"
+    assert row["url"].startswith("http") and row["retrieved_at"]
+    assert row["excerpt"] in PAGE, "the stored excerpt is not verbatim from the fetched page"
+    assert row["first_seen_at"] and row["last_seen_at"]
+
+
+def test_live_and_prepared_events_stay_distinguishable(con):
+    """Gate M2: live, cached and prepared data can be told apart."""
+    rf.run_prepared(con, at=NOW)
+    rf.run_live(con, FakeLLM([_clean_finding()]), at=NOW, fetcher=fetcher_ok)
+
+    modes = dict(con.execute("SELECT data_mode, COUNT(*) FROM events GROUP BY data_mode").fetchall())
+    assert modes.get("prepared", 0) >= 1 and modes.get("live", 0) == 1
+    # A live run must not relabel or drop the prepared demo rows.
+    assert sorted(modes) == ["live", "prepared"]

@@ -10,6 +10,7 @@ from flask import Flask, abort, flash, g, jsonify, redirect, render_template, re
 
 from . import business_form, db, present
 from . import weather as weather_mod
+from .config import load_env
 from .domain import drafts as drafts_mod
 from .domain import hours as hours_mod
 from .domain import insights as insights_mod
@@ -21,6 +22,7 @@ from .week import build_week, short_title
 
 def create_app(db_path: str | None = None, clock=None, llm: LLM | None = None, fetcher=None,
                weather_fetcher=None, geocoder=None) -> Flask:
+    load_env()
     app = Flask(__name__)
     app.config["SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY", "dev-only-not-secret")
     app.config["DB_PATH"] = db_path or os.getenv("FOOTFALL_DB", "footfall.sqlite3")

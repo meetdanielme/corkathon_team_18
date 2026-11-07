@@ -21,7 +21,7 @@ def connect(path: str) -> sqlite3.Connection:
 
 
 def init(con: sqlite3.Connection) -> None:
-    con.executescript(SCHEMA.read_text())
+    con.executescript(SCHEMA.read_text(encoding="utf-8"))
     cols = {r["name"] for r in con.execute("PRAGMA table_info(businesses)")}
     for col in ("address", "hours", "special_hours"):  # databases created before these columns existed
         if col not in cols:
@@ -39,7 +39,7 @@ def ensure_locations(con) -> None:
 
 def seed(con: sqlite3.Connection, seed_dir: Path = SEED) -> None:
     """Load the fictional café, its supplier constraints and the source directory. Idempotent."""
-    b = json.loads((seed_dir / "business.json").read_text())
+    b = json.loads((seed_dir / "business.json").read_text(encoding="utf-8"))
     con.execute("""INSERT OR REPLACE INTO businesses (id, name, lat, lon, timezone, opens, closes, open_days,
                    radius_m, sales_baseline, avg_spend, demo_label, address, hours, special_hours)
                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
@@ -53,12 +53,12 @@ def seed(con: sqlite3.Connection, seed_dir: Path = SEED) -> None:
         con.execute("INSERT INTO locations (business_id, position, name, address, lat, lon) VALUES (?,?,?,?,?,?)",
                     (b["id"], pos, loc.get("name"), loc["address"], loc["lat"], loc["lon"]))
     ensure_locations(con)
-    for s in json.loads((seed_dir / "suppliers.json").read_text()):
+    for s in json.loads((seed_dir / "suppliers.json").read_text(encoding="utf-8")):
         con.execute("INSERT OR REPLACE INTO supplier_constraints VALUES (?,?,?,?,?,?,?,?,?)",
                     (s["id"], b["id"], s["supplier"], s.get("contact_label"), s["delivery_day"],
                      s.get("delivery_window"), json.dumps(s["cutoff_rule"]), s.get("evidence"),
                      s.get("demo_label")))
-    for s in json.loads((seed_dir / "sources.json").read_text()):
+    for s in json.loads((seed_dir / "sources.json").read_text(encoding="utf-8")):
         con.execute("""INSERT INTO sources (id, org_name, venue_name, url, type, lat, lon, access_notes,
                        refresh_interval_h, provenance) VALUES (?,?,?,?,?,?,?,?,?,?)
                        ON CONFLICT(id) DO UPDATE SET org_name=excluded.org_name, venue_name=excluded.venue_name,
