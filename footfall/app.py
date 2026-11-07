@@ -104,9 +104,10 @@ def create_app(db_path: str | None = None, clock=None, llm: LLM | None = None, f
                  for i in result["insights"]]
         attention = sum(1 for x in cards if x["cd"]["level"] in ("now", "soon", "missed"))
         today = clock().date().isoformat()
-        next_special = next((x for x in b.get("special_hours") or [] if x["date"] >= today), None)
-        return render_template("index.html", business=b, week=week, cards=cards, attention=attention,
-                               hours_summary=hours_mod.summary(b), next_special=next_special,
+        places = [{"loc": loc, "hours": hours_mod.summary(loc),
+                   "special": next((x for x in loc["special_hours"] if x["date"] >= today), None)}
+                  for loc in b["locations"]]
+        return render_template("index.html", business=b, week=week, cards=cards, attention=attention, places=places,
                                cutoffs=sum(1 for x in cards if x["cd"]["level"] not in ("none", "done")),
                                done=sum(1 for x in cards if x["cd"]["level"] == "done"), **result)
 
@@ -124,8 +125,7 @@ def create_app(db_path: str | None = None, clock=None, llm: LLM | None = None, f
                 run = refresh_mod.run_live(c, model, at=clock(), **kwargs)
             else:
                 run = refresh_mod.run_prepared(c, at=clock())
-            label = "sample data" if run["mode"] == "prepared" else "live sources"
-            flash(f"Updated from {label}: {run['events_upserted']} events ({run['status']}).")
+            flash(f"Updated: {run['events_upserted']} events found ({run['status']}).")
         except refresh_mod.RefreshBusy as e:
             flash(str(e))
         return redirect(safe_next(url_for("index")))
@@ -137,7 +137,9 @@ def create_app(db_path: str | None = None, clock=None, llm: LLM | None = None, f
         existing = c.execute("SELECT * FROM drafts WHERE insight_id=? ORDER BY id DESC LIMIT 1", (iid,)).fetchone()
         draft = dict(existing) if existing else None
         b, result = compute()
-        week = build_week(b, result, db.get_events(c, clock()), clock(), only_day=i.day, drafts=db.draft_states(c))
+        here = next((loc for loc in b["locations"] if i.location and loc["address"] == i.location.get("address")), None)
+        week = build_week(b, result, db.get_events(c, clock()), clock(), only_day=i.day, drafts=db.draft_states(c),
+                          places=[here] if here else None)
         event = next((e for e in db.get_events(c, clock()) if e["id"] == i.event_id), {})
         return render_template("insight.html", i=i, draft=draft, business=b, week=week, event=event,
                                cd=present.countdown(i.action_deadline, clock(), draft),

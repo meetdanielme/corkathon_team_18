@@ -1,9 +1,10 @@
 """Opening hours: weekly ranges per day plus dated special days (holidays). Europe/Dublin local times.
 
-business["hours"]          {"mon": [["08:00", "12:00"], ["13:00", "16:00"]], ..., "sun": []}
-business["special_hours"]  [{"date": "2026-12-25", "label": "Christmas Day", "ranges": []}, ...]
+place["hours"]          {"mon": [["08:00", "12:00"], ["13:00", "16:00"]], ..., "sun": []}
+place["special_hours"]  [{"date": "2026-12-25", "label": "Christmas Day", "ranges": []}, ...]
 
-Businesses without "hours" fall back to the single opens/closes range on open_days.
+A place is a location (each has its own hours) or, for older data, the business itself. Places without
+"hours" fall back to the single opens/closes range on open_days.
 """
 from __future__ import annotations
 
@@ -29,6 +30,23 @@ def ranges_for(business: dict, day: date) -> tuple[list[list[str]], str | None]:
     if s:
         return [list(r) for r in s.get("ranges", [])], s.get("label") or "Special hours"
     return weekly(business)[weekday(day)], None
+
+
+def merge(ranges: list[list[str]]) -> list[list[str]]:
+    """Union of ranges, overlapping or touching ones joined."""
+    out: list[list[str]] = []
+    for a, b in sorted(list(r) for r in ranges):
+        if out and a <= out[-1][1]:
+            out[-1][1] = max(out[-1][1], b)
+        else:
+            out.append([a, b])
+    return out
+
+
+def any_open(places: list[dict], day: date) -> tuple[list[list[str]], str | None]:
+    """When at least one place is open, and the first special-day label among them."""
+    found = [ranges_for(p, day) for p in places]
+    return merge([r for rs, _ in found for r in rs]), next((label for _, label in found if label), None)
 
 
 def windows(business: dict, day: date) -> list[tuple[datetime, datetime]]:

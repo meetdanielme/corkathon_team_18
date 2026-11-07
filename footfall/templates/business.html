@@ -2,54 +2,81 @@
 {% block title %}{{ b.name }} · Footfall{% endblock %}
 {% macro err(name) %}{% if errors[name] %}<p class="field-error" id="{{ name }}-error"><i class="ri-error-warning-fill" aria-hidden="true"></i>{{ errors[name] }}</p>{% endif %}{% endmacro %}
 {% macro inv(name) %}{% if errors[name] %} aria-invalid="true" aria-describedby="{{ name }}-error"{% endif %}{% endmacro %}
-{% macro range_row(day, start="", end="") %}
+{% macro range_row(prefix, start="", end="") %}
 <div class="range" data-range>
-  <input type="time" name="{{ day }}_start" value="{{ start }}" aria-label="Opens" autocomplete="off">
+  <input type="time" name="{{ prefix }}_start" value="{{ start }}" aria-label="Opens" autocomplete="off">
   <span aria-hidden="true">–</span>
-  <input type="time" name="{{ day }}_end" value="{{ end }}" aria-label="Closes" autocomplete="off">
+  <input type="time" name="{{ prefix }}_end" value="{{ end }}" aria-label="Closes" autocomplete="off">
   <button type="button" class="icon-ghost" data-remove="[data-range]" aria-label="Remove these hours"><i class="ri-close-line" aria-hidden="true"></i></button>
 </div>
 {% endmacro %}
-{% macro location_row(i, loc) %}
-<div class="loc-row" data-loc>
-  <span class="loc-pin" aria-hidden="true"><i class="ri-map-pin-2-fill"></i></span>
-  <div class="field">
-    <label for="loc_name_{{ i }}">Name <span class="muted">(optional)</span></label>
-    <input id="loc_name_{{ i }}" name="loc_name" value="{{ loc.name }}" autocomplete="off" placeholder="e.g. Washington St…">
-  </div>
-  <div class="field field-grow">
-    <label for="loc_address_{{ i }}">Address</label>
-    <input id="loc_address_{{ i }}" name="loc_address" value="{{ loc.address }}" autocomplete="street-address" placeholder="e.g. Washington Street, Cork…"{{ inv('loc_' ~ i) }}>
-    {{ err('loc_' ~ i) }}
-  </div>
-  <button type="button" class="icon-ghost" data-remove="[data-loc]" aria-label="Remove this location"><i class="ri-delete-bin-line" aria-hidden="true"></i></button>
-</div>
-{% endmacro %}
-{% macro special_row(i, s) %}
+{% macro special_row(key, i, s) %}
 <div class="special-row" data-special>
   <div class="field">
-    <label for="special_date_{{ i }}">Date</label>
-    <input id="special_date_{{ i }}" type="date" name="special_date" value="{{ s.date }}" autocomplete="off"{{ inv('special_' ~ i) }}>
+    <label for="{{ key }}_sd_{{ i }}">Date</label>
+    <input id="{{ key }}_sd_{{ i }}" type="date" name="{{ key }}_special_date" value="{{ s.date }}" autocomplete="off"{{ inv(key ~ '_special_' ~ i) }}>
   </div>
   <div class="field field-grow">
-    <label for="special_label_{{ i }}">Name</label>
-    <input id="special_label_{{ i }}" name="special_label" value="{{ s.label }}" autocomplete="off" placeholder="e.g. Christmas Day…">
+    <label for="{{ key }}_sl_{{ i }}">Name</label>
+    <input id="{{ key }}_sl_{{ i }}" name="{{ key }}_special_label" value="{{ s.label }}" autocomplete="off" placeholder="e.g. Christmas Day…">
   </div>
   <div class="field">
-    <label for="special_mode_{{ i }}">Hours</label>
-    <select id="special_mode_{{ i }}" name="special_mode" data-mode>
+    <label for="{{ key }}_sm_{{ i }}">Hours</label>
+    <select id="{{ key }}_sm_{{ i }}" name="{{ key }}_special_mode" data-mode>
       <option value="closed"{% if s.mode != "hours" %} selected{% endif %}>Closed</option>
       <option value="hours"{% if s.mode == "hours" %} selected{% endif %}>Open, different hours</option>
     </select>
   </div>
   <div class="range special-hours"{% if s.mode != "hours" %} hidden{% endif %}>
-    <input type="time" name="special_start" value="{{ s.start }}" aria-label="Opens" autocomplete="off">
+    <input type="time" name="{{ key }}_special_start" value="{{ s.start }}" aria-label="Opens" autocomplete="off">
     <span aria-hidden="true">–</span>
-    <input type="time" name="special_end" value="{{ s.end }}" aria-label="Closes" autocomplete="off">
+    <input type="time" name="{{ key }}_special_end" value="{{ s.end }}" aria-label="Closes" autocomplete="off">
   </div>
   <button type="button" class="icon-ghost" data-remove="[data-special]" aria-label="Remove this special day"><i class="ri-delete-bin-line" aria-hidden="true"></i></button>
-  {{ err('special_' ~ i) }}
+  {{ err(key ~ '_special_' ~ i) }}
 </div>
+{% endmacro %}
+{% macro location_card(loc) %}
+<article class="loc-card" data-loc>
+  <input type="hidden" name="loc_key" value="{{ loc.key }}">
+  <div class="loc-head">
+    <span class="loc-badge" aria-hidden="true"><i class="ri-map-pin-2-fill"></i><span class="loc-num"></span></span>
+    <div class="field">
+      <label for="{{ loc.key }}_name">Name <span class="muted">(optional)</span></label>
+      <input id="{{ loc.key }}_name" name="{{ loc.key }}_name" value="{{ loc.name }}" autocomplete="off" placeholder="e.g. Washington St…">
+    </div>
+    <div class="field field-grow">
+      <label for="{{ loc.key }}_address">Address</label>
+      <input id="{{ loc.key }}_address" name="{{ loc.key }}_address" value="{{ loc.address }}" autocomplete="street-address" placeholder="e.g. Washington Street, Cork…"{{ inv(loc.key ~ '_address') }}>
+      {{ err(loc.key ~ '_address') }}
+    </div>
+    <button type="button" class="icon-ghost" data-remove="[data-loc]" aria-label="Remove this location"><i class="ri-delete-bin-line" aria-hidden="true"></i></button>
+  </div>
+  <div class="loc-section">
+    <h3 class="loc-sub"><i class="ri-time-line" aria-hidden="true"></i>Opening Hours</h3>
+    {{ err(loc.key ~ '_hours') }}
+    <div class="week">
+      {% for d in weekdays %}{% set rs = loc.hours.get(d, []) %}
+      <div class="day-row{% if not rs %} is-closed{% endif %}" data-prefix="{{ loc.key }}_{{ d }}">
+        <span class="day-name">{{ d|capitalize }}</span>
+        <div class="day-ranges" data-ranges>
+          {% for r in rs %}{{ range_row(loc.key ~ '_' ~ d, r[0], r[1]) }}{% endfor %}
+          <span class="closed-note">Closed</span>
+        </div>
+        <button type="button" class="btn btn-ghost btn-sm" data-add-range><i class="ri-add-line" aria-hidden="true"></i>Add Hours</button>
+        {{ err(loc.key ~ '_hours_' ~ d) }}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="loc-section">
+    <h3 class="loc-sub"><i class="ri-calendar-close-line" aria-hidden="true"></i>Holidays &amp; Special Days</h3>
+    <div class="rows" data-specials>
+      {% for s in loc.special %}{{ special_row(loc.key, loop.index0, s) }}{% endfor %}
+    </div>
+    <button type="button" class="btn btn-ghost btn-sm" data-add-special><i class="ri-add-line" aria-hidden="true"></i>Add Special Day</button>
+  </div>
+</article>
 {% endmacro %}
 {% block content %}
 <p class="back"><a href="{{ url_for('index') }}"><i class="ri-arrow-left-line" aria-hidden="true"></i>Back to the Week</a></p>
@@ -74,13 +101,13 @@
   </section>
 
   <section class="panel" id="location" aria-labelledby="location-h">
-    <h2 id="location-h"><i class="ri-map-pin-2-line" aria-hidden="true"></i>Locations</h2>
-    <p class="hint panel-intro">Events are measured from your nearest location. Footfall looks up each address on OpenStreetMap when you save.</p>
-    <div class="rows" data-rows="loc">
-      {% for loc in f.locations %}{{ location_row(loop.index0, loc) }}{% endfor %}
+    <h2 id="location-h"><i class="ri-map-pin-2-line" aria-hidden="true"></i>Locations &amp; Opening Hours</h2>
+    <p class="hint panel-intro">Each location has its own address and hours. Events are measured from the nearest one; Footfall looks up each address on OpenStreetMap when you save.</p>
+    <div class="locs" data-locs>
+      {% for loc in f.locations %}{{ location_card(loc) }}{% endfor %}
     </div>
     {{ err('locations') }}
-    <button type="button" class="btn btn-ghost btn-sm" data-add="loc"><i class="ri-add-line" aria-hidden="true"></i>Add Location</button>
+    <button type="button" class="btn btn-ghost" data-add-loc><i class="ri-add-line" aria-hidden="true"></i>Add Location</button>
     <div class="field radius">
       <label for="radius_m">Watch radius around each location (metres)</label>
       <div class="range-row">
@@ -89,34 +116,6 @@
       </div>
       {{ err('radius_m') }}
     </div>
-  </section>
-
-  <section class="panel" id="hours" aria-labelledby="hours-h">
-    <h2 id="hours-h"><i class="ri-time-line" aria-hidden="true"></i>Opening Hours</h2>
-    <p class="hint panel-intro">Add more than one set of hours for a split day. A day with no hours is closed.</p>
-    {{ err('hours') }}
-    <div class="week">
-      {% for d in weekdays %}
-      <div class="day-row{% if not f.hours[d] %} is-closed{% endif %}" data-day="{{ d }}">
-        <span class="day-name">{{ d|capitalize }}</span>
-        <div class="day-ranges" data-rows="{{ d }}">
-          {% for r in f.hours[d] %}{{ range_row(d, r[0], r[1]) }}{% endfor %}
-          <span class="closed-note">Closed</span>
-        </div>
-        <button type="button" class="btn btn-ghost btn-sm" data-add="{{ d }}"><i class="ri-add-line" aria-hidden="true"></i>Add Hours</button>
-        {{ err('hours_' ~ d) }}
-      </div>
-      {% endfor %}
-    </div>
-  </section>
-
-  <section class="panel" id="special" aria-labelledby="special-h">
-    <h2 id="special-h"><i class="ri-calendar-close-line" aria-hidden="true"></i>Holidays &amp; Special Days</h2>
-    <p class="hint panel-intro">These dates replace your weekly hours.</p>
-    <div class="rows" data-rows="special">
-      {% for s in f.special %}{{ special_row(loop.index0, s) }}{% endfor %}
-    </div>
-    <button type="button" class="btn btn-ghost btn-sm" data-add="special"><i class="ri-add-line" aria-hidden="true"></i>Add Special Day</button>
   </section>
 
   <section class="panel" id="revenue" aria-labelledby="revenue-h">
@@ -152,9 +151,10 @@
   <div class="settings-save"><button class="btn btn-lg"><i class="ri-save-3-line" aria-hidden="true"></i>Save Business Details</button></div>
 </form>
 
-<template id="tpl-loc">{{ location_row("new", {"name": "", "address": ""}) }}</template>
-<template id="tpl-special">{{ special_row("new", {"date": "", "label": "", "mode": "closed", "start": "", "end": ""}) }}</template>
-{% for d in weekdays %}<template id="tpl-{{ d }}">{{ range_row(d, "", "") }}</template>{% endfor %}
+{% set first_hours = f.locations[0].hours if f.locations else {} %}
+<template id="tpl-loc">{{ location_card({"key": "__K__", "name": "", "address": "", "hours": first_hours, "special": []}) }}</template>
+<template id="tpl-range">{{ range_row("__P__") }}</template>
+<template id="tpl-special">{{ special_row("__K__", "__I__", {"date": "", "label": "", "mode": "closed", "start": "", "end": ""}) }}</template>
 
 <section class="panel" aria-labelledby="sup-h">
   <h2 id="sup-h"><i class="ri-truck-line" aria-hidden="true"></i>Supplier Order Rules</h2>
@@ -204,22 +204,26 @@
   settings.addEventListener('input', () => { dirty = true; });
   settings.addEventListener('submit', () => { dirty = false; });
   window.addEventListener('beforeunload', e => { if (dirty) e.preventDefault(); });
+  const tpl = (id, swaps) => Object.entries(swaps).reduce((h, [k, v]) => h.replaceAll(k, v), document.getElementById(id).innerHTML);
   const syncDay = row => row && row.classList.toggle('is-closed', !row.querySelector('[data-range]'));
+  const focusLast = box => box.lastElementChild?.querySelector('input, select')?.focus();
   settings.addEventListener('click', e => {
-    const add = e.target.closest('[data-add]'), rm = e.target.closest('[data-remove]');
-    if (add) {
-      const key = add.dataset.add, tpl = document.getElementById('tpl-' + key).content.cloneNode(true);
-      tpl.querySelectorAll('[id$="_new"]').forEach(el => {
-        const id = el.id.replace(/_new$/, '_n' + (++uid));
-        tpl.querySelectorAll(`label[for="${el.id}"]`).forEach(l => { l.htmlFor = id; });
-        el.id = id;
-      });
-      const first = tpl.querySelector('input, select');
-      const box = settings.querySelector(`[data-rows="${key}"]`);
-      box.insertBefore(tpl, box.querySelector('.closed-note'));
-      syncDay(add.closest('.day-row')); first?.focus(); dirty = true;
+    const t = e.target;
+    if (t.closest('[data-add-loc]')) {
+      const box = settings.querySelector('[data-locs]');
+      box.insertAdjacentHTML('beforeend', tpl('tpl-loc', { __K__: 'n' + (++uid) })); focusLast(box); dirty = true;
+    } else if (t.closest('[data-add-range]')) {
+      const row = t.closest('.day-row'), box = row.querySelector('[data-ranges]');
+      box.querySelector('.closed-note').insertAdjacentHTML('beforebegin', tpl('tpl-range', { __P__: row.dataset.prefix }));
+      syncDay(row); box.querySelectorAll('[data-range]')[box.querySelectorAll('[data-range]').length - 1].querySelector('input').focus(); dirty = true;
+    } else if (t.closest('[data-add-special]')) {
+      const card = t.closest('[data-loc]'), box = card.querySelector('[data-specials]');
+      box.insertAdjacentHTML('beforeend', tpl('tpl-special', { __K__: card.querySelector('[name=loc_key]').value, __I__: 'n' + (++uid) }));
+      focusLast(box); dirty = true;
+    } else if (t.closest('[data-remove]')) {
+      const rm = t.closest('[data-remove]'), day = rm.closest('.day-row');
+      rm.closest(rm.dataset.remove).remove(); syncDay(day); dirty = true;
     }
-    if (rm) { const day = rm.closest('.day-row'); rm.closest(rm.dataset.remove).remove(); syncDay(day); dirty = true; }
   });
   settings.addEventListener('change', e => {
     if (e.target.matches('[data-mode]')) e.target.closest('[data-special]').querySelector('.special-hours').hidden = e.target.value !== 'hours';

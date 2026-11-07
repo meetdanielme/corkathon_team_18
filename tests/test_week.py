@@ -32,7 +32,8 @@ def test_short_title_drops_demo_suffix():
 def test_split_day_gives_one_band_per_range(con):
     run_prepared(con, at=NOW)
     b = db.get_business(con)
-    b["hours"] = {**b["hours"], "mon": [["08:00", "12:00"], ["13:00", "16:00"]]}
+    loc = b["locations"][0]
+    b["locations"] = [{**loc, "hours": {**loc["hours"], "mon": [["08:00", "12:00"], ["13:00", "16:00"]]}}]
     result = insights_mod.build(b, db.get_events(con, NOW), db.get_suppliers(con, b["id"]), {}, NOW)
     mon = next(d for d in build_week(b, result, db.get_events(con, NOW), NOW)["days"] if d["date"] == "2026-11-09")
     assert [h["label"] for h in mon["hours"]] == ["08:00–12:00", "13:00–16:00"]

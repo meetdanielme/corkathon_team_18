@@ -61,17 +61,19 @@ def _assign_lanes(bars: list[dict]) -> int:
 
 
 def build_week(business: dict, result: dict, events: list[dict], now: datetime, only_day: str | None = None,
-               drafts: dict | None = None) -> dict:
+               drafts: dict | None = None, places: list[dict] | None = None) -> dict:
+    """places: whose opening hours to shade. Default: every location (open anywhere)."""
+    places = places or business.get("locations") or [business]
     by_id = {e["id"]: e for e in events}
     days = []
     for n in range(HORIZON_DAYS):
         day = (now.astimezone(TZ) + timedelta(days=n)).date()
         if only_day and day.isoformat() != only_day:
             continue
-        ranges, special = hours_mod.ranges_for(business, day)
+        ranges, special = hours_mod.any_open(places, day)
         row = {"date": day.isoformat(), "weekday": f"{day:%a}", "daynum": day.day, "month": f"{day:%b}",
                "today": n == 0, "open": bool(ranges), "special": special, "bars": [], "cutoffs": [],
-               "hours": [_span(day, o0, o1) for o0, o1 in hours_mod.windows(business, day)]}
+               "hours": [_span(day, at(day, a), at(day, b)) for a, b in ranges]}
         for i in result["insights"]:
             if i.day == row["date"]:
                 bar = _span(day, parse_dt(i.window_start), parse_dt(i.window_end))

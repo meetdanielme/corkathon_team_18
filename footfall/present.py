@@ -45,6 +45,8 @@ def confidence_icon(text: str) -> str:
         return "ri-cloud-off-line"
     if "excerpt" in t:
         return "ri-file-unknow-line"
+    if "live source" in t:
+        return "ri-global-line"
     return "ri-database-2-line"
 
 

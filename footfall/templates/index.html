@@ -21,24 +21,22 @@
       <span class="biz-avatar" aria-hidden="true"><i class="ri-store-2-fill"></i></span>
       <strong>{{ business.name }}</strong>
     </div>
-    <dl>
-      <div class="biz-row">
-        <dt><i class="ri-map-pin-2-line" aria-hidden="true"></i><span class="visually-hidden">Locations</span></dt>
-        <dd>
-          {% for loc in business.locations %}<span class="biz-line">{% if loc.name %}<b>{{ loc.name }}</b> {% endif %}{{ loc.address }}</span>{% endfor %}
-          <span>Watching events within {{ business.radius_m|dist }}{{ " of each" if business.locations|length > 1 }}</span>
-        </dd>
-        <a href="{{ url_for('business') }}#location">Change<span class="visually-hidden"> locations and radius</span></a>
-      </div>
-      <div class="biz-row">
-        <dt><i class="ri-time-line" aria-hidden="true"></i><span class="visually-hidden">Opening hours</span></dt>
-        <dd>
-          {% for days, rng in hours_summary %}<span class="biz-line"><b>{{ days }}</b> {{ rng }}</span>{% endfor %}
-          {% if next_special %}<span class="biz-special"><i class="ri-calendar-close-line" aria-hidden="true"></i>{{ next_special.label }}: {{ next_special.ranges|map("join", "–")|join(", ") if next_special.ranges else "Closed" }}</span>{% endif %}
-        </dd>
-        <a href="{{ url_for('business') }}#hours">Change<span class="visually-hidden"> opening hours</span></a>
-      </div>
-    </dl>
+    <ol class="biz-locs">
+      {% for p in places %}
+      <li class="biz-loc">
+        <span class="biz-pin" aria-hidden="true"><i class="ri-map-pin-2-fill"></i>{% if places|length > 1 %}<b>{{ loop.index }}</b>{% endif %}</span>
+        <div>
+          <strong>{{ p.loc.name or p.loc.address }}</strong>
+          {% if p.loc.name %}<span class="biz-addr">{{ p.loc.address }}</span>{% endif %}
+          <ul class="biz-hours" aria-label="Opening hours">
+            {% for days, rng in p.hours %}<li><i class="ri-time-line" aria-hidden="true"></i><b>{{ days }}</b> {{ rng }}</li>{% endfor %}
+          </ul>
+          {% if p.special %}<span class="biz-special"><i class="ri-calendar-close-line" aria-hidden="true"></i>{{ p.special.label }}: {{ p.special.ranges|map("join", "–")|join(", ") if p.special.ranges else "Closed" }}</span>{% endif %}
+        </div>
+      </li>
+      {% endfor %}
+    </ol>
+    <p class="biz-foot"><span>Watching events within {{ business.radius_m|dist }}{{ " of each location" if places|length > 1 }}</span><a href="{{ url_for('business') }}#location">Change<span class="visually-hidden"> locations and opening hours</span></a></p>
   </aside>
 </section>
 

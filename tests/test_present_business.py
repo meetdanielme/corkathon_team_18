@@ -48,16 +48,20 @@ def app_client(tmp_path, geocoder=None):
     return app, app.test_client()
 
 
-WEEK = {f"{d}_{k}": v for d in ("mon", "tue", "wed", "thu", "fri") for k, v in (("start", "08:00"), ("end", "16:00"))}
+def week(key, days=("mon", "tue", "wed", "thu", "fri"), start="08:00", end="16:00"):
+    return {f"{key}_{d}_{k}": v for d in days for k, v in (("start", start), ("end", end))}
+
+
 VALID = {"name": "Bríd's Kitchen", "radius_m": "800", "avg_spend": "7,50", "customers_per_hour": "15",
-         "uplift_low": "4", "uplift_medium": "12", "uplift_high": "25",
-         "loc_name": ["Washington St", "Quay"], "loc_address": ["Washington Street, Cork", "Lavitt's Quay, Cork"],
-         **WEEK, "sat_start": ["09:00", "13:00"], "sat_end": ["12:00", "15:00"],
-         "special_date": ["2026-12-24"], "special_label": ["Christmas Eve"], "special_mode": ["hours"],
-         "special_start": ["09:00"], "special_end": ["13:00"]}
+         "uplift_low": "4", "uplift_medium": "12", "uplift_high": "25", "loc_key": ["l0", "n1"],
+         "l0_name": "Washington St", "l0_address": "Washington Street, Cork", **week("l0"),
+         "l0_sat_start": ["09:00", "13:00"], "l0_sat_end": ["12:00", "15:00"],
+         "l0_special_date": ["2026-12-24"], "l0_special_label": ["Christmas Eve"], "l0_special_mode": ["hours"],
+         "l0_special_start": ["09:00"], "l0_special_end": ["13:00"],
+         "n1_name": "Quay", "n1_address": "Lavitt's Quay, Cork", **week("n1", ("sat", "sun"), "10:00", "18:00")}
 
 
-def test_business_page_saves_locations_hours_and_assumptions(tmp_path):
+def test_business_page_saves_each_locations_own_hours(tmp_path):
     geo = FakeGeocoder({"Lavitt's Quay, Cork": (51.9006, -8.4718)})
     app, c = app_client(tmp_path, geo)
     assert c.get("/business").status_code == 200
@@ -66,20 +70,24 @@ def test_business_page_saves_locations_hours_and_assumptions(tmp_path):
     assert geo.calls == ["Lavitt's Quay, Cork"]  # the unchanged seeded address is not looked up again
     with db.connect(app.config["DB_PATH"]) as con:
         b = db.get_business(con)
-    assert [(loc["name"], loc["address"]) for loc in b["locations"]] == [("Washington St", "Washington Street, Cork"),
-                                                                         ("Quay", "Lavitt's Quay, Cork")]
-    assert (b["address"], b["lat"]) == ("Washington Street, Cork", 51.8977)  # main location mirrored
-    assert b["hours"]["sat"] == [["09:00", "12:00"], ["13:00", "15:00"]] and b["hours"]["sun"] == []
+    main, quay = b["locations"]
+    assert (main["name"], quay["name"], quay["address"]) == ("Washington St", "Quay", "Lavitt's Quay, Cork")
+    assert main["hours"]["sat"] == [["09:00", "12:00"], ["13:00", "15:00"]] and main["hours"]["sun"] == []
+    assert quay["hours"]["mon"] == [] and quay["hours"]["sun"] == [["10:00", "18:00"]]
+    assert main["special_hours"] == [{"date": "2026-12-24", "label": "Christmas Eve", "ranges": [["09:00", "13:00"]]}]
+    assert quay["special_hours"] == []
+    assert (b["address"], b["lat"], b["hours"]) == ("Washington Street, Cork", 51.8977, main["hours"])  # main mirrored
     assert (b["opens"], b["closes"], b["open_days"]) == ("08:00", "16:00", ["mon", "tue", "wed", "thu", "fri", "sat"])
-    assert b["special_hours"] == [{"date": "2026-12-24", "label": "Christmas Eve", "ranges": [["09:00", "13:00"]]}]
     assert (b["radius_m"], b["avg_spend"]) == (800, 7.5)
     assert b["sales_baseline"] == {"customers_per_hour": 15, "uplift_pct": {"low": 4, "medium": 12, "high": 25}}
+    home = c.get("/").get_data(as_text=True)
+    assert "Lavitt&#39;s Quay, Cork" in home and "Sat–Sun</b> 10:00–18:00" in home
 
 
 def test_business_page_rejects_bad_input_inline(tmp_path):
     app, c = app_client(tmp_path, FakeGeocoder())
-    bad = {**VALID, "radius_m": "50", "uplift_high": "150", "mon_start": ["08:00", "11:00"], "mon_end": ["12:00", "14:00"],
-           "special_date": [""], "special_label": ["Bank holiday"]}
+    bad = {**VALID, "radius_m": "50", "uplift_high": "150", "l0_mon_start": ["08:00", "11:00"],
+           "l0_mon_end": ["12:00", "14:00"], "l0_special_date": [""], "l0_special_label": ["Bank holiday"]}
     r = c.post("/business", data=bad)
     html = r.get_data(as_text=True)
     assert r.status_code == 400

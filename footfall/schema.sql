@@ -15,8 +15,8 @@ CREATE TABLE IF NOT EXISTS businesses (
   avg_spend REAL,                   -- optional, owner-supplied
   demo_label TEXT,
   address TEXT,                     -- main location's address (mirrors locations position 0)
-  hours TEXT,                       -- JSON weekly ranges, see footfall/domain/hours.py
-  special_hours TEXT                -- JSON dated exceptions (holidays)
+  hours TEXT,                       -- main location's hours (mirror, for weather and older code)
+  special_hours TEXT                -- main location's special days (mirror)
 );
 
 CREATE TABLE IF NOT EXISTS locations (
@@ -26,7 +26,9 @@ CREATE TABLE IF NOT EXISTS locations (
   name TEXT,                        -- optional label, e.g. "Washington St"
   address TEXT NOT NULL,
   lat REAL NOT NULL,                -- looked up from the address, never typed by the owner
-  lon REAL NOT NULL
+  lon REAL NOT NULL,
+  hours TEXT,                       -- JSON weekly ranges for this location (footfall/domain/hours.py)
+  special_hours TEXT                -- JSON dated exceptions (holidays) for this location
 );
 
 CREATE TABLE IF NOT EXISTS supplier_constraints (
