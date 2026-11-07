@@ -160,7 +160,7 @@
   <h2 id="sup-h"><i class="ri-truck-line" aria-hidden="true"></i>Supplier Order Deadlines</h2>
   <div class="table-wrap">
     <table class="table">
-      <thead><tr><th scope="col">Supplier</th><th scope="col">Contact</th><th scope="col">Delivers</th><th scope="col">Order by</th></tr></thead>
+      <thead><tr><th scope="col">Supplier</th><th scope="col">Contact</th><th scope="col">Delivers</th><th scope="col">Order by</th><th scope="col">Actions</th></tr></thead>
       <tbody>
         {% for s in suppliers|sort(attribute="supplier") %}
         <tr>
@@ -168,6 +168,7 @@
           <td>{{ s.contact_label or "—" }}</td>
           <td>{{ s.delivery_day|capitalize }}{% if s.delivery_window %} <span class="muted">{{ s.delivery_window }}</span>{% endif %}</td>
           <td>{% set r = s.cutoff_rule %}{% if r.type == "business_days_before" %}{{ r.n }} working day{{ "s" if r.n != 1 }} before, {{ r.time }}{% else %}{{ r.time or "—" }}{% endif %}</td>
+          <td><a class="btn btn-ghost btn-sm" href="{{ url_for('edit_supplier', sid=s.id) }}">Edit<span class="visually-hidden"> {{ s.supplier }} {{ s.delivery_day }}</span></a></td>
         </tr>
         {% endfor %}
       </tbody>

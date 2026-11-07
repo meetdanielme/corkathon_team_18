@@ -51,11 +51,16 @@ def main() -> int:
         print("\nRe-run with --apply to delete. Nothing was changed.")
         return 0
 
+    # Count first: the remote libSQL cursor wrapper exposes no rowcount, so reading it would
+    # raise against Turso, which is the only database that actually has this problem.
+    ev_before = con.execute("SELECT COUNT(*) FROM event_evidence WHERE event_id IN "
+                            "(SELECT id FROM events WHERE id LIKE ?)", (STALE,)).fetchone()[0]
     # event_evidence.event_id references events(id) with no ON DELETE CASCADE, so evidence first.
-    ev = con.execute("DELETE FROM event_evidence WHERE event_id IN "
-                     "(SELECT id FROM events WHERE id LIKE ?)", (STALE,)).rowcount
-    n = con.execute("DELETE FROM events WHERE id LIKE ?", (STALE,)).rowcount
+    con.execute("DELETE FROM event_evidence WHERE event_id IN "
+                "(SELECT id FROM events WHERE id LIKE ?)", (STALE,))
+    con.execute("DELETE FROM events WHERE id LIKE ?", (STALE,))
     con.commit()
+    n, ev = len(rows), ev_before
     print(f"\nDeleted {n} event(s) and {ev} evidence row(s).")
     print("Now click Load Sample Data once so the current seed is present.")
     return 0

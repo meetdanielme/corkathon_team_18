@@ -29,7 +29,9 @@
       <span class="via" aria-hidden="true"><i class="ri-whatsapp-line"></i><i class="ri-mail-line"></i></span>
       <button type="button" class="btn btn-sm js-copy" {% if not d.approved_at %}disabled aria-describedby="copy-why"{% endif %}><i class="ri-file-copy-line" aria-hidden="true"></i>Copy</button>
     </div>
+    {% if error %}<p class="notice notice-error" role="alert">{{ error }}</p>{% endif %}
     <form method="post" action="{{ url_for('save_draft', draft_id=d.id) }}" id="edit-form">
+      <div class="field"><label for="recipient_label">Recipient</label><input id="recipient_label" name="recipient_label" value="{{ d.recipient_label }}" required maxlength="200"></div>
       <label for="text" class="visually-hidden">Message text</label>
       <textarea id="text" name="text" rows="7" autocomplete="off" spellcheck="true">{{ d.text }}</textarea>
       <div class="composer-foot">
@@ -62,7 +64,7 @@
 <script>
   const text = document.getElementById('text'), count = document.getElementById('count');
   let dirty = false;
-  text.addEventListener('input', () => {
+  document.getElementById('edit-form').addEventListener('input', () => {
     dirty = true; count.textContent = text.value.length;
     document.getElementById('approve').disabled = true;
     document.querySelectorAll('.js-copy').forEach(b => b.disabled = true);

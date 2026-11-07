@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Edit Supplier · Footfall{% endblock %}
+{% block content %}
+<p class="back"><a href="{{ url_for('business', _anchor='sup-h') }}">Back to Suppliers</a></p>
+<h1>Edit Supplier</h1>
+<p>Update this delivery schedule. Other delivery days for the same supplier keep their own settings.</p>
+{% for error in errors %}<p class="notice notice-error" role="alert">{{ error }}</p>{% endfor %}
+<form method="post" class="settings panel">
+{% set r = s.cutoff_rule %}
+<div class="field"><label for="supplier">Supplier name</label><input id="supplier" name="supplier" value="{{ s.supplier }}" required maxlength="200"></div>
+<div class="field"><label for="contact_label">Contact</label><input id="contact_label" name="contact_label" value="{{ s.contact_label or '' }}"></div>
+<div class="field"><label for="delivery_day">Delivery day</label><select id="delivery_day" name="delivery_day">{% for d in weekdays %}<option value="{{ d }}" {{ 'selected' if s.delivery_day == d }}>{{ d|capitalize }}</option>{% endfor %}</select></div>
+<div class="field"><label for="delivery_window">Delivery window (optional, HH:MM-HH:MM)</label><input id="delivery_window" name="delivery_window" value="{{ s.delivery_window or '' }}" placeholder="07:30-08:00"></div>
+<div class="field"><label for="rule_type">Order cutoff</label><select id="rule_type" name="rule_type"><option value="business_days_before" {{ 'selected' if r.type == 'business_days_before' }}>Working days before delivery</option><option value="weekday" {{ 'selected' if r.type == 'weekday' }}>Weekday before delivery</option></select></div>
+<div class="field"><label for="days_before">Working days before delivery (for working-day rule)</label><input type="number" id="days_before" name="days_before" min="1" max="30" value="{{ r.n or 1 }}"></div>
+<fieldset><legend>Supplier closed days (for working-day rule)</legend>{% for d in weekdays %}<label><input type="checkbox" name="closed" value="{{ d }}" {{ 'checked' if d in r.get('closed', []) }}> {{ d|capitalize }}</label> {% endfor %}</fieldset>
+<div class="field"><label for="cutoff_day">Cutoff weekday (for weekday rule)</label><select id="cutoff_day" name="cutoff_day">{% for d in weekdays %}<option value="{{ d }}" {{ 'selected' if r.day == d }}>{{ d|capitalize }}</option>{% endfor %}</select></div>
+<div class="field"><label for="cutoff_time">Cutoff time</label><input type="time" id="cutoff_time" name="cutoff_time" value="{{ r.time }}" required></div>
+<p class="hint">These are your saved supplier settings. Confirm deadlines with your supplier. Existing order messages are kept as written.</p>
+<button class="btn">Save Supplier</button> <a class="btn btn-ghost" href="{{ url_for('business', _anchor='sup-h') }}">Cancel</a>
+</form>
+{% endblock %}
