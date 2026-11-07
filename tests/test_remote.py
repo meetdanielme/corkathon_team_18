@@ -36,7 +36,8 @@ def test_allowance_is_shared_and_stops_before_sdk_call(tmp_path, monkeypatch):
 
 
 def test_reconnect_after_network_preserves_committed_records(tmp_path):
-    import libsql
+    # Same reason as above: no libsql wheel for Python 3.13+, so skip instead of failing.
+    libsql = pytest.importorskip("libsql", reason="libsql not installed; remote/Turso path not exercised")
     path = str(tmp_path / 'reconnect.sqlite3')
     factory = lambda: libsql.connect(path)
     with Connection(factory(), reconnect=factory) as c:
