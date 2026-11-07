@@ -117,5 +117,39 @@
    "url": "https://example.org/footfall-demo/tbc",
    "excerpt": "Community talk coming soon, date to be confirmed."
   }
+ },
+ {
+  "event": {
+   "title": "Harbour food fair",
+   "start_at": "2026-11-09T10:00:00+00:00",
+   "end_at": "2026-11-09T14:00:00+00:00",
+   "venue_name": "Grand Parade",
+   "lat": 51.8977,
+   "lon": -8.4735,
+   "category": "market",
+   "access": "public",
+   "attendance": null
+  },
+  "evidence": {
+   "url": "https://example.org/footfall-demo/harbour-food-fair",
+   "excerpt": "Harbour food fair, Monday 9 November, 10:00-14:00, Grand Parade."
+  }
+ },
+ {
+  "event": {
+   "title": "Evening book launch",
+   "start_at": "2026-11-10T16:45:00+00:00",
+   "end_at": "2026-11-10T17:15:00+00:00",
+   "venue_name": "Oliver Plunkett Street",
+   "lat": 51.8977,
+   "lon": -8.4757,
+   "category": "community",
+   "access": "public",
+   "attendance": null
+  },
+  "evidence": {
+   "url": "https://example.org/footfall-demo/book-launch",
+   "excerpt": "Evening book launch, Tuesday 10 November, 16:45-17:15, Oliver Plunkett Street."
+  }
  }
 ]
