@@ -1,10 +1,12 @@
 """Verify the configured model returns JSON. Usage: python -m scripts.check_llm  (reads FOOTFALL_LLM etc.)"""
 import sys
 
+from footfall.config import load_env
 from footfall.llm import LLM, LLMNotConfigured
 
 
 def main() -> int:
+    load_env()
     llm = LLM()
     try:
         out = llm.complete_json('Return JSON {"ok": true} and nothing else.', "ping")

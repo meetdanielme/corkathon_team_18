@@ -21,22 +21,22 @@ def connect(path: str) -> sqlite3.Connection:
 
 
 def init(con: sqlite3.Connection) -> None:
-    con.executescript(SCHEMA.read_text())
+    con.executescript(SCHEMA.read_text(encoding="utf-8"))
     con.commit()
 
 
 def seed(con: sqlite3.Connection, seed_dir: Path = SEED) -> None:
     """Load the fictional café, its supplier constraints and the source directory. Idempotent."""
-    b = json.loads((seed_dir / "business.json").read_text())
+    b = json.loads((seed_dir / "business.json").read_text(encoding="utf-8"))
     con.execute("INSERT OR REPLACE INTO businesses VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
                 (b["id"], b["name"], b["lat"], b["lon"], b["timezone"], b["opens"], b["closes"],
                  json.dumps(b["open_days"]), b["radius_m"], None, b.get("avg_spend"), b.get("demo_label")))
-    for s in json.loads((seed_dir / "suppliers.json").read_text()):
+    for s in json.loads((seed_dir / "suppliers.json").read_text(encoding="utf-8")):
         con.execute("INSERT OR REPLACE INTO supplier_constraints VALUES (?,?,?,?,?,?,?,?,?)",
                     (s["id"], b["id"], s["supplier"], s.get("contact_label"), s["delivery_day"],
                      s.get("delivery_window"), json.dumps(s["cutoff_rule"]), s.get("evidence"),
                      s.get("demo_label")))
-    for s in json.loads((seed_dir / "sources.json").read_text()):
+    for s in json.loads((seed_dir / "sources.json").read_text(encoding="utf-8")):
         con.execute("""INSERT INTO sources (id, org_name, venue_name, url, type, lat, lon, access_notes,
                        refresh_interval_h, provenance) VALUES (?,?,?,?,?,?,?,?,?,?)
                        ON CONFLICT(id) DO UPDATE SET org_name=excluded.org_name, venue_name=excluded.venue_name,

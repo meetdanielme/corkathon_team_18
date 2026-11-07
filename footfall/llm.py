@@ -49,7 +49,7 @@ class LLM:
         import anthropic  # pip install anthropic
 
         client = anthropic.Anthropic()
-        r = client.messages.create(model=os.getenv("ANTHROPIC_MODEL", "claude-sonnet-5-5"), max_tokens=2000,
+        r = client.messages.create(model=os.getenv("ANTHROPIC_MODEL", "claude-sonnet-5"), max_tokens=2000,
                                    system=system, messages=[{"role": "user", "content": user}])
         return "".join(b.text for b in r.content if getattr(b, "type", "") == "text")
 
