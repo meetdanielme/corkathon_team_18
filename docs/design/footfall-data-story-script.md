@@ -2,11 +2,12 @@
 
 ## 30-second version
 
-Four Cork pages feed Footfall. Our human baseline has 11 listings for 7–13 November. The deployed app is partly updated, and its refresh status changed between checks. One observed view rejected The Nutcracker and Disco Pigs as out of window although both overlap; a later check showed one refresh issue and Harry Clarke from Triskel, but not those rejection messages. The app also shifts several displayed start times from the source pages. PR #27 reports two findings filtered by café hours. Demo events are fictional, and the full comparison is still incomplete.
+Four Cork pages feed Footfall. Our human baseline has 11 listings for 7–13 November. A read-only production database audit found eight live rows representing five baseline titles; four other titles have named historical rejections, and two are absent with the cause unknown. The earlier one-hour display offsets were planning windows; stored starts match the source. The retained history is incomplete, so we cannot claim an accuracy score. Demo events are fictional.
 
 ## Delivery notes
 
 - Keep the distinction clear: 11 is a count of human-visible listing entries, not extracted event count.
-- One deployed-app snapshot rejected The Nutcracker and Disco Pigs as out of window despite the source dates overlapping the window; a later snapshot did not show those messages. Report both observations and say the rejection needs reproduction.
-- If asked about other misses or false positives, say the changing partial refresh and missing per-source output leave the full comparison incomplete.
+- Do not report the display windows as incorrect extracted start times: the stored starts match the source, while `demand_window` applies an arrival buffer and an assumed duration.
+- Four baseline titles have named historical rejection records; two absent titles have no retained rejection reason. Explain that rejected candidates are not fully retained, so false positives and a complete accuracy score cannot be established.
+- PRs #49 and #50 flag three old St Peter's spelling-variant pairs without merging them. Production verification of the new warning behavior is still pending.
 - If asked about customer numbers or sales, say the sources do not state attendance and Footfall does not infer sales.
