@@ -6,9 +6,9 @@
 <p><span class="badge mode-{{ i.data_mode }}">{{ i.data_mode }} data</span> <span class="badge">rules {{ i.rule_version }}</span></p>
 <table class="facts">
   <tr><th>Relevant window</th><td>{{ i.window_label }}<br><span class="muted small">{{ i.window_basis }}</span></td></tr>
-  <tr><th>Expected effect</th><td><span class="effect effect-{{ i.direction }}">{{ i.direction }}</span></td></tr>
-  <tr><th>Potential impact</th><td><span class="impact impact-{{ i.impact }}">{{ i.impact }}</span> <span class="muted small">(heuristic points: distance {{ i.impact_points.distance }}, overlap {{ i.impact_points.overlap }}, attendance {{ i.impact_points.attendance }} = {{ i.impact_points.total }}; not a measured uplift)</span></td></tr>
-  <tr><th>Confidence</th><td><span class="confidence confidence-{{ i.confidence }}">{{ i.confidence }}</span><ul>{% for r in i.confidence_reasons %}<li>{{ r }}</li>{% endfor %}</ul></td></tr>
+  <tr><th>Expected effect</th><td>{{ i.direction }}</td></tr>
+  <tr><th>Potential impact</th><td>{{ i.impact }} <span class="muted small">(heuristic points: distance {{ i.impact_points.distance }}, overlap {{ i.impact_points.overlap }}, attendance {{ i.impact_points.attendance }} = {{ i.impact_points.total }}; not a measured uplift)</span></td></tr>
+  <tr><th>Confidence</th><td>{{ i.confidence }}<ul>{% for r in i.confidence_reasons %}<li>{{ r }}</li>{% endfor %}</ul></td></tr>
   <tr><th>Reasons</th><td><ul>{% for r in i.reasons %}<li>{{ r }}</li>{% endfor %}</ul></td></tr>
   {% if i.conflicts %}<tr><th>Conflicts</th><td><ul>{% for c in i.conflicts %}<li>{{ c }}</li>{% endfor %}</ul></td></tr>{% endif %}
   <tr><th>Sources and freshness</th><td><ul>{% for s in i.sources %}<li><a href="{{ s.url }}" rel="noopener" target="_blank">{{ s.url }}</a> · retrieved {{ s.retrieved_at|when }}{% if s.stale %} · <strong class="stale">stale</strong>{% endif %}{% if s.excerpt %}<blockquote>{{ s.excerpt }}</blockquote>{% endif %}</li>{% endfor %}</ul></td></tr>

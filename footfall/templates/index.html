@@ -22,16 +22,16 @@
   <p class="muted small">"No events" means none found in the monitored sources, not complete local coverage.</p>
 </section>
 
-<section class="insights">
+<section>
   <h2>Next 7 days</h2>
   {% for i in insights %}
   <a class="card dir-{{ i.direction }}" href="{{ url_for('insight', iid=i.id) }}">
     <div class="card-head"><strong>{{ i.title }}</strong><span class="badge mode-{{ i.data_mode }}">{{ i.data_mode }}</span></div>
     <div>{{ i.window_label }} · {{ i.distance_m }} m away</div>
     <div class="labels">
-      <span class="badge effect-{{ i.direction }}">Effect: {{ i.direction }}</span>
-      <span class="badge impact-{{ i.impact }}">Impact: {{ i.impact }}</span>
-      <span class="badge confidence-{{ i.confidence }}">Confidence: {{ i.confidence }}</span>
+      <span class="badge">Effect: {{ i.direction }}</span>
+      <span class="badge">Impact: {{ i.impact }}</span>
+      <span class="badge">Confidence: {{ i.confidence }}</span>
       {% if i.action_deadline %}<span class="badge deadline-{{ i.action_deadline.status }}">{{ i.action_deadline.supplier }} cutoff {{ i.action_deadline.cutoff_label }} ({{ i.action_deadline.status }})</span>{% endif %}
       {% if i.conflicts %}<span class="badge conflict">Conflicting signals</span>{% endif %}
     </div>
@@ -41,13 +41,10 @@
   {% endfor %}
 </section>
 
-<section class="excluded">
+<section>
   <h2>Filtered out</h2>
-  <ul class="excluded-list">{% for e in excluded %}<li><strong>{{ e.title }}</strong>: {{ e.reason }}</li>{% else %}<li>Nothing filtered.</li>{% endfor %}</ul>
-</section>
-
-<section class="review">
+  <ul>{% for e in excluded %}<li><strong>{{ e.title }}</strong>: {{ e.reason }}</li>{% else %}<li>Nothing filtered.</li>{% endfor %}</ul>
   <h2>Needs review</h2>
-  <ul class="review-list">{% for r in review %}<li><strong>{{ r.title }}</strong>: missing {{ r.missing|join(", ") }}</li>{% else %}<li>Nothing to review.</li>{% endfor %}</ul>
+  <ul>{% for r in review %}<li><strong>{{ r.title }}</strong>: missing {{ r.missing|join(", ") }}</li>{% else %}<li>Nothing to review.</li>{% endfor %}</ul>
 </section>
 {% endblock %}
