@@ -13,6 +13,7 @@ from flask import (Flask, abort, flash, g, jsonify, redirect, render_template, r
 from . import business_form, db, present
 from . import weather as weather_mod
 from .config import load_env
+from .domain import clashes as clashes_mod
 from .domain import drafts as drafts_mod
 from .domain import hours as hours_mod
 from .domain import insights as insights_mod
@@ -233,7 +234,12 @@ def create_app(db_path: str | None = None, clock=None, llm: LLM | None = None, f
         week = build_week(b, result, db.get_events(c, clock()), clock(), only_day=i.day, drafts=db.draft_states(c),
                           places=[here] if here else None)
         event = next((e for e in db.get_events(c, clock()) if e["id"] == i.event_id), {})
+        # Deliveries a nearby closure would block. Access only: never a demand or sales claim.
+        clashes = [x for x in clashes_mod.clashes_for(b, db.get_events(c, clock()),
+                                                      db.get_suppliers(c, b["id"]), clock())
+                   if x.event_id == i.event_id]
         return render_template("insight.html", i=i, draft=draft, business=b, week=week, event=event,
+                               clashes=clashes,
                                cd=present.countdown(i.action_deadline, clock(), draft),
                                rev=present.revenue_estimate(i.impact, i.direction, i.overlap_min, b))
 
@@ -242,6 +248,17 @@ def create_app(db_path: str | None = None, clock=None, llm: LLM | None = None, f
         i = find_insight(iid)
         d = drafts_mod.draft({**i.to_dict(), "title": short_title(i.title)}, llm=model if model.enabled else None)
         draft_id = db.create_draft(con(), iid, d["recipient_label"], d["text"], d["source"])
+        return redirect(url_for("draft", draft_id=draft_id))
+
+    @app.post("/clashes/<path:cid>/draft")
+    def make_clash_draft(cid):
+        c = con()
+        b, _ = compute()
+        found = next((x for x in clashes_mod.clashes_for(b, db.get_events(c, clock()),
+                                                         db.get_suppliers(c, b["id"]), clock())
+                      if x.id == cid), None) or abort(404)
+        who, text = clashes_mod.template_draft(found.to_dict())
+        draft_id = db.create_draft(c, cid, who, text, "template")
         return redirect(url_for("draft", draft_id=draft_id))
 
     @app.get("/drafts/<int:draft_id>")
