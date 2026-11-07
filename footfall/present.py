@@ -24,30 +24,30 @@ def category_icon(category: str | None) -> str:
 
 def reason_icon(text: str) -> str:
     t = text.lower()
-    if "from the café" in t or "radius" in t:
+    if "walk" in t or " from " in t:
         return "ri-map-pin-range-line"
-    if "overlaps opening hours" in t:
+    if "while you're open" in t:
         return "ri-time-line"
     if "rain" in t:
         return "ri-showers-line"
-    if "competing" in t:
+    if "cancel" in t:
         return "ri-error-warning-line"
     return "ri-information-line"
 
 
 def confidence_icon(text: str) -> str:
     t = text.lower()
-    if "attendance" in t:
+    if "how many people" in t:
         return "ri-group-line"
-    if "end time" in t:
+    if "finish time" in t:
         return "ri-time-line"
-    if "stale" in t or "failed" in t:
+    if "recently" in t:
         return "ri-cloud-off-line"
-    if "excerpt" in t:
+    if "details written" in t:
         return "ri-file-unknow-line"
-    if "live source" in t:
+    if "event's own page" in t:
         return "ri-global-line"
-    return "ri-database-2-line"
+    return "ri-information-line"
 
 
 def dist(metres) -> str:
@@ -81,7 +81,7 @@ def _until(hours: float) -> str:
     if hours < 1:
         return "within the hour"
     if hours < NOW_H:
-        return f"within {int(hours)} h"
+        return f"in {int(hours)} hour{'s' if int(hours) != 1 else ''}"
     days = int(hours // 24)
     return "tomorrow" if days == 1 else f"in {days} days"
 
@@ -92,19 +92,19 @@ def countdown(deadline: dict | None, now: datetime, draft: dict | None = None) -
     level: done (message approved), missed, now (<24 h), soon (<72 h), later, none (no cutoff).
     """
     if draft and draft.get("approved_at"):
-        sub = f"Order by {deadline['cutoff_label']}" if deadline else "No supplier cutoff"
-        return {"level": "done", "icon": "ri-checkbox-circle-fill", "label": "Message approved", "sub": sub}
+        sub = f"Order due {deadline['cutoff_label']}" if deadline else "No order to change"
+        return {"level": "done", "icon": "ri-checkbox-circle-fill", "label": "Message ready to send", "sub": sub}
     if not deadline:
-        return {"level": "none", "icon": "ri-calendar-check-line", "label": "No order cutoff", "sub": ""}
+        return {"level": "none", "icon": "ri-calendar-check-line", "label": "No order to change", "sub": ""}
     hours = (parse_dt(deadline["cutoff"]) - now).total_seconds() / 3600
     sub = deadline["cutoff_label"]
     if hours <= 0:
-        return {"level": "missed", "icon": "ri-close-circle-fill", "label": "Cutoff passed", "sub": sub}
+        return {"level": "missed", "icon": "ri-close-circle-fill", "label": "Order deadline passed", "sub": sub}
     level = "now" if hours < NOW_H else "soon" if hours < SOON_H else "later"
     icon = {"now": "ri-alarm-warning-fill", "soon": "ri-time-fill", "later": "ri-calendar-event-fill"}[level]
-    label = f"Order {_until(hours)}"
+    label = f"Order due {_until(hours)}"
     if draft:
-        label += ", draft not approved"
+        label += ", message not approved yet"
     return {"level": level, "icon": icon, "label": label, "sub": sub, "hours": hours}
 
 

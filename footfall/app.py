@@ -65,6 +65,7 @@ def create_app(db_path: str | None = None, clock=None, llm: LLM | None = None, f
     app.add_template_filter(short_title, "short")
     app.add_template_filter(present.local_iso, "iso")
     app.add_template_filter(present.dist, "dist")
+    app.add_template_filter(insights_mod.duration_words, "duration")
     app.add_template_filter(present.walk_minutes, "walk")
     app.add_template_filter(present.category_icon, "category_icon")
     app.add_template_filter(present.reason_icon, "reason_icon")
@@ -175,7 +176,9 @@ def create_app(db_path: str | None = None, clock=None, llm: LLM | None = None, f
                 run = refresh_mod.run_live(c, model, at=clock(), **kwargs)
             else:
                 run = refresh_mod.run_prepared(c, at=clock())
-            flash(f"Updated: {run['events_upserted']} events found ({run['status']}).")
+            flash({"ok": f"Up to date. We found {run['events_upserted']} events near you.",
+                   "partial": "Partly up to date: we couldn't check some event listings. Try again later."}
+                  .get(run["status"], "We couldn't check for new events just now. Try again shortly."))
         except refresh_mod.RefreshBusy as e:
             flash(str(e))
         return redirect(safe_next(url_for("index")))
@@ -213,7 +216,7 @@ def create_app(db_path: str | None = None, clock=None, llm: LLM | None = None, f
     def save_draft(draft_id):
         db.get_draft(con(), draft_id) or abort(404)
         db.update_draft(con(), draft_id, request.form["text"].strip())
-        flash("Saved. Approve again after editing.")
+        flash("Saved. Approve the message again when you're happy with it.")
         return redirect(url_for("draft", draft_id=draft_id))
 
     @app.post("/drafts/<int:draft_id>/approve")

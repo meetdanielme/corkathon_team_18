@@ -11,7 +11,7 @@ from datetime import date, datetime, timedelta
 from . import hours as hours_mod
 from .cutoffs import cutoff_for, serving_delivery
 from .geo import haversine_m
-from .timeutil import fmt, fmt_day, parse_dt, weekday
+from .timeutil import at, fmt, fmt_day, parse_dt, weekday
 
 RULE_VERSION = "r1"
 PRE_BUFFER_MIN = 60          # assumed arrival buffer before an event
@@ -59,7 +59,25 @@ class Insight:
 class Exclusion:
     event_id: str
     title: str
-    reason: str
+    reason: str      # one plain sentence for the owner
+    short: str = ""  # a few words for the timeline bar
+
+
+def distance_words(metres: float) -> str:
+    m = round(metres)
+    return f"{m} m" if m < 1000 else f"{m / 1000:.1f} km".replace(".0 km", " km")
+
+
+def duration_words(minutes: int) -> str:
+    h, m = divmod(minutes, 60)
+    hours = f"{h} hour{'s' if h != 1 else ''}" if h else ""
+    mins = f"{m} minutes" if m else ""
+    return " ".join(x for x in (hours, mins) if x)
+
+
+def walk_words(metres: float) -> str:
+    mins = max(1, round(metres / 80))  # about 80 m a minute on foot
+    return f"about a {mins}-minute walk"
 
 
 @dataclass
@@ -72,10 +90,9 @@ class ReviewFinding:
 def demand_window(start: datetime, end: datetime | None) -> tuple[datetime, datetime, str]:
     if end:
         return (start - timedelta(minutes=PRE_BUFFER_MIN), end + timedelta(minutes=POST_BUFFER_MIN),
-                f"Assumed: {PRE_BUFFER_MIN} min before start to {POST_BUFFER_MIN} min after published end")
+                "Includes the hour before it starts and the hour after it ends, while people arrive and leave.")
     return (start - timedelta(minutes=PRE_BUFFER_MIN), start + timedelta(minutes=UNKNOWN_END_SPAN_MIN),
-            f"Assumed: end time not published, so {PRE_BUFFER_MIN} min before to "
-            f"{UNKNOWN_END_SPAN_MIN} min after start. Review before relying on it")
+            "No finish time has been published, so we've assumed it runs for about two hours. Worth checking.")
 
 
 def overlap_minutes(a0: datetime, a1: datetime, b0: datetime, b1: datetime) -> int:
@@ -96,18 +113,18 @@ def impact_for(distance_m: float, overlap_min: int, attendance: int | None) -> t
 def confidence_for(event: dict) -> tuple[str, list[str]]:
     low, medium = [], []
     if event.get("stale"):
-        low.append("Source data is stale or the last check failed")
+        low.append("We couldn't check the event page recently, so details may have changed")
     if not any(e.get("excerpt") for e in event.get("evidence", [])):
-        low.append("No supporting excerpt from the source")
+        low.append("We couldn't find the details written on the event page")
     if event.get("data_mode") == "prepared":
-        medium.append("Not yet checked against a live source")
+        medium.append("We haven't checked the event's own page yet")
     elif event.get("verification") != "verified":
-        medium.append("Not yet verified against the source page")
+        medium.append("We haven't confirmed this on the event's own page yet")
     if not event.get("end_at"):
-        medium.append("End time not published, so the window is assumed")
+        medium.append("No finish time published, so we've guessed how long it runs")
     notes = []
     if event.get("attendance") is None:
-        notes.append("Attendance unknown, so it did not raise impact")
+        notes.append("We don't know how many people are going")
     level = "low" if low else "medium" if medium else "high"
     return level, low + medium + notes
 
@@ -142,51 +159,58 @@ def evaluate(business: dict, event: dict, suppliers: list[dict], weather: dict[s
         return ReviewFinding(eid, title, missing)
     end = parse_dt(event.get("end_at"))
     if event.get("access") == "restricted":
-        return Exclusion(eid, title, "Private or restricted event, so not a public demand signal")
+        return Exclusion(eid, title, "It's a private event, so it won't bring passing trade", "Private event")
     locations = business.get("locations") or [business]
     near = min(locations, key=lambda loc: haversine_m(loc["lat"], loc["lon"], event["lat"], event["lon"]))
     dist = haversine_m(near["lat"], near["lon"], event["lat"], event["lon"])
-    place = (near.get("name") or near.get("address") or "the café") if len(locations) > 1 else "the café"
+    place = (near.get("name") or near.get("address") or "your café") if len(locations) > 1 else "your café"
     if dist > business["radius_m"]:
-        return Exclusion(eid, title, f"{round(dist)} m away, outside the {business['radius_m']} m radius")
+        return Exclusion(eid, title, f"It's {distance_words(dist)} away, too far to bring people past your door",
+                         f"{distance_words(dist)} away")
     day = start.date()
     if not (now.date() <= day < now.date() + timedelta(days=HORIZON_DAYS)):
-        return Exclusion(eid, title, "Outside the 7-day view")
+        return Exclusion(eid, title, "It isn't happening this week", "Not this week")
     sched = near if near.get("hours") is not None else business  # the nearest location's own hours
     ranges, special = hours_mod.ranges_for(sched, day)
-    where = f" at {place}" if place != "the café" else ""
+    where = f" at {place}" if place != "your café" else ""
     if not ranges:
-        return Exclusion(eid, title, f"Café is closed{where} for {special}" if special
-                         else f"Café is closed{where} on {fmt_day(day)}")
+        return Exclusion(eid, title, f"You're closed{where} for {special}" if special
+                         else f"You're closed{where} on {fmt_day(day)}", "You're closed")
     w0, w1, basis = demand_window(start, end)
     ov = sum(overlap_minutes(w0, w1, o0, o1) for o0, o1 in hours_mod.windows(sched, day))
     label = f"{w0:%H:%M}-{w1:%H:%M}"
     if ov == 0:
-        return Exclusion(eid, title, f"Window {label} does not overlap opening hours {hours_mod.label(ranges)}")
+        when = ("after you close" if w0 >= at(day, ranges[-1][1]) else
+                "before you open" if w1 <= at(day, ranges[0][0]) else "while you're closed")
+        return Exclusion(eid, title, f"People will be around {w0:%H:%M}–{w1:%H:%M}, {when} "
+                                     f"(you're open {hours_mod.label(ranges).replace('-', '–')})",
+                         when.capitalize())
 
     direction = "decrease" if event.get("category") in DECREASE_CATEGORIES else "increase"
     impact, pts = impact_for(dist, ov, event.get("attendance"))
     conf, conf_reasons = confidence_for(event)
-    reasons = [f"{round(dist)} m from {place} (radius {business['radius_m']} m). Proximity is relevance "
-               f"evidence, not proof of extra customers",
-               f"Window {label} overlaps opening hours by {ov} min"]
+    hours_open = duration_words(ov)
+    reasons = [f"It's {distance_words(dist)} from {place}, {walk_words(dist)}. Being close helps, but it "
+               f"doesn't guarantee extra customers",
+               f"People will be around for {hours_open} while you're open ({w0:%H:%M}–{w1:%H:%M})"]
     wx = weather.get(day.isoformat())
     if wx and wx.get("rain_prob_max") is not None and wx["rain_prob_max"] >= 60:
-        reasons.append(f"Rain likely ({wx['rain_prob_max']}%). Context only; no sales effect assumed")
+        reasons.append(f"Rain is likely that day ({wx['rain_prob_max']}% chance). Worth bearing in mind; it doesn't change the estimate above")
 
     dls = deadlines_for(day, w0, suppliers, now)
     live = [d for d in dls if d["status"] != "missed"]
     action = live[0] if live else (dls[0] if dls else None)
     if direction == "decrease":
-        suggestion = f"Check whether deliveries or customer access are affected {fmt_day(day)} {label}."
+        suggestion = (f"Check whether your deliveries or customers can still reach you on "
+                      f"{fmt_day(day)}, {w0:%H:%M}–{w1:%H:%M}.")
     elif action and action["status"] != "missed":
-        suggestion = (f"Review your {action['supplier']} order for {action['delivery_day']} before "
-                      f"{action['cutoff_label']}. Whether to change quantities is your call.")
+        suggestion = (f"Have a look at your {action['supplier'].lower()} order for {action['delivery_day']}. "
+                      f"Changes need to reach them by {action['cutoff_label']}. How much to change is up to you.")
     elif action:
-        suggestion = (f"The {action['supplier']} cutoff ({action['cutoff_label']}) has passed. "
-                      f"Consider asking whether a late change is possible.")
+        suggestion = (f"The {action['supplier'].lower()} order for {action['delivery_day']} closed at "
+                      f"{action['cutoff_label']}. You could ask if a late change is possible.")
     else:
-        suggestion = f"Consider staffing and stock for {fmt_day(day)} {label}."
+        suggestion = f"Think about staff and stock for {fmt_day(day)}, {w0:%H:%M}–{w1:%H:%M}."
 
     sources = [{"url": e["url"], "retrieved_at": e["retrieved_at"], "excerpt": e.get("excerpt"),
                 "stale": bool(event.get("stale"))} for e in event.get("evidence", [])]
@@ -215,7 +239,7 @@ def build(business: dict, events: list[dict], suppliers: list[dict], weather: di
             if a is not b and a.direction != b.direction and a.day == b.day and overlap_minutes(
                     parse_dt(a.window_start), parse_dt(a.window_end),
                     parse_dt(b.window_start), parse_dt(b.window_end)) > 0:
-                a.conflicts.append(f"Competing signal: {b.title} may {b.direction} demand in an overlapping "
-                                   f"window. Effects are shown separately, not netted.")
+                effect = "bring more customers" if b.direction == "increase" else "keep customers away"
+                a.conflicts.append(f"{b.title} could {effect} at the same time, so the two may cancel each other out")
     insights.sort(key=lambda i: (i.day, -IMPACT_RANK[i.impact], i.window_start))
     return {"insights": insights, "excluded": excluded, "review": review}

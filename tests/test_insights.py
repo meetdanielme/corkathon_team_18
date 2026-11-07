@@ -24,9 +24,9 @@ def test_prepared_scenario_classifies_every_event(con):
                                                               "Road closure for filming",
                                                               "Harbour food fair", "Evening book launch"}
     reasons = {e.title.split(" (")[0]: e.reason for e in r["excluded"]}
-    assert "does not overlap opening hours" in reasons["Evening concert"]
-    assert "outside the 1000 m radius" in reasons["Suburban festival"]
-    assert "restricted" in reasons["Private function"]
+    assert "after you close" in reasons["Evening concert"]
+    assert "7.6 km away, too far" in reasons["Suburban festival"]
+    assert "private event" in reasons["Private function"]
     assert r["review"][0].missing == ["start time", "location"]
 
 
@@ -35,19 +35,19 @@ def test_graduation_window_impact_and_deadline(con):
     g = by_title(build(con)["insights"], "Graduation")
     assert g.window_label == "Thu 12 Nov 10:00-14:00"
     assert g.impact == "medium" and g.impact_points == {"distance": 1, "overlap": 2, "attendance": 0, "total": 3}
-    assert g.confidence == "medium" and any("live source" in r for r in g.confidence_reasons)
+    assert g.confidence == "medium" and any("event's own page" in r for r in g.confidence_reasons)
     assert g.action_deadline["supplier"] == "Bakery"
     assert g.action_deadline["cutoff"] == "2026-11-11T16:00:00+00:00"
     assert g.action_deadline["status"] == "upcoming"
-    assert "your call" in g.suggested_action
+    assert "up to you" in g.suggested_action
 
 
 def test_market_high_impact_assumed_window_and_conflict(con):
     run_prepared(con, at=NOW)
     r = build(con)
     m = by_title(r["insights"], "market")
-    assert m.impact == "high" and "end time not published" in m.window_basis
-    assert any("End time not published" in x for x in m.confidence_reasons)
+    assert m.impact == "high" and "No finish time" in m.window_basis
+    assert any("No finish time" in x for x in m.confidence_reasons)
     assert m.conflicts and "Road closure" in m.conflicts[0]
     closure = by_title(r["insights"], "closure")
     assert closure.direction == "decrease" and closure.conflicts
@@ -70,7 +70,7 @@ def test_window_touching_opening_time_is_excluded():
           "end_at": "2026-11-12T07:00:00+00:00", "lat": 51.9, "lon": -8.48, "access": "public",
           "evidence": [{"url": "u", "retrieved_at": NOW.isoformat(), "excerpt": "x"}]}
     r = ins.evaluate(b, ev, [], {}, NOW)
-    assert isinstance(r, ins.Exclusion) and "does not overlap" in r.reason
+    assert isinstance(r, ins.Exclusion) and "before you open" in r.reason
 
 
 def test_rain_is_context_only(con):
@@ -79,7 +79,7 @@ def test_rain_is_context_only(con):
     r = ins.build(b, db.get_events(con, NOW), db.get_suppliers(con, b["id"]),
                   {"2026-11-12": {"rain_prob_max": 80}}, NOW)
     g = by_title(r["insights"], "Graduation")
-    assert any("Context only" in x for x in g.reasons) and g.impact == "medium"
+    assert any("doesn't change the estimate" in x for x in g.reasons) and g.impact == "medium"
 
 
 def test_prepared_scenario_covers_every_impact_level_and_a_passed_cutoff(con):

@@ -16,13 +16,17 @@ Do not reset the allowance or raise the setting without Daniel’s direction. Do
 
 ## Deployment and source
 
-The deployment uses the committed shared-code branch `feat/azure-app-setup` with hosting changes in PR #29. It does not include Daniel’s separate uncommitted attention-visuals work. The repository remains private, and project public-source access is disabled. Deployments are preview environments; a shareable link grants judges access without a Vercel account. Link expiry is reported separately in chat, and a new share link is needed after expiry or switching deployments. Do not put share-bypass tokens into Git.
+The Vercel project is connected to the private GitHub repository `meetdanielme/corkathon_team_18`. **Every push or merged PR to `main` automatically builds a production deployment and updates https://footfall-team18.vercel.app .** The production branch is `main`, and automatic domain assignment is enabled. Feature branches receive preview deployments; use the stable production URL for the team/judge demo.
 
-To redeploy from the linked checkout:
+The new attention design and subsequent fixes are merged into main and included in production. Repository visibility remains private, and Vercel public-source access is disabled. Visitors to the production URL do not need a Vercel login, Azure credentials, or an expiring share link.
+
+Deploy changes through a branch and PR into main. No local `vercel deploy` command, GitHub Actions workflow, copied credentials, or personal access token is required for the normal deployment path. If an automatic build fails, Vercel retains the previous successful production deployment; inspect the GitHub check and Vercel build logs before retrying.
+
+For an explicitly requested manual recovery deployment only:
 
 ```sh
 vercel project inspect --non-interactive
-vercel deploy --yes --environment preview
+vercel deploy --prod --yes
 ```
 
 Credentials must already exist in the target Vercel project. Another project or account needs its own authorized secrets and remote database; cloning alone never grants use of Daniel’s Azure credential.

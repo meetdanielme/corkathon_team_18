@@ -16,9 +16,9 @@ def at(hours):
 def test_countdown_colours_by_time_left_and_approval():
     assert countdown(at(100), NOW)["level"] == "later"
     assert countdown(at(48), NOW)["level"] == "soon"
-    assert countdown(at(5), NOW) == {**countdown(at(5), NOW), "level": "now", "label": "Order within 5 h"}
+    assert countdown(at(5), NOW) == {**countdown(at(5), NOW), "level": "now", "label": "Order due in 5 hours"}
     assert countdown(at(-1), NOW)["level"] == "missed"
-    assert countdown(at(100), NOW, {"approved_at": None})["label"].endswith("draft not approved")
+    assert countdown(at(100), NOW, {"approved_at": None})["label"].endswith("message not approved yet")
     assert countdown(at(5), NOW, {"approved_at": "2026-11-07T21:00:00+00:00"})["level"] == "done"
     assert countdown(None, NOW)["level"] == "none"
 
@@ -120,9 +120,9 @@ def test_home_shows_approved_message_as_done(tmp_path):
     c.post("/refresh", data={"mode": "prepared"})
     iid = next(i["id"] for i in c.get("/api/insights").get_json()["insights"] if i["title"] == "Graduation ceremony")
     did = int(c.post(f"/insights/{iid}/draft").headers["Location"].rstrip("/").split("/")[-1])
-    assert "Message approved" not in c.get("/app").get_data(as_text=True)
+    assert "Message ready to send" not in c.get("/app").get_data(as_text=True)
     c.post(f"/drafts/{did}/approve")
-    assert "Message approved" in c.get("/app").get_data(as_text=True)
+    assert "Message ready to send" in c.get("/app").get_data(as_text=True)
 
 
 def test_revenue_estimate_applies_owner_assumptions():
@@ -139,4 +139,4 @@ def test_insight_shows_revenue_metric(tmp_path):
     c.post("/refresh", data={"mode": "prepared"})
     iid = next(i["id"] for i in c.get("/api/insights").get_json()["insights"] if i["title"] == "Graduation ceremony")
     html = c.get(f"/insights/{iid}").get_data(as_text=True)
-    assert "+10%" in html and "≈ +€36" in html and "Not a forecast." in html
+    assert "+10%" in html and "≈ +€36" in html and "A rough guide, not a prediction." in html

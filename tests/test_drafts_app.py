@@ -31,11 +31,11 @@ def test_full_browser_flow(tmp_path):
     c = sign_in(app.test_client())
     assert c.get("/app").status_code == 200
     page = c.post("/refresh", data={"mode": "prepared"}, follow_redirects=True).get_data(as_text=True)
-    assert "Sample data" not in page and "Graduation ceremony" in page and "Filtered out" in page
+    assert "Sample data" not in page and "Graduation ceremony" in page and "Not relevant" in page
     data = c.get("/api/insights").get_json()
     iid = next(i["id"] for i in data["insights"] if "Graduation" in i["title"])
     detail = c.get(f"/insights/{iid}").get_data(as_text=True)
-    assert "Wed 11 Nov 16:00" in detail and "confidence" in detail.lower()
+    assert "Wed 11 Nov 16:00" in detail and "Fairly sure" in detail
     r = c.post(f"/insights/{iid}/draft")
     draft_url = r.headers["Location"]
     did = int(draft_url.rstrip("/").split("/")[-1])
