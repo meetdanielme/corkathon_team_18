@@ -1,38 +1,18 @@
-{% extends "base.html" %}
+{% extends "_site.html" %}
 {% from "_bits.html" import effect, impact %}
 {% block title %}Footfall · See busy days coming before your order is due{% endblock %}
-{% block head %}<meta name="description" content="Footfall watches local events and the weather around your café, explains which ones matter, and helps you adjust supplier orders before the cutoff.">{% endblock %}
-{% block body_attrs %} class="site"{% endblock %}
-{% block header %}
-<header class="site-nav">
-  <a href="{{ url_for('landing') }}" class="wordmark" translate="no">Footfall</a>
-  <nav aria-label="Page sections">
-    <a href="#how">How it works</a>
-    <a href="#trust">Honest by design</a>
-    <a href="#who">Who it's for</a>
-  </nav>
-  <div class="site-nav-cta">
-    {% if user %}
-    <a class="btn btn-sm" href="{{ url_for('index') }}">Open your week<i class="ri-arrow-right-line" aria-hidden="true"></i></a>
-    {% else %}
-    <a class="site-signin" href="{{ url_for('login') }}">Sign in</a>
-    <a class="btn btn-sm" href="{{ url_for('login') }}">Try the demo</a>
-    {% endif %}
-  </div>
-</header>
-{% endblock %}
-{% block main_attrs %} class="site-main"{% endblock %}
+{% block head %}<meta name="description" content="Footfall watches local events and the weather around your business, explains which ones matter, and helps you adjust stock orders before the supplier cutoff.">{% endblock %}
 {% block content %}
 <section class="lp-hero">
   <div class="lp-hero-copy">
-    <p class="eyebrow"><i class="ri-cup-line" aria-hidden="true"></i>For independent cafés in Cork</p>
+    <p class="eyebrow"><i class="ri-store-2-line" aria-hidden="true"></i>For local businesses that live on foot traffic</p>
     <h1>Know which days will be busy <span>before your order is due.</span></h1>
-    <p class="lp-lead">Footfall watches local events and the weather around your café, explains which ones matter for your opening hours, and shows you which supplier order to adjust before the cutoff.</p>
+    <p class="lp-lead">Cafés, restaurants, shops, pubs and food trucks: Footfall watches local events and the weather around your business, explains which ones matter for your opening hours, and shows you which supplier order to adjust before the cutoff.</p>
     <div class="lp-ctas">
-      <a class="btn btn-lg" href="{{ url_for('index') if user else url_for('login') }}">{{ "Open your week" if user else "Try the demo" }}<i class="ri-arrow-right-line" aria-hidden="true"></i></a>
-      <a class="btn btn-lg btn-ghost" href="#how">See how it works</a>
+      <a class="btn btn-lg" href="{{ url_for('index') if user else url_for('signup') }}">{{ "Open your week" if user else "Start free" }}<i class="ri-arrow-right-line" aria-hidden="true"></i></a>
+      <a class="btn btn-lg btn-ghost" href="{{ url_for('login') }}">Try the demo business</a>
     </div>
-    <p class="lp-fine"><i class="ri-shield-check-line" aria-hidden="true"></i>The demo uses a fictional café. No card, no setup.</p>
+    <p class="lp-fine"><i class="ri-shield-check-line" aria-hidden="true"></i>Free for one location. No card needed. The demo uses a fictional Cork café.</p>
   </div>
 
   <figure class="mock" aria-label="Illustrative example of the Footfall week view">
@@ -73,9 +53,9 @@
   <p class="eyebrow">The problem</p>
   <h2 id="problem-h">Your busiest days are decided by what happens down the street.</h2>
   <ul class="lp-cards">
-    <li><i class="ri-calendar-event-line" aria-hidden="true"></i><h3>Events you never hear about</h3><p>Graduations, matches, gigs and conferences fill the streets nearby. Nobody tells the café on the corner.</p></li>
+    <li><i class="ri-calendar-event-line" aria-hidden="true"></i><h3>Events you never hear about</h3><p>Graduations, matches, gigs and conferences fill the streets nearby. Nobody tells the business on the corner.</p></li>
     <li><i class="ri-showers-line" aria-hidden="true"></i><h3>Weather that changes the day</h3><p>A wet afternoon empties the street and a bright one fills it, often after you've placed your order.</p></li>
-    <li><i class="ri-truck-line" aria-hidden="true"></i><h3>Cutoffs that don't wait</h3><p>Bakery and dairy orders close days ahead. By the time the crowd arrives, it's too late to order more.</p></li>
+    <li><i class="ri-truck-line" aria-hidden="true"></i><h3>Cutoffs that don't wait</h3><p>Stock, bakery and dairy orders close days ahead. By the time the crowd arrives, it's too late to order more.</p></li>
   </ul>
 </section>
 
@@ -106,45 +86,53 @@
 
 <section class="lp-section" id="who" aria-labelledby="who-h">
   <p class="eyebrow">Who it's for</p>
-  <h2 id="who-h">Built for the café owner who does everything</h2>
+  <h2 id="who-h">Built for small and medium businesses that live on foot traffic</h2>
+  <p class="lp-sub">If a match, a festival or a wet afternoon changes how many people walk through your door, Footfall is for you.</p>
+  <ul class="lp-types">
+    <li><i class="ri-cup-line" aria-hidden="true"></i><strong>Cafés and coffee shops</strong><span>Pastries, milk and staff for the morning rush</span></li>
+    <li><i class="ri-restaurant-2-line" aria-hidden="true"></i><strong>Restaurants and takeaways</strong><span>Prep and fresh stock ahead of busy evenings</span></li>
+    <li><i class="ri-cake-3-line" aria-hidden="true"></i><strong>Bakeries and delis</strong><span>Bake counts and early supplier cutoffs</span></li>
+    <li><i class="ri-goblet-line" aria-hidden="true"></i><strong>Pubs and bars</strong><span>Kegs and cover for match days and gigs</span></li>
+    <li><i class="ri-shopping-bag-3-line" aria-hidden="true"></i><strong>Independent shops</strong><span>Stock and opening hours around big events</span></li>
+    <li><i class="ri-truck-line" aria-hidden="true"></i><strong>Food trucks and market stalls</strong><span>Know which days are worth trading</span></li>
+  </ul>
   <div class="lp-who">
     <article class="lp-panel">
-      <span class="chip lp-chip-now"><i class="ri-checkbox-circle-fill" aria-hidden="true"></i>In the demo today</span>
-      <h3>Independent cafés in Cork city centre</h3>
+      <span class="chip lp-chip-now"><i class="ri-checkbox-circle-fill" aria-hidden="true"></i>Working in the demo today</span>
+      <h3>Everything you need for one week ahead</h3>
       <ul class="icon-list">
         <li><i class="ri-store-2-line" aria-hidden="true"></i>One or more locations, each with its own opening hours and special days</li>
         <li><i class="ri-walk-line" aria-hidden="true"></i>A walking radius you choose</li>
-        <li><i class="ri-truck-line" aria-hidden="true"></i>Supplier cutoffs for each delivery day</li>
+        <li><i class="ri-truck-line" aria-hidden="true"></i>Supplier cutoffs for each delivery day, with a message ready to send</li>
       </ul>
     </article>
     <article class="lp-panel lp-panel-next">
       <span class="chip conf"><i class="ri-road-map-line" aria-hidden="true"></i>Future ideas, not in this demo</span>
-      <h3>Any business that lives on foot traffic</h3>
+      <h3>Where Footfall goes next</h3>
       <ul class="icon-list">
-        <li><i class="ri-truck-fill" aria-hidden="true"></i>Food trucks choosing where to trade</li>
-        <li><i class="ri-shopping-bag-3-line" aria-hidden="true"></i>Bakeries, delis and small shops</li>
-        <li><i class="ri-global-line" aria-hidden="true"></i>More sources and more cities beyond Cork</li>
+        <li><i class="ri-map-pin-range-line" aria-hidden="true"></i>Suggested trading spots for food trucks and stalls</li>
+        <li><i class="ri-team-line" aria-hidden="true"></i>Staffing suggestions next to stock decisions</li>
+        <li><i class="ri-global-line" aria-hidden="true"></i>More sources and more towns and cities beyond Cork</li>
       </ul>
     </article>
   </div>
 </section>
 
+<section class="lp-section lp-price-teaser" aria-labelledby="price-h">
+  <div>
+    <p class="eyebrow">Pricing</p>
+    <h2 id="price-h">Free for one location. €19 a month when you're ready for more.</h2>
+    <p class="lp-sub">One better-timed order a month can cover the cost. No contracts, cancel any time.</p>
+  </div>
+  <a class="btn btn-lg btn-ghost" href="{{ url_for('pricing') }}">See plans and pricing<i class="ri-arrow-right-line" aria-hidden="true"></i></a>
+</section>
+
 <section class="lp-cta" aria-labelledby="cta-h">
   <h2 id="cta-h">See next week the way Footfall does</h2>
-  <p>Open the demo café, refresh the sources and follow one decision from the event to the supplier message.</p>
-  <a class="btn btn-lg" href="{{ url_for('index') if user else url_for('login') }}">{{ "Open your week" if user else "Try the demo" }}<i class="ri-arrow-right-line" aria-hidden="true"></i></a>
-</section>
-{% endblock %}
-{% block footer %}
-<footer class="site-foot">
-  <div>
-    <span class="wordmark" translate="no">Footfall</span>
-    <p>Built by Team 18 at Corkathon 2026, University College Cork.</p>
+  <p>Create a free account, or step into our demo business and follow one decision from a local event to the supplier message.</p>
+  <div class="lp-ctas">
+    <a class="btn btn-lg" href="{{ url_for('index') if user else url_for('signup') }}">{{ "Open your week" if user else "Start free" }}<i class="ri-arrow-right-line" aria-hidden="true"></i></a>
+    {% if not user %}<a class="btn btn-lg btn-on-brand" href="{{ url_for('login') }}">Try the demo business</a>{% endif %}
   </div>
-  <p class="small">Python · Flask · SQLite/Turso · Azure AI · Vercel. Weather data by <a href="https://open-meteo.com/">Open-Meteo</a> (CC BY 4.0). The demo café, Bríd's Kitchen, is fictional.</p>
-  <nav aria-label="Project links">
-    <a href="https://github.com/meetdanielme/corkathon_team_18"><i class="ri-github-fill" aria-hidden="true"></i>GitHub</a>
-    <a href="https://corkathon.devpost.com/"><i class="ri-trophy-line" aria-hidden="true"></i>Devpost</a>
-  </nav>
-</footer>
+</section>
 {% endblock %}

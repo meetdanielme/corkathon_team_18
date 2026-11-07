@@ -7,7 +7,8 @@ from __future__ import annotations
 import os
 import re
 
-from flask import Flask, abort, flash, g, jsonify, redirect, render_template, request, session, url_for
+from flask import (Flask, abort, flash, g, jsonify, redirect, render_template, request, send_from_directory,
+                   session, url_for)
 
 from . import business_form, db, present
 from . import weather as weather_mod
@@ -23,7 +24,10 @@ from .week import build_week, short_title
 
 # Simulated sign-in for the demo: any credentials work, nothing is stored server-side.
 DEMO_EMAIL = "brid@bridskitchen.ie"
-PUBLIC = {"landing", "login", "logout", "static", "api_insights"}
+PUBLIC = {"landing", "pricing", "login", "signup", "logout", "favicon", "static", "api_insights"}
+PLANS = {"starter": "Starter (free)", "essentials": "Essentials", "multi": "Multi-site", "group": "Group"}
+BUSINESS_TYPES = ["Café or coffee shop", "Restaurant or takeaway", "Bakery or deli", "Pub or bar",
+                  "Independent shop", "Food truck or market stall", "Other"]
 
 
 def display_name(email: str) -> str:
@@ -127,7 +131,7 @@ def create_app(db_path: str | None = None, clock=None, llm: LLM | None = None, f
             if not email:
                 errors["email"] = "Enter your email address."
             elif not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email):
-                errors["email"] = "Enter an email address like name@yourcafe.ie."
+                errors["email"] = "Enter an email address like name@yourbusiness.ie."
             if not demo and not request.form.get("password"):
                 errors["password"] = "Enter your password."
             if not errors:
@@ -140,10 +144,44 @@ def create_app(db_path: str | None = None, clock=None, llm: LLM | None = None, f
         return render_template("login.html", email=email, errors=errors, next=nxt,
                                forgot="forgot" in request.args), (400 if errors else 200)
 
+    @app.route("/signup", methods=["GET", "POST"])
+    def signup():
+        plan = request.values.get("plan", "starter")
+        plan = plan if plan in PLANS else "starter"
+        f, errors = {k: request.form.get(k, "").strip() for k in ("name", "business", "type", "email")}, {}
+        if request.method == "POST":
+            if not f["name"]:
+                errors["name"] = "Enter your name."
+            if not f["business"]:
+                errors["business"] = "Enter your business name."
+            if f["type"] not in BUSINESS_TYPES:
+                errors["type"] = "Choose the kind of business you run."
+            if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", f["email"]):
+                errors["email"] = "Enter an email address like name@yourbusiness.ie."
+            if len(request.form.get("password", "")) < 8:
+                errors["password"] = "Use at least 8 characters."
+            if not errors:
+                session.clear()
+                session["user"] = f["name"].split()[0][:24]
+                flash(f"Welcome, {session['user']}! This demo doesn't save accounts, "
+                      "so you're exploring Bríd's Kitchen, a fictional Cork café.")
+                return redirect(url_for("index"))
+        return render_template("signup.html", f=f, errors=errors, plan=plan, plans=PLANS,
+                               types=BUSINESS_TYPES), (400 if errors else 200)
+
+    @app.get("/pricing")
+    def pricing():
+        return render_template("pricing.html")
+
+    @app.get("/favicon.ico")
+    def favicon():
+        return send_from_directory(os.path.join(app.static_folder, "brand"), "favicon.ico",
+                                   mimetype="image/vnd.microsoft.icon", max_age=86400)
+
     @app.post("/logout")
     def logout():
         session.clear()
-        flash("You have been signed out.")
+        flash("You've been logged out.")
         return redirect(url_for("landing"))
 
     @app.get("/app")
