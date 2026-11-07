@@ -3,10 +3,12 @@ import os
 from pathlib import Path
 
 from footfall import db
+from footfall.config import load_env
 from footfall.scout.refresh import run_prepared
 
 
 def main() -> None:
+    load_env()
     path = Path(os.getenv("FOOTFALL_DB", "footfall.sqlite3"))
     path.unlink(missing_ok=True)
     con = db.connect(str(path))

@@ -9,7 +9,7 @@ ordering deadlines. Corkathon Team 18 MVP. It uses one fictional café: Bríd's 
 python -m venv .venv
 # Windows: .venv\Scripts\activate     macOS/Linux: source .venv/bin/activate
 pip install -r requirements.txt
-pytest -q                                    # expect: 26 passed
+pytest -q                                    # expect: 32 passed
 python -m scripts.reset_demo                 # fresh DB with prepared demo data
 flask --app "footfall.app:create_app()" run --debug
 # open http://127.0.0.1:5000
@@ -19,8 +19,15 @@ Configure AI (optional; the prepared demo works without it):
 
 ```bash
 cp .env.example .env        # fill in locally, never commit
-# PowerShell: $env:FOOTFALL_LLM="azure"; $env:AZURE_OPENAI_ENDPOINT="..."  (etc.)
 python -m scripts.check_llm   # expect: OK (azure): {'ok': True}
+```
+
+`.env` is read at startup by the app and both scripts. Real environment variables take precedence, so you
+can still override a single run without editing the file:
+
+```bash
+# PowerShell: $env:FOOTFALL_LLM="azure"; $env:AZURE_OPENAI_ENDPOINT="..."  (etc.)
+FOOTFALL_LLM=none python -m scripts.check_llm   # expect: NOT CONFIGURED
 ```
 
 ## What's where
