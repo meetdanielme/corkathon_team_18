@@ -21,7 +21,8 @@ def test_prepared_scenario_classifies_every_event(con):
     run_prepared(con, at=NOW)
     r = build(con)
     assert {i.title.split(" (")[0] for i in r["insights"]} == {"Graduation ceremony", "Street market",
-                                                              "Road closure for filming"}
+                                                              "Road closure for filming",
+                                                              "Harbour food fair", "Evening book launch"}
     reasons = {e.title.split(" (")[0]: e.reason for e in r["excluded"]}
     assert "after you close" in reasons["Evening concert"]
     assert "7.6 km away, too far" in reasons["Suburban festival"]
@@ -79,3 +80,23 @@ def test_rain_is_context_only(con):
                   {"2026-11-12": {"rain_prob_max": 80}}, NOW)
     g = by_title(r["insights"], "Graduation")
     assert any("doesn't change the estimate" in x for x in g.reasons) and g.impact == "medium"
+
+
+def test_prepared_scenario_covers_every_impact_level_and_a_passed_cutoff(con):
+    """The demo set must show each impact level and a deadline that is not simply upcoming,
+    or the owner never sees what the product is actually for."""
+    run_prepared(con, at=NOW)
+    r = build(con)
+
+    assert {i.impact for i in r["insights"]} == {"low", "medium", "high"}
+
+    fair = by_title(r["insights"], "Harbour food fair")
+    # NOW is Saturday 22:00, so the Saturday Dairy cutoff has passed and the Monday delivery
+    # falls back to the Bakery rule: two business days before, Sunday closed, so Friday 16:00.
+    assert fair.action_deadline["status"] == "missed"
+    assert fair.action_deadline["cutoff_label"] == "Fri 6 Nov 16:00"
+
+    launch = by_title(r["insights"], "Evening book launch")
+    assert launch.impact == "low"
+    # It only clips the last 15 minutes of trading, so it still counts but barely.
+    assert launch.impact_points["overlap"] == 0

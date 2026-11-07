@@ -1,3 +1,5 @@
+import json
+
 import pytest
 
 from footfall import db
@@ -20,12 +22,18 @@ def fetcher_ok(url):
     raise FetchError("simulated outage")
 
 
+def _prepared_count() -> int:
+    """How many events the prepared seed file holds."""
+    return len(json.loads(rf.PREPARED.read_text(encoding="utf-8")))
+
+
 def test_repeat_prepared_refresh_creates_no_duplicates(con):
     rf.run_prepared(con, at=NOW)
     n1 = con.execute("SELECT COUNT(*) FROM events").fetchone()[0]
     e1 = con.execute("SELECT COUNT(*) FROM event_evidence").fetchone()[0]
     rf.run_prepared(con, at=NOW)
-    assert con.execute("SELECT COUNT(*) FROM events").fetchone()[0] == n1 == 7
+    # Count comes from the seed file, so adding a demo event does not break this test.
+    assert con.execute("SELECT COUNT(*) FROM events").fetchone()[0] == n1 == _prepared_count()
     assert con.execute("SELECT COUNT(*) FROM event_evidence").fetchone()[0] == e1
 
 
