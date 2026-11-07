@@ -185,6 +185,13 @@ def get_events(con, at: datetime | None = None) -> list[dict]:
             srcs = [sources[x["source_id"]] for x in ev if x["source_id"] in sources]
             e["stale"] = not srcs or all(source_is_stale(s, at) for s in srcs)
         events.append(e)
+    for event in events:
+        urls = {v["url"] for v in event["evidence"]}
+        matches = [other for other in events if other["id"] != event["id"]
+                   and _same_listing(event, other)
+                   and urls.intersection(v["url"] for v in other["evidence"])]
+        if matches:
+            event["possible_duplicate_of"] = matches[0]["id"]
     return events
 
 
@@ -205,12 +212,35 @@ def norm_key(title: str, start_at: str | None, venue: str | None) -> str:
     return f"{normalise(title)}|{day}|{normalise(venue)}"
 
 
+def _same_listing(a: dict, b: dict) -> bool:
+    """Missing venue can be enriched; conflicting venues or showtimes stay separate."""
+    return (normalise(a["title"]) == normalise(b["title"])
+            and a.get("data_mode", "live") == b.get("data_mode", "live")
+            and parse_dt(a.get("start_at")) is not None
+            and parse_dt(a.get("start_at")) == parse_dt(b.get("start_at"))
+            and (not a.get("venue_name") or not b.get("venue_name")
+                 or normalise(a["venue_name"]) == normalise(b["venue_name"])))
+
+
 def upsert_event(con, ev: dict, evidence: dict, at: datetime) -> tuple[str, bool]:
     """Insert or update by norm_key. Returns (event_id, created). Evidence is appended, never replaced."""
     from difflib import SequenceMatcher
 
     key = norm_key(ev["title"], ev.get("start_at"), ev.get("venue_name"))
-    row = con.execute("SELECT id FROM events WHERE norm_key=?", (key,)).fetchone()
+    row = con.execute("SELECT * FROM events WHERE norm_key=?", (key,)).fetchone()
+    if row is not None and (row["data_mode"] != ev.get("data_mode", "live")
+                            or parse_dt(row["start_at"]) != parse_dt(ev.get("start_at"))):
+        # Same title/day/venue can still mean a different performance or data mode.
+        key += "|" + ev.get("data_mode", "live") + "|" + str(parse_dt(ev.get("start_at")))
+        row = con.execute("SELECT * FROM events WHERE norm_key=?", (key,)).fetchone()
+    if row is None:
+        # Only reconcile one unambiguous listing from the same source page.
+        candidates = [dict(r) for r in con.execute(
+            "SELECT DISTINCT e.* FROM events e JOIN event_evidence v ON v.event_id=e.id "
+            "WHERE v.url=?", (evidence["url"],)).fetchall()]
+        matches = [r for r in candidates if _same_listing(r, ev)]
+        if len(matches) == 1:
+            row = matches[0]
     created = row is None
     if created:
         eid = "ev_" + re.sub(r"[^a-z0-9]+", "_", key)[:40] + "_" + hashlib.sha256(key.encode()).hexdigest()[:20]
@@ -230,11 +260,12 @@ def upsert_event(con, ev: dict, evidence: dict, at: datetime) -> tuple[str, bool
                      ev.get("attendance"), dup, ev.get("data_mode", "live"), at.isoformat(), at.isoformat()))
     else:
         eid = row["id"]
-        con.execute("""UPDATE events SET end_at=COALESCE(?, end_at), lat=COALESCE(?, lat), lon=COALESCE(?, lon),
+        con.execute("""UPDATE events SET norm_key=CASE WHEN venue_name IS NULL THEN ? ELSE norm_key END,
+                       venue_name=COALESCE(venue_name, ?), end_at=COALESCE(?, end_at), lat=COALESCE(?, lat), lon=COALESCE(?, lon),
                        category=COALESCE(?, category), attendance=COALESCE(?, attendance),
                        verification=CASE WHEN ?='verified' THEN 'verified' ELSE verification END,
                        last_seen_at=? WHERE id=?""",
-                    (ev.get("end_at"), ev.get("lat"), ev.get("lon"), ev.get("category"), ev.get("attendance"),
+                    (key, ev.get("venue_name"), ev.get("end_at"), ev.get("lat"), ev.get("lon"), ev.get("category"), ev.get("attendance"),
                      ev.get("verification"), at.isoformat(), eid))
     con.execute("""INSERT OR IGNORE INTO event_evidence (event_id, source_id, url, retrieved_at, excerpt,
                    extracted_json, uncertainty) VALUES (?,?,?,?,?,?,?)""",

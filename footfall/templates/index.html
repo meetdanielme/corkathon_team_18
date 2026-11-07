@@ -69,6 +69,7 @@
     <span class="att lvl-check"><i class="ri-question-line" aria-hidden="true"></i><span><strong>Details missing</strong><span>Not on your week yet</span></span></span>
     <div class="dcard-body">
       <h3><i class="ri-calendar-close-line" aria-hidden="true"></i>{{ r.title|short }}</h3>
+      {% if r.possible_duplicate %}<p class="meta">This may be another listing of an event already saved. Check before planning for it twice.</p>{% endif %}
       <p class="meta"><span><i class="ri-error-warning-line" aria-hidden="true"></i>We don't know {{ r.missing|map("replace", "start time", "when it starts")|map("replace", "location", "where it is")|join(" or ") }} yet</span></p>
     </div>
   </article>

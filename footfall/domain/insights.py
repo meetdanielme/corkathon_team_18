@@ -85,6 +85,7 @@ class ReviewFinding:
     event_id: str
     title: str
     missing: list[str]
+    possible_duplicate: bool = False
 
 
 def demand_window(start: datetime, end: datetime | None) -> tuple[datetime, datetime, str]:
@@ -112,6 +113,8 @@ def impact_for(distance_m: float, overlap_min: int, attendance: int | None) -> t
 
 def confidence_for(event: dict) -> tuple[str, list[str]]:
     low, medium = [], []
+    if event.get("possible_duplicate_of"):
+        low.append("This may be another listing of an event already saved; check before planning for it twice")
     if event.get("stale"):
         low.append("We couldn't check the event page recently, so details may have changed")
     if not any(e.get("excerpt") for e in event.get("evidence", [])):
@@ -156,7 +159,7 @@ def evaluate(business: dict, event: dict, suppliers: list[dict], weather: dict[s
     start = parse_dt(event.get("start_at"))
     missing = [k for k, v in (("start time", start), ("location", event.get("lat"))) if v is None]
     if missing:
-        return ReviewFinding(eid, title, missing)
+        return ReviewFinding(eid, title, missing, bool(event.get("possible_duplicate_of")))
     end = parse_dt(event.get("end_at"))
     if event.get("access") == "restricted":
         return Exclusion(eid, title, "It's a private event, so it won't bring passing trade", "Private event")
