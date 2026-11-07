@@ -6,16 +6,13 @@
   <title>{% block title %}Footfall{% endblock %}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,600&family=Manrope:wght@600;700;800&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;700;800&display=swap">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
   <header class="top">
-    <a href="{{ url_for('index') }}" class="brand">
-      <svg class="mark" viewBox="0 0 32 20" aria-hidden="true"><path d="M3 17a13 13 0 0 1 26 0" /><path class="mark-inner" d="M10 17a6 6 0 0 1 12 0" /></svg>
-      Footfall
-    </a>
-    <span class="tagline">Local signals. Thoughtful decisions.</span>
+    <a href="{{ url_for('index') }}" class="wordmark">Footfall</a>
+    <span class="top-note">For independent cafés in Cork</span>
   </header>
   <main>
     {% with msgs = get_flashed_messages() %}{% for m in msgs %}<p class="flash" role="status">{{ m }}</p>{% endfor %}{% endwith %}

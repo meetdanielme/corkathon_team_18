@@ -1,34 +1,43 @@
 {% extends "base.html" %}
 {% block title %}Draft · Footfall{% endblock %}
 {% block content %}
-<p class="back"><a href="{{ url_for('insight', iid=d.insight_id) }}">← Back to insight</a></p>
-<section class="page-head">
+<p class="back"><a href="{{ url_for('insight', iid=d.insight_id) }}">Back to the insight</a></p>
+<section class="intro">
   <div>
-    <p class="eyebrow">Supplier message · {{ d.source }} draft</p>
     <h1>Message to {{ d.recipient_label }}</h1>
-    <p class="muted">Drafted from: {{ d.source }}. Footfall never sends messages: edit, approve, then copy it into WhatsApp or email yourself.</p>
+    <p class="lede">Footfall doesn't send anything. Edit the message, approve it, then copy it into WhatsApp or email yourself.</p>
   </div>
 </section>
-<ol class="steps" aria-label="Progress">
-  <li class="done">Edit</li>
-  <li class="{% if d.approved_at %}done{% else %}current{% endif %}">Approve</li>
-  <li class="{% if d.approved_at %}current{% endif %}">Copy</li>
-</ol>
-<div class="editor">
-<p class="status {% if d.approved_at %}status-approved{% endif %}">
-  Status: {% if d.approved_at %}<strong>Approved {{ d.approved_at|when }}, not sent</strong>{% else %}<strong>Not approved</strong> · not sent{% endif %}
-</p>
-<form method="post" action="{{ url_for('save_draft', draft_id=d.id) }}">
-  <label for="text">Review and edit your message</label>
-  <textarea id="text" name="text" rows="6">{{ d.text }}</textarea>
-  <button class="secondary">Save edits</button>
-  <p class="muted small" id="edit-status" role="status">Save any changes before approving. Editing clears approval.</p>
-</form>
-<div class="actions">
-  <form method="post" action="{{ url_for('approve', draft_id=d.id) }}"><button id="approve" {% if d.approved_at %}class="secondary"{% endif %}>Approve</button></form>
-  <button type="button" id="copy" {% if not d.approved_at %}disabled title="Approve first"{% endif %}>Copy message</button>
-</div>
-<p id="copied" class="muted" role="status"></p>
+
+<div class="draft">
+  <ol class="steps" aria-label="Progress">
+    <li class="is-done">Edit the wording</li>
+    <li class="{% if d.approved_at %}is-done{% else %}is-current{% endif %}">Approve it</li>
+    <li class="{% if d.approved_at %}is-current{% endif %}">Copy and send it yourself</li>
+  </ol>
+
+  <div class="sheet">
+    <p class="sheet-head"><span>To {{ d.recipient_label }}</span><span>Drafted from: {{ d.source }}</span></p>
+    <form method="post" action="{{ url_for('save_draft', draft_id=d.id) }}">
+      <label for="text" class="visually-hidden">Message</label>
+      <textarea id="text" name="text" rows="7">{{ d.text }}</textarea>
+      <div class="sheet-row">
+        <button class="secondary">Save edits</button>
+        <p class="small" id="edit-status" role="status">Saving an edit clears any approval.</p>
+      </div>
+    </form>
+  </div>
+
+  <div class="sign-off">
+    <p class="status{% if d.approved_at %} is-approved{% endif %}">
+      {% if d.approved_at %}<strong>Approved {{ d.approved_at|when }}, not sent</strong>{% else %}<strong>Not approved yet.</strong> Not sent.{% endif %}
+    </p>
+    <div class="actions">
+      <form method="post" action="{{ url_for('approve', draft_id=d.id) }}"><button id="approve" {% if d.approved_at %}class="secondary"{% endif %}>Approve</button></form>
+      <button type="button" id="copy" {% if not d.approved_at %}disabled title="Approve first"{% endif %}>Copy message</button>
+    </div>
+    <p id="copied" role="status"></p>
+  </div>
 </div>
 <script>
   const text = document.getElementById('text');

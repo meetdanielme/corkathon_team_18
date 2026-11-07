@@ -1,65 +1,66 @@
 {% extends "base.html" %}
+{% from "_timeline.html" import timeline %}
 {% block content %}
-<section class="page-head">
+<section class="intro">
   <div>
-    <p class="eyebrow">{{ business.name }} · Cork</p>
-    <h1>Your week, in context</h1>
-    <p class="muted">{{ business.demo_label }} · open {{ business.opens }}–{{ business.closes }} · radius {{ business.radius_m }} m · Europe/Dublin</p>
-    <p>
-      {% for m in modes|sort %}<span class="badge mode-{{ m }}">{{ m }} data</span>{% endfor %}
-      {% if not modes %}<span class="badge">no events loaded yet</span>{% endif %}
-    </p>
+    <h1>The week ahead</h1>
+    <p class="lede">{{ business.name }}, open {{ business.opens }} to {{ business.closes }}. Watching events within {{ business.radius_m }} m.</p>
+    {% if "prepared" in modes %}<p class="data-note">Showing prepared data: every event here is fictional, for the demo.</p>
+    {% elif modes %}<p class="data-note data-live">Showing live data from saved sources.</p>
+    {% else %}<p class="data-note">No events loaded yet. Load the prepared data or refresh from sources.</p>{% endif %}
   </div>
-  <form class="refresh-actions" method="post" action="{{ url_for('refresh') }}">
-    <button name="mode" value="prepared">Load prepared demo data</button>
-    <button name="mode" value="live" class="secondary" {% if not llm_enabled %}title="FOOTFALL_LLM not configured; live extraction will record errors"{% endif %}>Refresh saved sources (live)</button>
-  </form>
-</section>
-
-<section class="refresh-status">
-  {% if run %}
-  <p><strong>Last refresh</strong> · {{ run.mode }} · {{ run.status }} · {{ run.started_at|when }} ·
-     sources {{ run.sources_succeeded }}/{{ run.sources_attempted }} · events upserted {{ run.events_upserted }}</p>
-  {% if run.errors %}<details><summary>{{ run.errors|length }} refresh issue(s)</summary><ul>{% for e in run.errors %}<li>{{ e }}</li>{% endfor %}</ul></details>{% endif %}
-  {% else %}
-  <p><strong>Not refreshed yet.</strong> Load prepared demo data or refresh saved sources.</p>
-  {% endif %}
-  <p class="muted small">"No events" means none found in the monitored sources, not complete local coverage.</p>
-</section>
-
-<section>
-  <h2>Next 7 days</h2>
-  <p class="muted">Local signals for your café. Select an insight to review the evidence and your next decision.</p>
-  {% for i in insights %}
-  <a class="card insight-card dir-{{ i.direction }}" href="{{ url_for('insight', iid=i.id) }}">
-    <div class="card-main">
-      <div class="card-head"><strong class="card-title">{{ i.title }}</strong><span class="badge mode-{{ i.data_mode }}">{{ i.data_mode }}</span></div>
-      <p class="when">{{ i.window_label }} · {{ i.distance_m }} m away</p>
-      <div class="labels">
-        <span class="badge effect-{{ i.direction }}">Expected: {{ i.direction }}</span>
-        <span class="badge impact impact-{{ i.impact }}"><span class="pips" aria-hidden="true"><i></i><i></i><i></i></span>Potential impact: {{ i.impact }}</span>
-        <span class="badge confidence">Confidence: {{ i.confidence }}</span>
-        {% if i.conflicts %}<span class="badge conflict">Conflicting signals</span>{% endif %}
-      </div>
-    </div>
-    {% if i.action_deadline %}
-    <div class="card-deadline deadline-{{ i.action_deadline.status }}">
-      <span class="eyebrow">Act before</span>
-      <strong>{{ i.action_deadline.cutoff_label }}</strong>
-      <span class="small">{{ i.action_deadline.supplier }} cutoff · {{ i.action_deadline.status }}</span>
-    </div>
+  <div class="refresh">
+    <form method="post" action="{{ url_for('refresh') }}">
+      <button name="mode" value="prepared">Load prepared data</button>
+      <button name="mode" value="live" class="secondary" {% if not llm_enabled %}title="FOOTFALL_LLM not configured; live extraction will record errors"{% endif %}>Refresh from sources</button>
+    </form>
+    {% if run %}
+    <p>Last refreshed {{ run.started_at|when }} using {{ run.mode }} data: {{ run.status }}, {{ run.events_upserted }} events from {{ run.sources_succeeded }} of {{ run.sources_attempted }} sources.</p>
+    {% if run.errors %}<details><summary>{{ run.errors|length }} refresh issue(s)</summary><ul>{% for e in run.errors %}<li>{{ e }}</li>{% endfor %}</ul></details>{% endif %}
     {% endif %}
+    <p>An empty week means nothing turned up in the monitored sources, not that nothing is happening.</p>
+  </div>
+</section>
+
+{{ timeline(week) }}
+
+<section class="decisions">
+  <h2>Decisions due</h2>
+  {% for i in insights %}
+  <a class="decision tl-{{ i.direction }}" href="{{ url_for('insight', iid=i.id) }}">
+    <div class="decision-when">
+      {% if i.action_deadline %}
+      <span class="small">Order by</span>
+      <strong class="mark-{{ i.action_deadline.status }}">{{ i.action_deadline.cutoff_label }}</strong>
+      <span class="small">{{ i.action_deadline.supplier }}, {{ i.action_deadline.status }}</span>
+      {% else %}
+      <span class="small">No supplier cutoff</span>
+      {% endif %}
+    </div>
+    <div class="decision-what">
+      <strong class="decision-title">{{ i.title }}<span class="data-tag">{{ i.data_mode }}</span></strong>
+      <span>{{ i.window_label }}, {{ i.distance_m }} m away</span>
+      {% if i.conflicts %}<span class="conflict">Overlaps a signal pointing the other way</span>{% endif %}
+    </div>
+    <ul class="measures">
+      <li>Expected <b>{{ i.direction }}</b></li>
+      <li class="impact-{{ i.impact }}"><span class="pips" aria-hidden="true"><i></i><i></i><i></i></span>Impact <b>{{ i.impact }}</b></li>
+      <li>Confidence <b>{{ i.confidence }}</b></li>
+    </ul>
   </a>
   {% else %}
   <p class="empty">No relevant events in the monitored sources for the next 7 days.</p>
   {% endfor %}
 </section>
 
-<section class="quiet">
-  <h2>Filtered out</h2>
-  <p class="muted small">Not shown as insights. Each has a reason you can check.</p>
-  <ul class="quiet-list">{% for e in excluded %}<li><strong>{{ e.title }}</strong><span>{{ e.reason }}</span></li>{% else %}<li>Nothing filtered.</li>{% endfor %}</ul>
-  <h2>Needs review</h2>
-  <ul class="quiet-list">{% for r in review %}<li><strong>{{ r.title }}</strong><span>Missing {{ r.missing|join(", ") }}</span></li>{% else %}<li>Nothing to review.</li>{% endfor %}</ul>
+<section class="aside-lists">
+  <div>
+    <h2>Filtered out</h2>
+    <dl>{% for e in excluded %}<dt>{{ e.title }}</dt><dd>{{ e.reason }}</dd>{% else %}<dt>Nothing filtered.</dt>{% endfor %}</dl>
+  </div>
+  <div>
+    <h2>Needs checking</h2>
+    <dl>{% for r in review %}<dt>{{ r.title }}</dt><dd>Missing {{ r.missing|join(", ") }}</dd>{% else %}<dt>Nothing to check.</dt>{% endfor %}</dl>
+  </div>
 </section>
 {% endblock %}

@@ -1,84 +1,83 @@
-# Footfall - wireframes for the prepared journey (issue #12)
+# Footfall - prepared journey design (issue #12)
 
-Low-fidelity layout for the three screens, applied in `footfall/templates/` and `footfall/static/style.css` using visual direction 01 (`docs/design/visual-direction.md`, not yet committed). Desktop shown; below 820px the two columns stack (deadline beneath the insight), and below 640px buttons go full width.
+Layout and visual rules for the three screens, implemented in `footfall/templates/` and `footfall/static/style.css`. Produced with the `frontend-design` skill, replacing the first pass that read as templated.
 
-## 1. Home - "Your week, in context"
+## Concept
+
+A café owner plans the week in a diary and orders on a supplier docket. Footfall borrows that world: cool paper, ballpoint-blue ink, and a highlighter that marks supplier cutoffs only. The one bold element is the week timeline. It draws every event against opening hours, so the reason an evening concert is filtered out is visible rather than just stated.
+
+| Token | Value | Use |
+| --- | --- | --- |
+| Page / sheet | `#F1F3F6` / `#FBFCFD` | Background and paper surfaces |
+| Graphite / pencil | `#1D232B` / `#566170` | Text and secondary text |
+| Ballpoint | `#2B44A8` | Links, buttons, "could bring more customers" |
+| Highlighter | `#FFE76A` | Supplier cutoffs, nothing else |
+| Red pen | `#B3261E` | "Could reduce customers", conflicts, stale |
+
+Type: Schibsted Grotesk only (Google Fonts, system sans fallback), sentence case throughout. Avoided on purpose: cream and terracotta, uppercase eyebrow labels, middle-dot metadata strings, identical rounded cards, arrows on links.
+
+## 1. Home - "The week ahead"
 
 ```
-Footfall (mark)                                   Local signals. Thoughtful decisions.
----------------------------------------------------------------------------------
-[flash: Refresh (prepared) finished: ok]
-BRÍD'S KITCHEN (FICTIONAL DEMO CAFÉ) · CORK
-Your week, in context
-demo label · open 08:00–16:00 · radius 1000 m · Europe/Dublin
-[prepared data]
-[Load prepared demo data] [Refresh saved sources (live)]
-+-- refresh status (sage) -----------------------------------------------------+
-| Last refresh · prepared · ok · time · sources n/n · events upserted n        |
-| "No events" means none found in the monitored sources, not complete coverage |
-+------------------------------------------------------------------------------+
-Next 7 days
-+-- insight card (left border = direction) ----------------+-- deadline -------+
-| Graduation ceremony (fictional demo)         [prepared]   | ACT BEFORE        |
-| Thu 12 Nov 10:00-14:00 · 941 m away                       | Wed 11 Nov 16:00  |
-| [Expected: increase] [||. Potential impact: medium]       | Bakery cutoff ·   |
-| [ Confidence: medium ] [Conflicting signals]              | upcoming          |
-+-----------------------------------------------------------+-------------------+
-(more cards)
----------------------------------------------------------------------------------
-Filtered out (quiet list: title | reason)
-Needs review (quiet list: title | missing fields)
+Footfall.                                           For independent cafés in Cork
+The week ahead                                [Load prepared data][Refresh from sources]
+Bríd's Kitchen, open 08:00 to 16:00 ...        Last refreshed ... 7 events from 0 of 0
+[Showing prepared data: every event is fictional]   An empty week means nothing turned up...
++-- week timeline ------------------------------------------------------------------+
+|         06    08    10    12    14    16    18    20    22    24                   |
+| Sat 7        [====== opening hours ======]                                         |
+| Sun 8   ///////////////// closed /////////////////////                             |
+| Mon 9        [         :Private function :  ]          (dashed = filtered out)     |
+| Wed 11       [                            ]|Bakery order for Thu closes 16:00      |
+|                                             |          :Evening concert:          |
+| Thu 12       [      ■Graduation■          ]|Bakery order for Fri closes 16:00      |
+| Fri 13   ■Road closure (red)■  ■Street market■                                     |
+| key: opening hours, more customers, fewer customers, filtered out, order cutoff    |
++------------------------------------------------------------------------------------+
+Decisions due
+Order by           | Graduation ceremony [prepared]        Expected increase
+▓Wed 11 Nov 16:00▓ | Thu 12 Nov 10:00-14:00, 941 m away    ▮▮▯ Impact medium
+Bakery, upcoming   |                                       Confidence medium
+-------------------------------------------------------------------------------
+Filtered out (title, reason)                    Needs checking (title, missing fields)
 ```
 
 ## 2. Insight detail
 
 ```
-← Your week
-INSIGHT · RULES R1
+Back to the week
 Graduation ceremony (fictional demo)
-Thu 12 Nov 10:00-14:00 · 941 m away
-[prepared data]
-+-- summary ------------------------------------+  +-- action deadline ------+
-| EXPECTED EFFECT        POTENTIAL IMPACT       |  | ACT BEFORE              |
-| [increase]             [||. medium]           |  | Wed 11 Nov 16:00        |
-|                        heuristic points; not  |  | Bakery cutoff for       |
-|                        a measured uplift      |  | delivery Thu 12 Nov     |
-| CONFIDENCE             RELEVANT WINDOW        |  | demo assumption note    |
-| [ medium ]             Thu 12 Nov 10:00-14:00 |  | ---------------------   |
-| - reasons              assumed buffer basis   |  | suggested response      |
-+-----------------------------------------------+  | [Draft a message]       |
-                                                   +-------------------------+
-Why this matters
-| Reasons               | proximity, overlap                                   |
-| Conflicts (if any)    | ...                                                  |
-| Sources and freshness | link · retrieved time · stale flag · > excerpt       |
-▸ Optional revenue scenario (illustrative)
+Thu 12 Nov 10:00-14:00, 941 m from the café.   [Prepared data ... Rules r1.]
++-- the same timeline, this day only, current bar outlined in highlighter ---------+
+What this could mean                          +== docket ==================+
+ Expected effect   Increase ...               | Order by                   |
+ Potential impact  ▮▮▯ Medium, a ranking...   | ▓Wed 11 Nov 16:00▓         |
+ Confidence        Medium + reasons           | Bakery cutoff for delivery |
+ Relevant window   ... + assumed basis        | - - - - - - - - - - - - -  |
+Why it showed up (reasons, conflicts)         | suggested response         |
+Source (quoted clipping, link, retrieved)     | [Draft a message]          |
+Try a revenue scenario with your own numbers  +----------------------------+
 ```
 
 ## 3. Draft review
 
 ```
-← Back to insight
-SUPPLIER MESSAGE · TEMPLATE DRAFT
+Back to the insight
 Message to Declan (bakery)
-Footfall never sends messages: edit, approve, then copy it yourself.
-(✓ Edit) (2. Approve) (3. Copy)
-+-- editor ---------------------------------------------------------+
-| Status: Not approved · not sent  /  Approved <time>, not sent     |
-| Review and edit your message                                      |
-| [ textarea                                                      ] |
-| [Save edits]  Editing clears approval.                            |
-| ----------------------------------------------------------------- |
-| [Approve] [Copy message]  (copy disabled until approved)          |
-| Copied. Paste it into WhatsApp or email. Not sent.                |
-+-------------------------------------------------------------------+
+Footfall doesn't send anything. Edit, approve, then copy it yourself.
+(✓) Edit the wording   (2) Approve it   (3) Copy and send it yourself
++-- order sheet ---------------------------------------------+
+| To Declan (bakery)                  Drafted from: template |
+|============================================================|
+| message on faint ruled lines                               |
+| [Save edits]  Saving an edit clears any approval.          |
++------------------------------------------------------------+
+Not approved yet. Not sent.   /   Approved <time>, not sent
+[Approve] [Copy message]   (copy disabled until approved)
 ```
 
-## Design rules carried over
+## Responsive
 
-- Impact (filled amber badge with ordinal bars) and confidence (outlined badge) use different shapes, not colour alone.
-- Direction is always written as a word; the left border only repeats it.
-- Prepared data is labelled on the page and on each card. Approval always reads "not sent"; there is no delivered state.
-- Fonts: Manrope headings, DM Sans body, loaded from Google Fonts with system sans-serif fallbacks if offline.
+Below 900px the columns stack and the docket follows the reading column. Below 600px buttons go full width, and the timeline keeps its scale and scrolls sideways inside its frame, with a hint. The page itself never scrolls sideways.
 
 Screenshots of the implemented screens (prepared data, desktop and 390px mobile) are in [screenshots/issue-12](screenshots/issue-12/).
