@@ -46,13 +46,28 @@ class LLM:
         return parse_json(text)
 
     def _azure(self, system: str, user: str) -> str:
+        if limit := os.getenv("FOOTFALL_AZURE_CALL_LIMIT"):
+            from . import db
+            with db.connect(os.getenv("FOOTFALL_DB", "footfall.sqlite3")) as con:
+                con.execute("CREATE TABLE IF NOT EXISTS ai_allowance (id INTEGER PRIMARY KEY, calls INTEGER NOT NULL)")
+                reserved = con.execute("""INSERT INTO ai_allowance (id,calls) VALUES (1,1)
+                    ON CONFLICT(id) DO UPDATE SET calls=calls+1 WHERE calls < ? RETURNING calls""",
+                    (int(limit),)).fetchone()
+                if reserved is None:
+                    raise ValueError("Shared demo AI allowance reached; prepared data remains available")
         from openai import AzureOpenAI  # pip install openai
 
         client = AzureOpenAI(azure_endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],
                              api_key=os.environ["AZURE_OPENAI_API_KEY"],
-                             api_version=os.getenv("AZURE_OPENAI_API_VERSION", "2024-10-21"))
+                             api_version=os.getenv("AZURE_OPENAI_API_VERSION", "2024-10-21"),
+                             timeout=60, max_retries=0)
+        options = {}
+        if effort := os.getenv("AZURE_OPENAI_REASONING_EFFORT"):
+            options["reasoning_effort"] = effort
         r = client.chat.completions.create(
-            model=os.environ["AZURE_OPENAI_DEPLOYMENT"], temperature=0,
+            model=os.environ["AZURE_OPENAI_DEPLOYMENT"],
+            max_completion_tokens=int(os.getenv("AZURE_OPENAI_MAX_COMPLETION_TOKENS", "2048")),
+            **options,
             response_format={"type": "json_object"},
             messages=[{"role": "system", "content": system}, {"role": "user", "content": user}])
         return r.choices[0].message.content
