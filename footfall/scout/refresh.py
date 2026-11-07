@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import time
 from datetime import datetime, timedelta
@@ -11,7 +12,7 @@ from .. import db
 from ..domain.timeutil import now as tz_now, parse_dt
 from .extract import extract_events
 from .fetch import FetchError, fetch_text
-from .validate import validate_finding
+from .validate import OutsideWindow, validate_finding
 
 # A refresh stays bounded. 90 s suits a hosted model; a model running locally is slower, so the
 # wall-clock budget is overridable rather than silently truncating the run at two sources.
@@ -82,6 +83,9 @@ def run_live(con, llm, at: datetime | None = None, fetcher=fetch_text, limits: d
             for f in found["events"]:
                 clean, why = validate_finding(f, text, w0, w1)
                 if not clean:
+                    if isinstance(why, OutsideWindow):
+                        logging.getLogger(__name__).info("Skipped finding from %s: %s", src["id"], why)
+                        continue
                     errors.append(f"{src['id']}: rejected finding ({why})")
                     continue
                 match = _venue_matches(clean["venue_name"], src)

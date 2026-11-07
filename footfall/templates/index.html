@@ -41,7 +41,7 @@
 </section>
 
 {% if run and run.errors %}
-<details class="notice notice-warn"><summary><i class="ri-error-warning-line" aria-hidden="true"></i>{{ run.errors|length }} source{{ "s" if run.errors|length != 1 }} could not be checked</summary><ul>{% for e in run.errors %}<li>{{ e }}</li>{% endfor %}</ul></details>
+<details class="notice notice-warn"><summary><i class="ri-error-warning-line" aria-hidden="true"></i>{{ run.errors|length }} refresh issue{{ "s" if run.errors|length != 1 }}</summary><ul>{% for e in run.errors %}<li>{{ e }}</li>{% endfor %}</ul></details>
 {% endif %}
 
 {{ timeline(week) }}

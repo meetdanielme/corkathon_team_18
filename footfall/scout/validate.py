@@ -7,6 +7,10 @@ from datetime import datetime, timedelta
 from ..domain.timeutil import TZ, parse_dt
 
 
+class OutsideWindow(str):
+    """Normal eligibility exclusion, distinct from invalid source evidence."""
+
+
 def _squash(s: str) -> str:
     return re.sub(r"\s+", " ", s or "").strip().lower()
 
@@ -26,7 +30,7 @@ def validate_finding(f: dict, page_text: str, window_start: datetime, window_end
     except ValueError:
         return None, f"unparseable date for '{title}'"
     if start and not (window_start - timedelta(days=1) <= start <= window_end + timedelta(days=1)):
-        return None, f"'{title}' is outside the date window"
+        return None, OutsideWindow(f"'{title}' is outside the date window")
     if start and end and end < start:
         end = None
     clean = {
