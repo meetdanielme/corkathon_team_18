@@ -17,7 +17,7 @@ TICKS = list(range(AXIS_START_H, AXIS_END_H + 1, 2))
 
 
 def short_title(title: str) -> str:
-    return re.sub(r"\s*\((fictional )?demo\)\s*$", "", title)
+    return re.sub(r"\s*\((fictional )?demo(?: café)?\)\s*$", "", title)
 
 
 def _pct(dt: datetime, day) -> float:

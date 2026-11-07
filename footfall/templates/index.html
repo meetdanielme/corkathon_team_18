@@ -19,7 +19,7 @@
   <aside class="biz-card" aria-label="Your business">
     <div class="biz-head">
       <span class="biz-avatar" aria-hidden="true"><i class="ri-store-2-fill"></i></span>
-      <strong>{{ business.name }}</strong>
+      <strong>{{ business.name|short }}</strong>
     </div>
     <ol class="biz-locs">
       {% for p in places %}
@@ -52,7 +52,7 @@
   <article class="dcard lvl-{{ c.cd.level }}">
     {{ status(c.cd) }}
     <div class="dcard-body">
-      <h3><i class="{{ i.category|category_icon }}" aria-hidden="true"></i><a class="stretch" href="{{ url_for('insight', iid=i.id) }}">{{ i.title }}</a></h3>
+      <h3><i class="{{ i.category|category_icon }}" aria-hidden="true"></i><a class="stretch" href="{{ url_for('insight', iid=i.id) }}">{{ i.title|short }}</a></h3>
       <p class="meta"><span><i class="ri-time-line" aria-hidden="true"></i>{{ i.window_label }}</span><span><i class="ri-map-pin-range-line" aria-hidden="true"></i>{{ i.distance_m|dist }} away</span></p>
       {% if i.conflicts %}<p class="warn"><i class="ri-error-warning-fill" aria-hidden="true"></i>Another event at the same time could cancel this out</p>{% endif %}
     </div>
@@ -68,7 +68,7 @@
   <article class="dcard lvl-check">
     <span class="att lvl-check"><i class="ri-question-line" aria-hidden="true"></i><span><strong>Details missing</strong><span>Not on your week yet</span></span></span>
     <div class="dcard-body">
-      <h3><i class="ri-calendar-close-line" aria-hidden="true"></i>{{ r.title }}</h3>
+      <h3><i class="ri-calendar-close-line" aria-hidden="true"></i>{{ r.title|short }}</h3>
       <p class="meta"><span><i class="ri-error-warning-line" aria-hidden="true"></i>We don't know {{ r.missing|map("replace", "start time", "when it starts")|map("replace", "location", "where it is")|join(" or ") }} yet</span></p>
     </div>
   </article>

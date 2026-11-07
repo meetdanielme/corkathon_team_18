@@ -78,7 +78,8 @@ def create_app(db_path: str | None = None, clock=None, llm: LLM | None = None, f
         c = con()
         b = db.get_business(c)
         at = clock()
-        result = insights_mod.build(b, db.get_events(c, at), db.get_suppliers(c, b["id"]),
+        events = [{**e, "title": short_title(e["title"])} for e in db.get_events(c, at)]
+        result = insights_mod.build(b, events, db.get_suppliers(c, b["id"]),
                                     db.get_weather(c, b["lat"], b["lon"]), at)
         return b, result
 
@@ -151,7 +152,7 @@ def create_app(db_path: str | None = None, clock=None, llm: LLM | None = None, f
     @app.post("/insights/<path:iid>/draft")
     def make_draft(iid):
         i = find_insight(iid)
-        d = drafts_mod.draft(i.to_dict(), llm=model if model.enabled else None)
+        d = drafts_mod.draft({**i.to_dict(), "title": short_title(i.title)}, llm=model if model.enabled else None)
         draft_id = db.create_draft(con(), iid, d["recipient_label"], d["text"], d["source"])
         return redirect(url_for("draft", draft_id=draft_id))
 

@@ -146,7 +146,7 @@ def deadlines_for(day: date, window_start: datetime, suppliers: list[dict], now:
         status = "missed" if cutoff <= now else "urgent" if cutoff - now <= timedelta(hours=24) else "upcoming"
         out.append({"supplier": name, "supplier_id": row["id"], "contact_label": row.get("contact_label"),
                     "delivery_day": fmt_day(delivery), "cutoff": cutoff.isoformat(), "cutoff_label": fmt(cutoff),
-                    "status": status, "evidence": row.get("evidence") or row.get("demo_label")})
+                    "status": status, "evidence": row.get("evidence") or "Order cutoff from saved supplier settings; confirm with your supplier"})
     return sorted(out, key=lambda d: d["cutoff"])
 
 
