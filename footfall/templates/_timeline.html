@@ -1,0 +1,43 @@
+{% macro timeline(week, current=None, caption=None) %}
+<figure class="tl">
+  {% if caption %}<figcaption class="tl-caption">{{ caption }}</figcaption>{% endif %}
+  <p class="tl-hint">Swipe the timeline sideways to see later hours.</p>
+  <div class="tl-scroll">
+    <div class="tl-body">
+      <div class="tl-row tl-axis" aria-hidden="true">
+        <div class="tl-day"></div>
+        <div class="tl-track">{% for t in week.ticks %}<span style="left:{{ t.left }}%">{{ t.label }}</span>{% endfor %}</div>
+      </div>
+      {% for d in week.days %}
+      <div class="tl-row{% if not d.open %} is-closed{% endif %}{% if d.today %} is-today{% endif %}{% if d.cutoffs %} has-cutoff{% endif %}">
+        <div class="tl-day">
+          <strong>{{ d.weekday }} {{ d.daynum }}</strong>
+          {% if d.today %}<span>Today</span>{% elif not d.open %}<span>Closed</span>{% endif %}
+        </div>
+        <div class="tl-track" style="--lanes:{{ d.lanes }}">
+          {% for t in week.ticks %}<i class="tl-tick" style="left:{{ t.left }}%"></i>{% endfor %}
+          {% if d.hours %}<span class="tl-hours" style="left:{{ d.hours.left }}%;width:{{ d.hours.width }}%" title="Open {{ d.hours.label }}"></span>{% endif %}
+          {% for b in d.bars %}
+          {% if b.kind == "insight" %}
+          <a class="tl-bar tl-{{ b.direction }}{% if b.id == current %} is-current{% endif %}" href="{{ url_for('insight', iid=b.id) }}" style="left:{{ b.left }}%;width:{{ b.width }}%;--lane:{{ b.lane }}" title="{{ b.title }}, {{ b.label }}"><span>{{ b.title }}</span></a>
+          {% else %}
+          <span class="tl-bar tl-ghost" style="left:{{ b.left }}%;width:{{ b.width }}%;--lane:{{ b.lane }}" title="Filtered out: {{ b.reason }}"><span>{{ b.title }}</span></span>
+          {% endif %}
+          {% endfor %}
+          {% for c in d.cutoffs %}
+          <span class="tl-cutoff tl-cutoff-{{ c.status }}" style="left:{{ c.left }}%"><span>{{ c.supplier }} order for {{ c.for_day.split(' ')[0] }} closes {{ c.time }}</span></span>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  <ul class="tl-key">
+    <li><i class="key-hours"></i>Opening hours</li>
+    <li><i class="key-increase"></i>Could bring more customers</li>
+    <li><i class="key-decrease"></i>Could reduce customers</li>
+    <li><i class="key-ghost"></i>Filtered out</li>
+    <li><i class="key-cutoff"></i>Supplier order cutoff</li>
+  </ul>
+</figure>
+{% endmacro %}
