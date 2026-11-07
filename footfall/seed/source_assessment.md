@@ -13,6 +13,28 @@ Assessed 2026-11-07 against the scout task's rules: a page that lists dated even
 
 The source itself is the recurring event-listing page in every selected row, not a single event detail page. Distance is straight-line haversine distance from the café point. Each selected page was retrieved with `footfall.scout.fetch.fetch_text` on 2026-11-07 using the repository's bounded fetcher and normal TLS verification; the check output contained the event names and dates shown above. Robots checks used `FootfallHackathonBot/0.1`; all four selected paths were allowed. All four pages were public and fetched without authentication. Refresh interval is 24 hours.
 
+## Issue #14 human-visible baseline (7–13 November 2026)
+
+Re-fetched all four saved pages with `footfall.scout.fetch.fetch_text` on 2026-11-07. This baseline records listing entries visible in readable page text, not inferred show counts. Dates are Europe/Dublin. For every row, the page did **not** state an attendance figure; a ticket price or sold-out label is not an attendance count. `Unknown` means no start time or event-level venue was printed on the listing.
+
+| Source | Human-visible listing title | Listed date(s) intersecting 7–13 Nov | Start time as printed | Venue as printed / safe attribution | Attendance stated? |
+| --- | --- | --- | --- | --- | --- |
+| [St Peter's Cork events](https://stpeterscork.ie/events) | Day Of The Dead Mexican Offering | On now, until Sat 7 Nov | Unknown | St Peter's Cork (venue calendar) | No |
+| [St Peter's Cork events](https://stpeterscork.ie/events) | Creative Workshop – Write and Paint Your Own Calaverita | Sat 7 Nov | 15:00 | St Peter's Cork (venue calendar) | No |
+| [St Peter's Cork events](https://stpeterscork.ie/events) | The Soul Of Mexico: A Day Of The Dead Dance Celebration | Sat 7 Nov | 17:00 | St Peter's Cork (venue calendar) | No |
+| [St Peter's Cork events](https://stpeterscork.ie/events) | Recomposed By Max Richter: Vivaldi: The Four Seasons | Thu 12 Nov | 19:30 | St Peter's Cork (venue calendar) | No; €35 ticket price is listed, not attendance |
+| [Cork Opera House What’s On](https://www.corkoperahouse.ie/whats-on/) | Cork City Ballet presents The Nutcracker | Thu 5–Sat 7 Nov (the listing overlaps the window on 7 Nov) | “Various Times”; individual starts unknown | Cork Opera House (venue What’s On page) | No; sold-out status is shown, no headcount |
+| [Triskel What’s On](https://triskelartscentre.ie/whats-on/) | Cork Zine Fest Residency / Festival / Workshops | Thu 29 Oct–Sun 29 Nov (calendar shows it on each day 7–13 Nov) | Unknown | Triskel Arts Centre calendar; event-level venue not repeated | No |
+| [Triskel What’s On](https://triskelartscentre.ie/whats-on/) | The Devils 55th Anniversary | Sun 8–Wed 11 Nov | Unknown | Triskel Arts Centre calendar; event-level venue not repeated | No |
+| [Triskel What’s On](https://triskelartscentre.ie/whats-on/) | Pan’s Labyrinth 20th Anniversary | Sun 8–Wed 11 Nov | Unknown | Triskel Arts Centre calendar; event-level venue not repeated | No |
+| [Triskel What’s On](https://triskelartscentre.ie/whats-on/) | 2 – Portrait of Harry Clarke (Famous Paintings and their Hidden Histories: Autumn 2026) | Tue 10 Nov | 11:00 | Triskel Arts Centre calendar; event-level venue not repeated | No |
+| [Triskel What’s On](https://triskelartscentre.ie/whats-on/) | Cork International Film Festival 2026 | Fri 13–Sun 22 Nov (the listing overlaps the window on 13 Nov) | Unknown | Triskel Arts Centre calendar; specific screening venue not printed | No |
+| [The Everyman What’s On](https://everymancork.com/) | Disco Pigs by Enda Walsh | Sat 31 Oct–Sat 14 Nov (the listing overlaps 7–13 Nov) | Unknown on the listing | The Everyman (venue What’s On section) | No |
+
+**Baseline count:** 11 human-visible listing entries across four source pages; 4/4 pages returned readable text and, per the team's recorded refresh, all four source records reached `ok` with success timestamps. This is not a model extraction result. No live-model extraction has run, so extracted events = 0, extraction misses/false positives = not measurable yet, and rejected model findings = none recorded (not “zero false positives”). Compare the next extraction to this list and record verbatim evidence, misses, and false positives then. Do not compare prepared demo events as if they were live findings.
+
+Known listing limits: recurring/run listings (Nutcracker, Disco Pigs, Triskel film runs, Zine Fest, and CIFF) do not expose every individual performance/screening time or event-level attendance on these source pages. Triskel's listing does not repeat individual venues, so those stay unknown at event level pending detail-page review.
+
 ## Other candidates assessed
 
 | Candidate | Type | Finding | Decision |
