@@ -5,8 +5,9 @@ Run:  flask --app "footfall.app:create_app()" run --debug
 from __future__ import annotations
 
 import os
+import re
 
-from flask import Flask, abort, flash, g, jsonify, redirect, render_template, request, url_for
+from flask import Flask, abort, flash, g, jsonify, redirect, render_template, request, session, url_for
 
 from . import business_form, db, present
 from . import weather as weather_mod
@@ -19,6 +20,16 @@ from .geocode import geocode
 from .llm import LLM
 from .scout import refresh as refresh_mod
 from .week import build_week, short_title
+
+# Simulated sign-in for the demo: any credentials work, nothing is stored server-side.
+DEMO_EMAIL = "brid@bridskitchen.ie"
+PUBLIC = {"landing", "login", "logout", "static", "api_insights"}
+
+
+def display_name(email: str) -> str:
+    first = re.split(r"[._+-]", email.split("@")[0])[0]
+    return "Bríd" if email == DEMO_EMAIL else (first[:1].upper() + first[1:]) or "Owner"
+
 
 def create_app(db_path: str | None = None, clock=None, llm: LLM | None = None, fetcher=None,
                weather_fetcher=None, geocoder=None) -> Flask:
@@ -71,7 +82,13 @@ def create_app(db_path: str | None = None, clock=None, llm: LLM | None = None, f
         modes = {r["data_mode"] for r in c.execute("SELECT DISTINCT data_mode FROM events").fetchall()}
         state = "none" if not run else {"ok": "ok", "partial": "partial"}.get(run["status"], "error")
         return {"run": run, "run_state": state, "modes": modes, "llm_enabled": model.enabled,
-                "shell_business": db.get_business(c), "now": clock()}
+                "shell_business": db.get_business(c), "now": clock(), "user": session.get("user")}
+
+    @app.before_request
+    def _require_login():
+        if request.endpoint is None or request.endpoint in PUBLIC or session.get("user"):
+            return None
+        return redirect(url_for("login", next=request.path if request.method == "GET" else None))
 
     def compute():
         c = con()
@@ -90,11 +107,44 @@ def create_app(db_path: str | None = None, clock=None, llm: LLM | None = None, f
             return None
         abort(404)
 
-    def safe_next(default: str) -> str:
-        nxt = request.form.get("next", "")
+    def safe_next(default: str, nxt: str | None = None) -> str:
+        nxt = request.form.get("next", "") if nxt is None else nxt
         return nxt if nxt.startswith("/") and not nxt.startswith("//") else default
 
     @app.get("/")
+    def landing():
+        return render_template("landing.html")
+
+    @app.route("/login", methods=["GET", "POST"])
+    def login():
+        nxt = safe_next(url_for("index"), request.values.get("next", ""))
+        email, errors = "", {}
+        if request.method == "POST":
+            demo = bool(request.form.get("demo"))
+            email = DEMO_EMAIL if demo else request.form.get("email", "").strip()
+            if not email:
+                errors["email"] = "Enter your email address."
+            elif not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email):
+                errors["email"] = "Enter an email address like name@yourcafe.ie."
+            if not demo and not request.form.get("password"):
+                errors["password"] = "Enter your password."
+            if not errors:
+                session.clear()
+                session["user"] = display_name(email)
+                session.permanent = bool(request.form.get("remember"))
+                return redirect(nxt)
+        if session.get("user") and request.method == "GET":
+            return redirect(nxt)
+        return render_template("login.html", email=email, errors=errors, next=nxt,
+                               forgot="forgot" in request.args), (400 if errors else 200)
+
+    @app.post("/logout")
+    def logout():
+        session.clear()
+        flash("You have been signed out.")
+        return redirect(url_for("landing"))
+
+    @app.get("/app")
     def index():
         b, result = compute()
         c = con()

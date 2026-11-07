@@ -4,7 +4,7 @@ from footfall import db
 from footfall.app import create_app
 from footfall.present import ago, countdown, dist, revenue_estimate
 
-from .conftest import NOW, FakeLLM
+from .conftest import NOW, FakeLLM, sign_in
 
 DEADLINE = {"supplier": "Bakery", "cutoff_label": "Wed 11 Nov 16:00", "delivery_day": "Thu 12 Nov"}
 
@@ -45,7 +45,7 @@ class FakeGeocoder:
 def app_client(tmp_path, geocoder=None):
     app = create_app(db_path=str(tmp_path / "b.sqlite3"), clock=lambda: NOW, llm=FakeLLM(enabled=False),
                      geocoder=geocoder or FakeGeocoder())
-    return app, app.test_client()
+    return app, sign_in(app.test_client())
 
 
 def week(key, days=("mon", "tue", "wed", "thu", "fri"), start="08:00", end="16:00"):
@@ -80,7 +80,7 @@ def test_business_page_saves_each_locations_own_hours(tmp_path):
     assert (b["opens"], b["closes"], b["open_days"]) == ("08:00", "16:00", ["mon", "tue", "wed", "thu", "fri", "sat"])
     assert (b["radius_m"], b["avg_spend"]) == (800, 7.5)
     assert b["sales_baseline"] == {"customers_per_hour": 15, "uplift_pct": {"low": 4, "medium": 12, "high": 25}}
-    home = c.get("/").get_data(as_text=True)
+    home = c.get("/app").get_data(as_text=True)
     assert "Lavitt&#39;s Quay, Cork" in home and "Sat–Sun</b> 10:00–18:00" in home
 
 
@@ -120,9 +120,9 @@ def test_home_shows_approved_message_as_done(tmp_path):
     c.post("/refresh", data={"mode": "prepared"})
     iid = next(i["id"] for i in c.get("/api/insights").get_json()["insights"] if i["title"] == "Graduation ceremony")
     did = int(c.post(f"/insights/{iid}/draft").headers["Location"].rstrip("/").split("/")[-1])
-    assert "Message approved" not in c.get("/").get_data(as_text=True)
+    assert "Message approved" not in c.get("/app").get_data(as_text=True)
     c.post(f"/drafts/{did}/approve")
-    assert "Message approved" in c.get("/").get_data(as_text=True)
+    assert "Message approved" in c.get("/app").get_data(as_text=True)
 
 
 def test_revenue_estimate_applies_owner_assumptions():
