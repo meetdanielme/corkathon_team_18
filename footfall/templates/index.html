@@ -12,8 +12,8 @@
     <ul class="stats">
       <li class="stat stat-events"><i class="ri-calendar-event-fill" aria-hidden="true"></i><strong>{{ insights|length }}</strong><span>events nearby</span></li>
       <li class="stat {{ 'stat-warn' if attention else 'stat-ok' }}"><i class="{{ 'ri-alarm-warning-fill' if attention else 'ri-truck-line' }}" aria-hidden="true"></i><strong>{{ attention if attention else cutoffs }}</strong><span>{{ "orders due soon" if attention else "orders to plan" }}</span></li>
-      <li class="stat stat-ok"><i class="ri-checkbox-circle-fill" aria-hidden="true"></i><strong>{{ done }}</strong><span>approved</span></li>
-      {% if review %}<li class="stat stat-warn"><i class="ri-question-line" aria-hidden="true"></i><strong>{{ review|length }}</strong><span>to check</span></li>{% endif %}
+      <li class="stat stat-ok"><i class="ri-checkbox-circle-fill" aria-hidden="true"></i><strong>{{ done }}</strong><span>messages ready</span></li>
+      {% if review %}<li class="stat stat-warn"><i class="ri-question-line" aria-hidden="true"></i><strong>{{ review|length }}</strong><span>missing details</span></li>{% endif %}
     </ul>
   </div>
   <aside class="biz-card" aria-label="Your business">
@@ -47,14 +47,14 @@
 {{ timeline(week) }}
 
 <section class="decisions" aria-labelledby="decisions-h">
-  <h2 id="decisions-h">Decisions Due</h2>
+  <h2 id="decisions-h">What's Coming Up</h2>
   {% for c in cards %}{% set i = c.i %}
   <article class="dcard lvl-{{ c.cd.level }}">
     {{ status(c.cd) }}
     <div class="dcard-body">
       <h3><i class="{{ i.category|category_icon }}" aria-hidden="true"></i><a class="stretch" href="{{ url_for('insight', iid=i.id) }}">{{ i.title }}</a></h3>
       <p class="meta"><span><i class="ri-time-line" aria-hidden="true"></i>{{ i.window_label }}</span><span><i class="ri-map-pin-range-line" aria-hidden="true"></i>{{ i.distance_m|dist }} away</span></p>
-      {% if i.conflicts %}<p class="warn"><i class="ri-error-warning-fill" aria-hidden="true"></i>Overlaps a signal pointing the other way</p>{% endif %}
+      {% if i.conflicts %}<p class="warn"><i class="ri-error-warning-fill" aria-hidden="true"></i>Another event at the same time could cancel this out</p>{% endif %}
     </div>
     <div class="dcard-measures">
       {{ effect(i.direction) }}
@@ -66,15 +66,15 @@
   {% endfor %}
   {% for r in review %}
   <article class="dcard lvl-check">
-    <span class="att lvl-check"><i class="ri-question-line" aria-hidden="true"></i><span><strong>Needs checking</strong><span>Not on the timeline yet</span></span></span>
+    <span class="att lvl-check"><i class="ri-question-line" aria-hidden="true"></i><span><strong>Details missing</strong><span>Not on your week yet</span></span></span>
     <div class="dcard-body">
       <h3><i class="ri-calendar-close-line" aria-hidden="true"></i>{{ r.title }}</h3>
-      <p class="meta"><span><i class="ri-error-warning-line" aria-hidden="true"></i>Missing {{ r.missing|join(" and ") }}</span></p>
+      <p class="meta"><span><i class="ri-error-warning-line" aria-hidden="true"></i>We don't know {{ r.missing|map("replace", "start time", "when it starts")|map("replace", "location", "where it is")|join(" or ") }} yet</span></p>
     </div>
   </article>
   {% endfor %}
   {% if not cards and not review %}
-  <p class="empty"><i class="ri-calendar-check-line" aria-hidden="true"></i>Nothing in the monitored sources affects the next 7 days. That doesn't mean nothing is happening nearby.</p>
+  <p class="empty"><i class="ri-calendar-check-line" aria-hidden="true"></i>Nothing we're following affects your café this week. We only see the event listings we follow, so keep an eye out locally too.</p>
   {% endif %}
 </section>
 {% endblock %}

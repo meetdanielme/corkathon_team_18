@@ -20,7 +20,7 @@ def find(items, title):
 
 def test_holiday_closure_filters_the_event(con):
     r = build(con, special_hours=[{"date": "2026-11-12", "label": "Staff training", "ranges": []}])
-    assert find(r["excluded"], "Graduation ceremony").reason == "Café is closed for Staff training"
+    assert find(r["excluded"], "Graduation ceremony").reason == "You're closed for Staff training"
 
 
 def test_split_day_sums_overlap_across_ranges(con):
@@ -31,7 +31,7 @@ def test_split_day_sums_overlap_across_ranges(con):
 
 def test_special_hours_replace_weekly_hours(con):
     r = build(con, special_hours=[{"date": "2026-11-12", "label": "Half day", "ranges": [["15:00", "18:00"]]}])
-    assert "does not overlap opening hours 15:00-18:00" in find(r["excluded"], "Graduation ceremony").reason
+    assert "before you open (you're open 15:00–18:00)" in find(r["excluded"], "Graduation ceremony").reason
 
 
 def test_nearest_location_sets_distance_and_reason(con):
@@ -42,7 +42,7 @@ def test_nearest_location_sets_distance_and_reason(con):
     r = insights_mod.build(b, db.get_events(con, NOW), db.get_suppliers(con, b["id"]), {}, NOW)
     g = find(r["insights"], "Graduation ceremony")
     assert g.distance_m < 50 and g.location["name"] == "Campus kiosk"
-    assert g.reasons[0].startswith(f"{g.distance_m} m from Campus kiosk")
+    assert g.reasons[0].startswith(f"It's {g.distance_m} m from Campus kiosk")
 
 
 def test_summary_groups_days():
@@ -60,7 +60,7 @@ def test_nearest_location_uses_its_own_hours(con):
               "hours": {**week, "thu": []}, "special_hours": []}
     b["locations"] = [*b["locations"], campus]
     r = insights_mod.build(b, db.get_events(con, NOW), db.get_suppliers(con, b["id"]), {}, NOW)
-    assert find(r["excluded"], "Graduation ceremony").reason == "Café is closed at Campus kiosk on Thu 12 Nov"
+    assert find(r["excluded"], "Graduation ceremony").reason == "You're closed at Campus kiosk on Thu 12 Nov"
 
 
 def test_timeline_shows_when_any_location_is_open(con):

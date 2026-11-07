@@ -20,21 +20,6 @@ def short_title(title: str) -> str:
     return re.sub(r"\s*\((fictional )?demo\)\s*$", "", title)
 
 
-def short_reason(reason: str) -> str:
-    """A few words for the timeline bar; the full reason stays in the bar's title and accessible name."""
-    r = reason.lower()
-    if "overlap" in r:
-        return "Outside hours"
-    if "radius" in r:
-        m = re.match(r"(\d+) m away", reason)
-        return f"{int(m.group(1)) / 1000:.1f} km away" if m else "Too far away"
-    if "private" in r or "restricted" in r:
-        return "Private event"
-    if "closed" in r:
-        return "Café closed"
-    return "Filtered out"
-
-
 def _pct(dt: datetime, day) -> float:
     local = dt.astimezone(TZ)
     hours = (local - at(day, "00:00")).total_seconds() / 3600
@@ -85,7 +70,7 @@ def build_week(business: dict, result: dict, events: list[dict], now: datetime, 
             if start and start.astimezone(TZ).date() == day:
                 w0, w1, _ = demand_window(start, parse_dt(ev.get("end_at")))
                 bar = _span(day, w0, w1)
-                bar.update(kind="excluded", title=short_title(x.title), reason=x.reason, why=short_reason(x.reason))
+                bar.update(kind="excluded", title=short_title(x.title), reason=x.reason, why=x.short or "Not relevant")
                 row["bars"].append(bar)
         seen = set()
         for i in result["insights"]:

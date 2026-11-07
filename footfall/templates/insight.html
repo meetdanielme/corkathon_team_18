@@ -27,7 +27,7 @@
 <div class="igrid">
   <section class="map-card" aria-label="Where it is">
     <div id="map" class="map" role="region" aria-label="Map of your café and the venue" data-cafe="{{ here.lat }},{{ here.lon }}" data-event="{{ event.lat }},{{ event.lon }}" data-radius="{{ business.radius_m }}" data-icon="{{ i.category|category_icon }}" data-direction="{{ i.direction }}">
-      <p class="map-fallback"><i class="ri-map-2-line" aria-hidden="true"></i>Map unavailable offline</p>
+      <p class="map-fallback"><i class="ri-map-2-line" aria-hidden="true"></i>Map not available right now</p>
     </div>
     <div class="map-foot">
       <div>
@@ -51,7 +51,7 @@
     {% if draft %}
     <a class="action-draft" href="{{ url_for('draft', draft_id=draft.id) }}">
       <i class="{{ 'ri-checkbox-circle-fill' if draft.approved_at else 'ri-draft-line' }}" aria-hidden="true"></i>
-      {{ "Approved message, not sent" if draft.approved_at else "Open your draft (not approved)" }}
+      {{ "Message approved, not sent yet" if draft.approved_at else "Open your message (not approved yet)" }}
     </a>
     {% endif %}
   </aside>
@@ -65,16 +65,16 @@
     <div class="tile tile-{{ i.direction }}">
       <span class="tile-icon" aria-hidden="true"><i class="ri-arrow-{{ 'up' if i.direction == 'increase' else 'down' }}-line"></i></span>
       <h3>{{ "More customers" if i.direction == "increase" else "Fewer customers" }}</h3>
-      <p>Expected during {{ hours }}, overlapping {{ (i.overlap_min / 60)|round(1)|replace(".0", "") }} h of opening time.</p>
+      <p>People will be around {{ hours|replace("-", "–") }}, for {{ i.overlap_min|duration }} while you're open.</p>
     </div>
     <div class="tile">
       {{ impact(i.impact) }}
-      <ul class="factors" aria-label="What sets the impact">
-        {% for key, label, icon in [("distance", "Distance", "ri-map-pin-range-line"), ("overlap", "Overlap with opening", "ri-time-line"), ("attendance", "Crowd size", "ri-group-line")] %}
+      <ul class="factors" aria-label="What decides the effect">
+        {% for key, label, icon in [("distance", "How close it is", "ri-map-pin-range-line"), ("overlap", "Time while you're open", "ri-time-line"), ("attendance", "How many people", "ri-group-line")] %}
         <li><i class="{{ icon }}" aria-hidden="true"></i><span>{{ label }}</span><span class="factor f{{ i.impact_points[key] }}" role="img" aria-label="{{ i.impact_points[key] }} of 2"><i></i><i></i></span></li>
         {% endfor %}
       </ul>
-      <p class="tile-note">A ranking, not a forecast.</p>
+      <p class="tile-note">A rough guide, not a prediction.</p>
     </div>
     <div class="tile">
       {{ confidence(i.confidence) }}
@@ -88,7 +88,7 @@
   <div class="revenue-head">
     <span class="tile-icon" aria-hidden="true"><i class="ri-money-euro-circle-line"></i></span>
     <h2 id="rev-h">Potential Impact on Revenue</h2>
-    <a class="btn btn-ghost btn-sm" href="{{ url_for('business') }}#revenue"><i class="ri-edit-line" aria-hidden="true"></i>Edit Assumptions</a>
+    <a class="btn btn-ghost btn-sm" href="{{ url_for('business') }}#revenue"><i class="ri-edit-line" aria-hidden="true"></i>Change My Numbers</a>
   </div>
   <div class="metrics">
     <div class="metric metric-lead">
@@ -110,7 +110,7 @@
     <a class="metric metric-add" href="{{ url_for('business') }}#revenue"><i class="ri-add-circle-line" aria-hidden="true"></i><span>Add your usual customers per hour and average spend to see this in euro</span></a>
     {% endif %}
   </div>
-  <p class="revenue-note"><i class="ri-information-line" aria-hidden="true"></i>Your assumption for {{ i.impact }} impact{% if rev.customers_per_hour %}, with {{ rev.customers_per_hour }} customers an hour{% endif %}. Not a forecast.</p>
+  <p class="revenue-note"><i class="ri-information-line" aria-hidden="true"></i>Based on your own numbers{% if rev.customers_per_hour %} (about {{ rev.customers_per_hour }} customers an hour){% endif %}. A rough guide, not a prediction.</p>
 </section>
 
 <section aria-labelledby="why-h">
@@ -123,7 +123,7 @@
     <figcaption>
       <a href="{{ s.url }}" rel="noopener" target="_blank"><i class="ri-links-line" aria-hidden="true"></i>{{ s.url.split("//")[-1].split("/")[0] }}</a>
       <span>Checked <time datetime="{{ s.retrieved_at|iso }}" title="{{ s.retrieved_at|when }}">{{ s.retrieved_at|ago }}</time></span>
-      {% if s.stale %}<span class="badge-stale"><i class="ri-cloud-off-line" aria-hidden="true"></i>Stale: last check failed or overdue</span>{% endif %}
+      {% if s.stale %}<span class="badge-stale"><i class="ri-cloud-off-line" aria-hidden="true"></i>We couldn't check this page recently</span>{% endif %}
     </figcaption>
   </figure>
   {% endfor %}

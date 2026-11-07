@@ -3,11 +3,11 @@
 {% endmacro %}
 
 {% macro impact(level, label=True) %}
-<span class="impact imp-{{ level }}"><span class="meter" aria-hidden="true"><i></i><i></i><i></i></span>{% if label %}{{ level|capitalize }} impact{% else %}<span class="visually-hidden">{{ level|capitalize }} impact</span>{% endif %}</span>
+<span class="impact imp-{{ level }}"><span class="meter" aria-hidden="true"><i></i><i></i><i></i></span>{% set words = {"low": "Small effect", "medium": "Medium effect", "high": "Big effect"}[level] %}{% if label %}{{ words }}{% else %}<span class="visually-hidden">{{ words }}</span>{% endif %}</span>
 {% endmacro %}
 
 {% macro confidence(level) %}
-<span class="chip conf conf-{{ level }}"><i class="{{ {'high': 'ri-shield-check-fill', 'medium': 'ri-shield-line', 'low': 'ri-shield-cross-line'}[level] }}" aria-hidden="true"></i>{{ level|capitalize }} confidence</span>
+<span class="chip conf conf-{{ level }}"><i class="{{ {'high': 'ri-shield-check-fill', 'medium': 'ri-shield-line', 'low': 'ri-shield-cross-line'}[level] }}" aria-hidden="true"></i>{{ {"high": "Very sure", "medium": "Fairly sure", "low": "Not sure yet"}[level] }}</span>
 {% endmacro %}
 
 {% macro status(cd) %}
