@@ -3,3 +3,9 @@ tzdata          # required on Windows for zoneinfo('Europe/Dublin')
 pytest>=8.0
 openai>=1.40    # only needed when FOOTFALL_LLM=azure
 anthropic>=0.40 # only needed when FOOTFALL_LLM=anthropic (fallback, Daniel's call)
+
+# Persistent remote SQLite on Vercel, which pins Python 3.12 in .python-version.
+# Marked optional: there is no 3.13+ wheel and the source build needs Rust, so an unmarked
+# requirement makes `pip install -r requirements.txt` fail on a newer local Python.
+# Only needed when TURSO_DATABASE_URL is set; local runs use stdlib sqlite3.
+libsql==0.1.11; python_version < "3.13"

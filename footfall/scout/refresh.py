@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import json
+import logging
+import os
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -10,9 +12,13 @@ from .. import db
 from ..domain.timeutil import now as tz_now, parse_dt
 from .extract import extract_events
 from .fetch import FetchError, fetch_text
-from .validate import validate_finding
+from .validate import OutsideWindow, validate_finding
 
-DEFAULT_LIMITS = {"max_sources": 15, "max_seconds": 90, "max_llm_calls": 15}
+# A refresh stays bounded. 90 s suits a hosted model; a model running locally is slower, so the
+# wall-clock budget is overridable rather than silently truncating the run at two sources.
+DEFAULT_LIMITS = {"max_sources": int(os.getenv("FOOTFALL_MAX_SOURCES", "15")),
+                  "max_seconds": float(os.getenv("FOOTFALL_REFRESH_MAX_SECONDS", "90")),
+                  "max_llm_calls": int(os.getenv("FOOTFALL_MAX_LLM_CALLS", "15"))}
 PREPARED = Path(__file__).parent.parent / "seed" / "prepared_events.json"
 
 
@@ -60,21 +66,32 @@ def run_live(con, llm, at: datetime | None = None, fetcher=fetch_text, limits: d
     lim = {**DEFAULT_LIMITS, **(limits or {})}
     run_id = _start_run(con, "live", at)
     t0, errors, attempted, ok, upserted = time.monotonic(), [], 0, 0, 0
+    calls_before = llm.calls
     w0, w1 = at, at + timedelta(days=7)
     for src in db.get_sources(con)[: lim["max_sources"]]:
-        if time.monotonic() - t0 > lim["max_seconds"] or llm.calls >= lim["max_llm_calls"]:
+        if time.monotonic() - t0 > lim["max_seconds"] or llm.calls - calls_before >= lim["max_llm_calls"]:
             errors.append("Execution limit reached; remaining sources not checked")
             break
         attempted += 1
         stamp = tz_now().isoformat()
         con.execute("UPDATE sources SET last_attempt_at=? WHERE id=?", (stamp, src["id"]))
+        con.commit()  # release the write lock before network/model calls
         try:
-            final_url, text = fetcher(src["url"])
-            found = extract_events(llm, src, text, w0.date().isoformat(), w1.date().isoformat())
+            try:
+                final_url, text = fetcher(src["url"])
+                found = extract_events(llm, src, text, w0.date().isoformat(), w1.date().isoformat())
+            finally:
+                # Hosted libSQL streams can expire while the external model is working.
+                # No source writes are pending at this boundary; do not retry a write.
+                if reconnect := getattr(con, "reconnect", None):
+                    reconnect()
             kept = 0
             for f in found["events"]:
                 clean, why = validate_finding(f, text, w0, w1)
                 if not clean:
+                    if isinstance(why, OutsideWindow):
+                        logging.getLogger(__name__).info("Skipped finding from %s: %s", src["id"], why)
+                        continue
                     errors.append(f"{src['id']}: rejected finding ({why})")
                     continue
                 match = _venue_matches(clean["venue_name"], src)
@@ -104,6 +121,6 @@ def run_live(con, llm, at: datetime | None = None, fetcher=fetch_text, limits: d
     status = "ok" if ok == attempted and not errors else "partial" if ok else "failed"
     con.execute("""UPDATE refresh_runs SET ended_at=?, status=?, sources_attempted=?, sources_succeeded=?,
                    events_upserted=?, llm_calls=?, errors=? WHERE id=?""",
-                (tz_now().isoformat(), status, attempted, ok, upserted, llm.calls, json.dumps(errors), run_id))
+                (tz_now().isoformat(), status, attempted, ok, upserted, llm.calls - calls_before, json.dumps(errors), run_id))
     con.commit()
     return db.last_run(con)

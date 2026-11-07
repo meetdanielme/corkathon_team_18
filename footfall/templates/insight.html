@@ -1,73 +1,152 @@
 {% extends "base.html" %}
-{% block title %}{{ i.title }} · Footfall{% endblock %}
+{% from "_timeline.html" import timeline %}
+{% from "_bits.html" import effect, impact, confidence %}
+{% block title %}{{ i.title|short }} · Footfall{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+{% endblock %}
 {% block content %}
-<p class="back"><a href="{{ url_for('index') }}">← Your week</a></p>
-<section class="page-head">
-  <div>
-    <p class="eyebrow">Insight · rules {{ i.rule_version }}</p>
-    <h1>{{ i.title }}</h1>
-    <p class="when-lg">{{ i.window_label }} · {{ i.distance_m }} m away</p>
-    <p><span class="badge mode-{{ i.data_mode }}">{{ i.data_mode }} data</span></p>
-  </div>
-</section>
+{% set day, hours = i.window_label.split(" ")[:3]|join(" "), i.window_label.split(" ")[-1] %}
+{% set here = i.location or {"lat": business.lat, "lon": business.lon, "name": None, "address": business.address} %}
+{% set here_label = here.name or (business.name if business.locations|length <= 1 else here.address) %}
+<p class="back"><a href="{{ url_for('index') }}"><i class="ri-arrow-left-line" aria-hidden="true"></i>Back to the Week</a></p>
 
-<div class="split">
-  <section class="panel summary dir-{{ i.direction }}" aria-label="Summary">
-    <dl class="summary-grid">
-      <div><dt>Expected effect</dt><dd><span class="badge effect-{{ i.direction }}">{{ i.direction }}</span></dd></div>
+<header class="ihead">
+  <span class="cat-badge" aria-hidden="true"><i class="{{ i.category|category_icon }}"></i></span>
+  <div>
+    <h1>{{ i.title|short }}</h1>
+    <ul class="meta-chips">
+      <li><i class="ri-calendar-event-line" aria-hidden="true"></i>{{ day }}</li>
+      <li><i class="ri-time-line" aria-hidden="true"></i>{{ hours }}</li>
+      <li><i class="ri-map-pin-range-line" aria-hidden="true"></i>{{ i.distance_m|dist }} away</li>
+      <li>{{ effect(i.direction) }}</li>
+    </ul>
+  </div>
+</header>
+
+<div class="igrid">
+  <section class="map-card" aria-label="Where it is">
+    <div id="map" class="map" role="region" aria-label="Map of your business and the venue" data-cafe="{{ here.lat }},{{ here.lon }}" data-event="{{ event.lat }},{{ event.lon }}" data-radius="{{ business.radius_m }}" data-icon="{{ i.category|category_icon }}" data-direction="{{ i.direction }}">
+      <p class="map-fallback"><i class="ri-map-2-line" aria-hidden="true"></i>Map not available right now</p>
+    </div>
+    <div class="map-foot">
       <div>
-        <dt>Potential impact</dt>
-        <dd><span class="badge impact impact-{{ i.impact }}"><span class="pips" aria-hidden="true"><i></i><i></i><i></i></span>{{ i.impact }}</span></dd>
-        <dd class="muted small">Heuristic points: distance {{ i.impact_points.distance }}, overlap {{ i.impact_points.overlap }}, attendance {{ i.impact_points.attendance }} = {{ i.impact_points.total }}. Not a measured uplift.</dd>
+        <strong><i class="ri-map-pin-2-fill" aria-hidden="true"></i>{{ event.venue_name or "Venue" }}</strong>
+        <span>{{ i.distance_m|dist }} from {{ here_label }}, about {{ i.distance_m|walk }} min on foot</span>
       </div>
-      <div>
-        <dt>Confidence</dt>
-        <dd><span class="badge confidence confidence-{{ i.confidence }}">{{ i.confidence }}</span></dd>
-        <dd><ul class="small">{% for r in i.confidence_reasons %}<li>{{ r }}</li>{% endfor %}</ul></dd>
-      </div>
-      <div>
-        <dt>Relevant window</dt>
-        <dd>{{ i.window_label }}</dd>
-        <dd class="muted small">{{ i.window_basis }}</dd>
-      </div>
-    </dl>
+      {% if event.lat %}<a class="btn btn-ghost" href="https://www.openstreetmap.org/directions?engine=fossgis_osrm_foot&route={{ here.lat }}%2C{{ here.lon }}%3B{{ event.lat }}%2C{{ event.lon }}" target="_blank" rel="noopener">Directions<i class="ri-external-link-line" aria-hidden="true"></i></a>{% endif %}
+    </div>
   </section>
 
-  <aside class="panel deadline-card {% if i.action_deadline %}deadline-{{ i.action_deadline.status }}{% endif %}" aria-label="Action deadline">
+  <aside class="action lvl-{{ cd.level }}" aria-labelledby="action-h">
+    <p class="action-head" id="action-h"><i class="{{ cd.icon }}" aria-hidden="true"></i>{{ cd.label }}</p>
     {% if i.action_deadline %}
-    <p class="eyebrow">Act before</p>
-    <p class="deadline-time">{{ i.action_deadline.cutoff_label }}</p>
-    <p>{{ i.action_deadline.supplier }} cutoff ({{ i.action_deadline.status }}) for delivery {{ i.action_deadline.delivery_day }}</p>
-    <p class="muted small">{{ i.action_deadline.evidence }}</p>
-    {% else %}
-    <p class="eyebrow">Action deadline</p>
-    <p>No known supplier constraint applies.</p>
+    <p class="action-time"><span>Order by</span>{{ i.action_deadline.cutoff_label }}</p>
+    <p class="action-line"><i class="ri-truck-line" aria-hidden="true"></i>{{ i.action_deadline.supplier }} delivery, {{ i.action_deadline.delivery_day }}</p>
     {% endif %}
-    <p class="suggested">{{ i.suggested_action }}</p>
-    <form method="post" action="{{ url_for('make_draft', iid=i.id) }}"><button>{% if draft %}New draft message{% else %}Draft a message{% endif %}</button></form>
-    {% if draft %}<p class="small"><a href="{{ url_for('draft', draft_id=draft.id) }}">Open latest draft</a></p>{% endif %}
+    <p class="action-suggest">{{ i.suggested_action }}</p>
+    <form method="post" action="{{ url_for('make_draft', iid=i.id) }}">
+      <button class="btn btn-lg"><i class="ri-edit-line" aria-hidden="true"></i>{% if draft %}Draft a New Message{% else %}Draft Message to Supplier{% endif %}</button>
+    </form>
+    {% if draft %}
+    <a class="action-draft" href="{{ url_for('draft', draft_id=draft.id) }}">
+      <i class="{{ 'ri-checkbox-circle-fill' if draft.approved_at else 'ri-draft-line' }}" aria-hidden="true"></i>
+      {{ "Message approved, not sent yet" if draft.approved_at else "Open your message (not approved yet)" }}
+    </a>
+    {% endif %}
   </aside>
 </div>
 
-<section>
-  <h2>Why this matters</h2>
-  <table class="facts">
-    <tr><th>Reasons</th><td><ul>{% for r in i.reasons %}<li>{{ r }}</li>{% endfor %}</ul></td></tr>
-    {% if i.conflicts %}<tr><th>Conflicts</th><td><ul>{% for c in i.conflicts %}<li>{{ c }}</li>{% endfor %}</ul></td></tr>{% endif %}
-    <tr><th>Sources and freshness</th><td><ul>{% for s in i.sources %}<li><a href="{{ s.url }}" rel="noopener" target="_blank">{{ s.url }}</a> · retrieved {{ s.retrieved_at|when }}{% if s.stale %} · <strong class="stale">stale</strong>{% endif %}{% if s.excerpt %}<blockquote>{{ s.excerpt }}</blockquote>{% endif %}</li>{% endfor %}</ul></td></tr>
-  </table>
+{{ timeline(week, current=i.id) }}
+
+<section aria-labelledby="mean-h">
+  <h2 id="mean-h">What This Could Mean</h2>
+  <div class="tiles">
+    <div class="tile tile-{{ i.direction }}">
+      <span class="tile-icon" aria-hidden="true"><i class="ri-arrow-{{ 'up' if i.direction == 'increase' else 'down' }}-line"></i></span>
+      <h3>{{ "More customers" if i.direction == "increase" else "Fewer customers" }}</h3>
+      <p>People will be around {{ hours|replace("-", "–") }}, for {{ i.overlap_min|duration }} while you're open.</p>
+    </div>
+    <div class="tile">
+      {{ impact(i.impact) }}
+      <ul class="factors" aria-label="What decides the effect">
+        {% for key, label, icon in [("distance", "How close it is", "ri-map-pin-range-line"), ("overlap", "Time while you're open", "ri-time-line"), ("attendance", "How many people", "ri-group-line")] %}
+        <li><i class="{{ icon }}" aria-hidden="true"></i><span>{{ label }}</span><span class="factor f{{ i.impact_points[key] }}" role="img" aria-label="{{ i.impact_points[key] }} of 2"><i></i><i></i></span></li>
+        {% endfor %}
+      </ul>
+      <p class="tile-note">A rough guide, not a prediction.</p>
+    </div>
+    <div class="tile">
+      {{ confidence(i.confidence) }}
+      <ul class="icon-list">{% for r in i.confidence_reasons %}<li><i class="{{ r|confidence_icon }}" aria-hidden="true"></i>{{ r }}</li>{% endfor %}</ul>
+    </div>
+  </div>
 </section>
 
-<details class="scenario">
-  <summary>Optional revenue scenario (illustrative)</summary>
-  <p class="small muted">Your assumptions, not a forecast. Footfall does not claim these sales.</p>
-  <label>Extra customers <input type="number" id="cust" min="0" value="0"></label>
-  <label>Average spend € <input type="number" id="spend" min="0" step="0.5" value="{{ business.avg_spend or 0 }}"></label>
-  <p>Illustrative extra sales: €<span id="total">0</span></p>
-</details>
+{% set sign = "+" if rev.pct > 0 else "−" %}
+<section class="revenue rev-{{ i.direction }}" aria-labelledby="rev-h">
+  <div class="revenue-head">
+    <span class="tile-icon" aria-hidden="true"><i class="ri-money-euro-circle-line"></i></span>
+    <h2 id="rev-h">Potential Impact on Revenue</h2>
+    <a class="btn btn-ghost btn-sm" href="{{ url_for('business') }}#revenue"><i class="ri-edit-line" aria-hidden="true"></i>Change My Numbers</a>
+  </div>
+  <div class="metrics">
+    <div class="metric metric-lead">
+      <strong>{{ sign }}{{ rev.pct|abs }}%</strong>
+      <span>{{ "more" if rev.pct > 0 else "fewer" }} customers during {{ hours }}</span>
+    </div>
+    {% if rev.extra is not none %}
+    <div class="metric">
+      <strong>≈ {{ sign }}{{ rev.extra|abs }}</strong>
+      <span>customers, on top of about {{ rev.usual }} usual</span>
+    </div>
+    {% endif %}
+    {% if rev.revenue is not none %}
+    <div class="metric">
+      <strong>≈ {{ sign }}€{{ "{:,}".format(rev.revenue|abs) }}</strong>
+      <span>{{ "extra" if rev.pct > 0 else "lost" }} sales at €{{ "%.2f"|format(rev.avg_spend) }} average spend</span>
+    </div>
+    {% else %}
+    <a class="metric metric-add" href="{{ url_for('business') }}#revenue"><i class="ri-add-circle-line" aria-hidden="true"></i><span>Add your usual customers per hour and average spend to see this in euro</span></a>
+    {% endif %}
+  </div>
+  <p class="revenue-note"><i class="ri-information-line" aria-hidden="true"></i>Based on your own numbers{% if rev.customers_per_hour %} (about {{ rev.customers_per_hour }} customers an hour){% endif %}. A rough guide, not a prediction.</p>
+</section>
+
+<section aria-labelledby="why-h">
+  <h2 id="why-h">Why It Showed Up</h2>
+  <ul class="icon-list why">{% for r in i.reasons %}<li><i class="{{ r|reason_icon }}" aria-hidden="true"></i>{{ r }}</li>{% endfor %}</ul>
+  {% for c in i.conflicts %}<p class="warn"><i class="ri-error-warning-fill" aria-hidden="true"></i>{{ c }}</p>{% endfor %}
+  {% for s in i.sources %}
+  <figure class="source">
+    {% if i.data_mode != "prepared" %}
+    {% if s.excerpt %}<blockquote>{{ s.excerpt }}</blockquote>{% endif %}
+    <figcaption>
+      <a href="{{ s.url }}" rel="noopener" target="_blank"><i class="ri-links-line" aria-hidden="true"></i>{{ s.url.split("//")[-1].split("/")[0] }}</a>
+      <span>Checked <time datetime="{{ s.retrieved_at|iso }}" title="{{ s.retrieved_at|when }}">{{ s.retrieved_at|ago }}</time></span>
+      {% if s.stale %}<span class="badge-stale"><i class="ri-cloud-off-line" aria-hidden="true"></i>We couldn't check this page recently</span>{% endif %}
+    </figcaption>
+    {% else %}<figcaption>Saved event record. Check the organiser’s latest information before acting.</figcaption>{% endif %}
+  </figure>
+  {% endfor %}
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
-  const c = document.getElementById('cust'), s = document.getElementById('spend'), t = document.getElementById('total');
-  const upd = () => { t.textContent = ((+c.value || 0) * (+s.value || 0)).toFixed(2); };
-  c.oninput = s.oninput = upd; upd();
+  (() => {
+    const el = document.getElementById('map');
+    const ev = el.dataset.event.split(',').map(Number);
+    if (!window.L || ev.some(isNaN)) return;
+    el.innerHTML = '';
+    const cafe = el.dataset.cafe.split(',').map(Number);
+    const map = L.map(el, { scrollWheelZoom: false, attributionControl: true });
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
+    const pin = (cls, icon) => L.divIcon({ className: '', html: `<span class="pin ${cls}"><i class="${icon}"></i></span>`, iconSize: [36, 36], iconAnchor: [18, 18] });
+    L.circle(cafe, { radius: +el.dataset.radius, color: '#2B44A8', weight: 1, fillOpacity: 0.04, dashArray: '4 4' }).addTo(map);
+    L.polyline([cafe, ev], { color: '#18202B', weight: 2, dashArray: '6 6' }).addTo(map);
+    L.marker(cafe, { icon: pin('pin-cafe', 'ri-store-2-fill'), title: 'Your business' }).addTo(map);
+    L.marker(ev, { icon: pin('pin-event pin-' + el.dataset.direction, el.dataset.icon.replace('-line', '-fill')), title: 'Event venue' }).addTo(map);
+    map.fitBounds([cafe, ev], { padding: [48, 48] });
+  })();
 </script>
 {% endblock %}

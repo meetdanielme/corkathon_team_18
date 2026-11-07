@@ -54,3 +54,9 @@ Shared AI skills are included in [`.agents/skills/`](.agents/skills/README.md); 
 The repository starts private. Agree visibility or judge access before submission. Local `context/` contains supplied material and personal details; it is intentionally excluded from Git.
 
 Sources: supplied organiser email and Hacker Guide; [official rules](https://corkathon.devpost.com/rules) and [event page](https://corkathon.devpost.com/), checked 5 November 2026. The guide mentions 09:00 in one rule; official rules specify project work from 09:45. Use 09:45 unless organisers clarify otherwise.
+
+## Shared hosted demo
+
+Footfall can run on Vercel with Azure Luna and persistent Turso storage. See [hosting setup, limits and validation](docs/team/vercel-hosting.md). Local SQLite remains available; Azure/Turso credentials are supplied only through server environment variables.
+
+`/` is the public marketing page and `/pricing` shows proposed plans (no payments are taken). `/login` and `/signup` are **simulated**: any email and password, a completed sign-up form, or "Continue with the demo business" opens the dashboard at `/app` for the fictional demo business. Nothing is stored server-side; set `FLASK_SECRET_KEY` in hosted environments so session cookies are signed with a real secret. Deployment changes are in PR #29.

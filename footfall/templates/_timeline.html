@@ -1,0 +1,43 @@
+{% macro timeline(week, current=None, caption=None) %}
+<figure class="tl">
+  {% if caption %}<figcaption class="tl-caption">{{ caption }}</figcaption>{% endif %}
+  <p class="tl-hint"><i class="ri-arrow-left-right-line" aria-hidden="true"></i>Scroll sideways for later hours</p>
+  <div class="tl-scroll" tabindex="0" role="region" aria-label="Week timeline">
+    <div class="tl-body">
+      <div class="tl-row tl-axis" aria-hidden="true">
+        <div class="tl-day"></div>
+        <div class="tl-track">{% for t in week.ticks %}<span style="left:{{ t.left }}%">{{ t.label }}</span>{% endfor %}</div>
+      </div>
+      {% for d in week.days %}
+      <div class="tl-row{% if not d.open %} is-closed{% endif %}{% if d.today %} is-today{% endif %}{% if d.cutoffs %} has-cutoff{% endif %}">
+        <div class="tl-day">
+          <strong>{{ d.weekday }} {{ d.daynum }}</strong>
+          {% if d.special %}<span class="tl-special">{{ d.special }}</span>{% elif d.today %}<span>Today</span>{% elif not d.open %}<span>Closed</span>{% endif %}
+        </div>
+        <div class="tl-track" style="--lanes:{{ d.lanes }}">
+          {% for t in week.ticks %}<i class="tl-tick" style="left:{{ t.left }}%"></i>{% endfor %}
+          {% for h in d.hours %}<span class="tl-hours" style="left:{{ h.left }}%;width:{{ h.width }}%" title="Open {{ h.label }}"></span>{% endfor %}
+          {% for b in d.bars %}
+          {% if b.kind == "insight" %}
+          <a class="tl-bar tl-{{ b.direction }}{% if b.id == current %} is-current{% endif %}" href="{{ url_for('insight', iid=b.id) }}" style="left:{{ b.left }}%;width:{{ b.width }}%;--lane:{{ b.lane }}" title="{{ b.title }}, {{ b.label }}"><i class="ri-arrow-{{ 'up' if b.direction == 'increase' else 'down' }}-line" aria-hidden="true"></i><span>{{ b.title }}</span></a>
+          {% else %}
+          <span class="tl-bar tl-ghost" style="left:{{ b.left }}%;width:{{ b.width }}%;--lane:{{ b.lane }}" title="Not relevant: {{ b.reason }}"><i class="ri-eye-off-line" aria-hidden="true"></i><span>{{ b.title }}<span class="tl-why"> · {{ b.why }}</span><span class="visually-hidden">. Not relevant: {{ b.reason }}</span></span></span>
+          {% endif %}
+          {% endfor %}
+          {% for c in d.cutoffs %}
+          <span class="tl-cutoff lvl-{{ c.level }}" style="left:{{ c.left }}%"><span><i class="{{ c.icon }}" aria-hidden="true"></i>{{ c.supplier }} order for {{ c.for_day.split(' ')[0] }} due {{ c.time }}</span></span>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  <ul class="tl-key">
+    <li><i class="key-hours"></i>You're open</li>
+    <li><i class="key-increase"></i>More customers</li>
+    <li><i class="key-decrease"></i>Fewer customers</li>
+    <li><i class="key-ghost"></i>Not relevant</li>
+    <li><i class="key-cutoff"></i>Order deadline</li>
+  </ul>
+</figure>
+{% endmacro %}

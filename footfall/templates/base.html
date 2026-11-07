@@ -3,23 +3,60 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
   <title>{% block title %}Footfall{% endblock %}</title>
+  <link rel="icon" href="{{ url_for('favicon') }}" sizes="48x48">
+  <link rel="icon" href="{{ url_for('static', filename='brand/logo-mark.svg') }}" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='brand/apple-touch-icon.png') }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,600&family=Manrope:wght@600;700;800&display=swap">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;700;800&display=swap">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css">
+  {% block head %}{% endblock %}
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body>
+<body{% block body_attrs %}{% endblock %}>
+  <a class="skip" href="#main">Skip to Content</a>
+  {% block header %}
   <header class="top">
-    <a href="{{ url_for('index') }}" class="brand">
-      <svg class="mark" viewBox="0 0 32 20" aria-hidden="true"><path d="M3 17a13 13 0 0 1 26 0" /><path class="mark-inner" d="M10 17a6 6 0 0 1 12 0" /></svg>
-      Footfall
-    </a>
-    <span class="tagline">Local signals. Thoughtful decisions.</span>
+    <a href="{{ url_for('index') }}" class="wordmark" translate="no"><img src="{{ url_for('static', filename='brand/logo-mark.svg') }}" alt="" width="28" height="28">Footfall</a>
+    <div class="top-right">
+      <div class="status status-{{ run_state }}">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span class="status-text">
+          {% if run %}
+          <span class="status-verb{% if run_state == "ok" %} is-ok{% endif %}">{% if run_state == "ok" %}Updated{% elif run_state == "partial" %}Partly updated{% else %}Update failed{% endif %}</span>
+          <time datetime="{{ run.started_at|iso }}" title="{{ run.started_at|when }}">{{ run.started_at|ago }}</time>
+          {% else %}Not updated yet{% endif %}
+        </span>
+        <form method="post" action="{{ url_for('refresh') }}" data-busy>
+          <input type="hidden" name="mode" value="{{ 'live' if llm_enabled else 'prepared' }}">
+          <input type="hidden" name="next" value="{{ request.path }}">
+          <button class="icon-btn" aria-label="Refresh Sources" title="Refresh sources"><i class="ri-refresh-line" aria-hidden="true"></i></button>
+        </form>
+      </div>
+      <a class="biz-link{% if request.endpoint == 'business' %} is-current{% endif %}" href="{{ url_for('business') }}"{% if request.endpoint == 'business' %} aria-current="page"{% endif %}>
+        <i class="ri-store-2-line" aria-hidden="true"></i><span>{{ shell_business.name|short }}</span>
+      </a>
+      {% if user %}
+      <form class="user" method="post" action="{{ url_for('logout') }}">
+        <span class="user-avatar" aria-hidden="true" title="Signed in as {{ user }}">{{ user[:1] }}</span>
+        <button class="icon-btn icon-btn-quiet" aria-label="Log Out {{ user }}" title="Log out"><i class="ri-logout-box-r-line" aria-hidden="true"></i></button>
+      </form>
+      {% endif %}
+    </div>
   </header>
-  <main>
-    {% with msgs = get_flashed_messages() %}{% for m in msgs %}<p class="flash" role="status">{{ m }}</p>{% endfor %}{% endwith %}
+  {% endblock %}
+  <main id="main"{% block main_attrs %}{% endblock %}>
+    {% block flashes %}{% with msgs = get_flashed_messages() %}{% if msgs %}<div aria-live="polite">{% for m in msgs %}<p class="flash" role="status"><i class="ri-information-line" aria-hidden="true"></i>{{ m }}</p>{% endfor %}</div>{% endif %}{% endwith %}{% endblock %}
     {% block content %}{% endblock %}
   </main>
+  {% block footer %}{% endblock %}
+  <script>
+    document.querySelectorAll('form[data-busy]').forEach(f => f.addEventListener('submit', () => {
+      const b = f.querySelector('button'); b.classList.add('is-busy'); b.setAttribute('aria-busy', 'true');
+    }));
+  </script>
 </body>
 </html>

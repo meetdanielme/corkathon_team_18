@@ -1,50 +1,85 @@
 {% extends "base.html" %}
-{% block title %}Draft · Footfall{% endblock %}
+{% from "_bits.html" import status %}
+{% block title %}Message to {{ d.recipient_label }} · Footfall{% endblock %}
 {% block content %}
-<p class="back"><a href="{{ url_for('insight', iid=d.insight_id) }}">← Back to insight</a></p>
-<section class="page-head">
+<p class="back"><a href="{{ url_for('insight', iid=d.insight_id) }}"><i class="ri-arrow-left-line" aria-hidden="true"></i>Back to the Event</a></p>
+
+<header class="dhead">
+  <span class="avatar" aria-hidden="true">{{ d.recipient_label[:1] }}</span>
   <div>
-    <p class="eyebrow">Supplier message · {{ d.source }} draft</p>
     <h1>Message to {{ d.recipient_label }}</h1>
-    <p class="muted">Drafted from: {{ d.source }}. Footfall never sends messages: edit, approve, then copy it into WhatsApp or email yourself.</p>
+    <p class="dhead-sub">Footfall never sends messages. Approve it, then paste it into WhatsApp or email yourself.</p>
   </div>
-</section>
-<ol class="steps" aria-label="Progress">
-  <li class="done">Edit</li>
-  <li class="{% if d.approved_at %}done{% else %}current{% endif %}">Approve</li>
-  <li class="{% if d.approved_at %}current{% endif %}">Copy</li>
+  <p class="pill {{ 'pill-done' if d.approved_at else 'pill-wait' }}">
+    <i class="{{ 'ri-checkbox-circle-fill' if d.approved_at else 'ri-time-line' }}" aria-hidden="true"></i>
+    {% if d.approved_at %}Approved {{ d.approved_at|ago }}, not sent{% else %}Not approved yet, not sent{% endif %}
+  </p>
+</header>
+
+<ol class="stepper" aria-label="Progress">
+  <li class="is-done"><i class="ri-check-line" aria-hidden="true"></i>Review the Wording</li>
+  <li class="{{ 'is-done' if d.approved_at else 'is-current' }}" {% if not d.approved_at %}aria-current="step"{% endif %}><i class="{{ 'ri-check-line' if d.approved_at else 'ri-shield-check-line' }}" aria-hidden="true"></i>Approve</li>
+  <li class="{{ 'is-current' if d.approved_at }}" {% if d.approved_at %}aria-current="step"{% endif %}><i class="ri-file-copy-line" aria-hidden="true"></i>Copy &amp; Send Yourself</li>
 </ol>
-<div class="editor">
-<p class="status {% if d.approved_at %}status-approved{% endif %}">
-  Status: {% if d.approved_at %}<strong>Approved {{ d.approved_at|when }}, not sent</strong>{% else %}<strong>Not approved</strong> · not sent{% endif %}
-</p>
-<form method="post" action="{{ url_for('save_draft', draft_id=d.id) }}">
-  <label for="text">Review and edit your message</label>
-  <textarea id="text" name="text" rows="6">{{ d.text }}</textarea>
-  <button class="secondary">Save edits</button>
-  <p class="muted small" id="edit-status" role="status">Save any changes before approving. Editing clears approval.</p>
-</form>
-<div class="actions">
-  <form method="post" action="{{ url_for('approve', draft_id=d.id) }}"><button id="approve" {% if d.approved_at %}class="secondary"{% endif %}>Approve</button></form>
-  <button type="button" id="copy" {% if not d.approved_at %}disabled title="Approve first"{% endif %}>Copy message</button>
+
+<div class="dgrid">
+  <section class="composer" aria-label="Message">
+    <div class="composer-bar">
+      <span class="to"><i class="ri-user-3-line" aria-hidden="true"></i>To {{ d.recipient_label }}</span>
+      <span class="via" aria-hidden="true"><i class="ri-whatsapp-line"></i><i class="ri-mail-line"></i></span>
+      <button type="button" class="btn btn-sm js-copy" {% if not d.approved_at %}disabled aria-describedby="copy-why"{% endif %}><i class="ri-file-copy-line" aria-hidden="true"></i>Copy</button>
+    </div>
+    <form method="post" action="{{ url_for('save_draft', draft_id=d.id) }}" id="edit-form">
+      <label for="text" class="visually-hidden">Message text</label>
+      <textarea id="text" name="text" rows="7" autocomplete="off" spellcheck="true">{{ d.text }}</textarea>
+      <div class="composer-foot">
+        <span class="count" aria-live="off"><span id="count">{{ d.text|length }}</span> characters</span>
+        <span class="small" id="edit-status" role="status">If you change the message, you'll need to approve it again.</span>
+        <button class="btn btn-ghost btn-sm"><i class="ri-save-3-line" aria-hidden="true"></i>Save Edits</button>
+      </div>
+    </form>
+  </section>
+
+  {% if i %}
+  <aside class="context" aria-label="Related order">
+    {{ status(cd) }}
+    <a class="context-link" href="{{ url_for('insight', iid=i.id) }}"><i class="{{ i.category|category_icon }}" aria-hidden="true"></i>{{ i.title }}</a>
+    <p class="meta"><span><i class="ri-time-line" aria-hidden="true"></i>{{ i.window_label }}</span></p>
+    {% if i.action_deadline %}<p class="meta"><span><i class="ri-truck-line" aria-hidden="true"></i>{{ i.action_deadline.supplier }} delivery {{ i.action_deadline.delivery_day }}</span></p>{% endif %}
+  </aside>
+  {% endif %}
 </div>
-<p id="copied" class="muted" role="status"></p>
+
+<div class="decide">
+  <form method="post" action="{{ url_for('approve', draft_id=d.id) }}">
+    <button id="approve" class="btn btn-lg {{ 'btn-ghost' if d.approved_at }}"><i class="ri-shield-check-line" aria-hidden="true"></i>{{ "Approve Again" if d.approved_at else "Approve Message" }}</button>
+  </form>
+  <button type="button" id="copy" class="btn btn-lg js-copy {{ 'btn-ghost' if not d.approved_at }}" {% if not d.approved_at %}disabled aria-describedby="copy-why"{% endif %}><i class="ri-file-copy-line" aria-hidden="true"></i>Copy Message</button>
+  {% if not d.approved_at %}<p class="small" id="copy-why">Approve the message to copy it.</p>{% endif %}
+  <p id="copied" role="status" aria-live="polite"></p>
 </div>
+
 <script>
-  const text = document.getElementById('text');
+  const text = document.getElementById('text'), count = document.getElementById('count');
+  let dirty = false;
   text.addEventListener('input', () => {
+    dirty = true; count.textContent = text.value.length;
     document.getElementById('approve').disabled = true;
-    document.getElementById('copy').disabled = true;
-    document.getElementById('edit-status').textContent = 'Unsaved changes. Save edits, then approve again.';
+    document.querySelectorAll('.js-copy').forEach(b => b.disabled = true);
+    document.getElementById('edit-status').textContent = 'You’ve made changes. Save them, then approve the message again.';
     document.getElementById('copied').textContent = '';
   });
-  document.getElementById('copy').onclick = async () => {
+  document.getElementById('edit-form').addEventListener('submit', () => { dirty = false; });
+  window.addEventListener('beforeunload', e => { if (dirty) e.preventDefault(); });
+  document.querySelectorAll('.js-copy').forEach(b => b.addEventListener('click', async () => {
+    const out = document.getElementById('copied');
     try {
       await navigator.clipboard.writeText(text.value);
-      document.getElementById('copied').textContent = 'Copied. Paste it into WhatsApp or email. Not sent.';
+      out.innerHTML = '<i class="ri-checkbox-circle-fill" aria-hidden="true"></i> Copied. Paste it into WhatsApp or email. Not sent.';
     } catch {
-      document.getElementById('copied').textContent = 'Could not copy. Select the message and copy it manually.';
+      text.select();
+      out.textContent = 'Your browser didn’t let us copy. The message is selected, so press Ctrl+C (or ⌘C on a Mac).';
     }
-  };
+  }));
 </script>
 {% endblock %}

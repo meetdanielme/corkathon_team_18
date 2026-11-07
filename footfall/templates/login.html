@@ -1,0 +1,42 @@
+{% extends "_auth.html" %}
+{% block title %}Log in · Footfall{% endblock %}
+{% block card %}
+    <div>
+      <h1 id="auth-h">Log in to Footfall</h1>
+      <p class="muted">Welcome back. Your week is ready for you.</p>
+    </div>
+    {% if forgot %}
+    <p class="notice notice-info" role="status"><i class="ri-information-line" aria-hidden="true"></i>This is a demo workspace, so there is no password to reset. Any email and password will log you in.</p>
+    {% endif %}
+    <form class="auth-form" method="post" action="{{ url_for('login') }}" novalidate data-auth>
+      <input type="hidden" name="next" value="{{ next }}">
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" autocomplete="email" inputmode="email" spellcheck="false"
+               placeholder="you@yourbusiness.ie" value="{{ email }}" data-rule="email"
+               data-empty="Enter your email address." data-msg="Enter an email address like name@yourbusiness.ie."
+               aria-describedby="email-error"{% if errors.email %} aria-invalid="true" autofocus{% endif %}>
+        {{ field_error("email", errors) }}
+      </div>
+      <div class="field">
+        <div class="label-row">
+          <label for="password">Password</label>
+          <a href="{{ url_for('login', forgot=1, next=next) }}">Forgot password?</a>
+        </div>
+        <div class="pw">
+          <input id="password" name="password" type="password" autocomplete="current-password" data-rule="required"
+                 data-empty="Enter your password."
+                 aria-describedby="password-error"{% if errors.password %} aria-invalid="true"{% if not errors.email %} autofocus{% endif %}{% endif %}>
+          <button type="button" class="pw-toggle" aria-controls="password" aria-pressed="false" data-pw-toggle>
+            <i class="ri-eye-line" aria-hidden="true"></i><span>Show</span>
+          </button>
+        </div>
+        {{ field_error("password", errors) }}
+      </div>
+      <label class="check"><input type="checkbox" name="remember" value="1"> Keep me logged in</label>
+      <button class="btn-lg auth-submit">Log in<i class="ri-arrow-right-line" aria-hidden="true"></i></button>
+      <p class="auth-or"><span>or</span></p>
+      <button class="btn-lg btn-ghost auth-submit" name="demo" value="1" formnovalidate><i class="ri-store-2-line" aria-hidden="true"></i>Continue with the demo business</button>
+    </form>
+    <p class="small">New to Footfall? <a href="{{ url_for('signup') }}">Create a free account</a></p>
+{% endblock %}

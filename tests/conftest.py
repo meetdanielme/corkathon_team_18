@@ -25,6 +25,13 @@ class FakeLLM:
         return r
 
 
+def sign_in(client):
+    """Simulated demo sign-in, as the login form does."""
+    with client.session_transaction() as s:
+        s["user"] = "Bríd"
+    return client
+
+
 @pytest.fixture
 def con(tmp_path):
     c = db.connect(str(tmp_path / "t.sqlite3"))

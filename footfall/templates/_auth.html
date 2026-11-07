@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block body_attrs %} class="site auth"{% endblock %}
+{% block header %}{% endblock %}
+{% block main_attrs %} class="auth-main"{% endblock %}
+{% block flashes %}{% endblock %}
+{% macro field_error(name, errors) %}<p class="field-error" id="{{ name }}-error"{% if not errors[name] %} hidden{% endif %}><i class="ri-error-warning-line" aria-hidden="true"></i><span>{{ errors[name] }}</span></p>{% endmacro %}
+{% block content %}
+<div class="auth-grid">
+  <section class="auth-card" aria-labelledby="auth-h">
+    <a href="{{ url_for('landing') }}" class="wordmark" translate="no"><img src="{{ url_for('static', filename='brand/logo-mark.svg') }}" alt="" width="30" height="30">Footfall</a>
+    {% with msgs = get_flashed_messages() %}{% for m in msgs %}<p class="flash" role="status"><i class="ri-information-line" aria-hidden="true"></i>{{ m }}</p>{% endfor %}{% endwith %}
+    {% block card %}{% endblock %}
+    <p class="demo-note"><i class="ri-flask-line" aria-hidden="true"></i><span><b>Demo environment.</b> {% block demo_note %}Any email and password will work.{% endblock %} Nothing you type is stored.</span></p>
+  </section>
+
+  <aside class="auth-side" aria-label="What Footfall does">
+    <p class="eyebrow">For businesses that live on foot traffic</p>
+    <h2>Know what's coming before your supplier cutoff.</h2>
+    <ul>
+      <li><i class="ri-calendar-event-fill" aria-hidden="true"></i><span><b>Local events and weather</b>, matched to your opening hours</span></li>
+      <li><i class="ri-alarm-warning-fill" aria-hidden="true"></i><span><b>Supplier deadlines</b>, counted down for each delivery</span></li>
+      <li><i class="ri-chat-check-fill" aria-hidden="true"></i><span><b>Ready-to-edit messages</b>. You approve, nothing is sent for you</span></li>
+    </ul>
+  </aside>
+</div>
+<script>
+  (() => {
+    // Client-side checks mirror the server's; data-rule is required | email | min8.
+    const form = document.querySelector('[data-auth]');
+    const rules = {
+      required: v => !!v,
+      email: v => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v),
+      min8: v => v.length >= 8,
+    };
+    const show = (input, msg) => {
+      const err = document.getElementById(input.id + '-error');
+      err.querySelector('span').textContent = msg; err.hidden = !msg;
+      msg ? input.setAttribute('aria-invalid', 'true') : input.removeAttribute('aria-invalid');
+    };
+    const fields = [...form.querySelectorAll('[data-rule]')];
+    form.addEventListener('submit', e => {
+      if (e.submitter && e.submitter.name === 'demo') return;
+      let first = null;
+      fields.forEach(f => {
+        const v = f.value.trim(), msg = !v ? f.dataset.empty : (rules[f.dataset.rule](v) ? '' : f.dataset.msg);
+        show(f, msg || ''); if (msg && !first) first = f;
+      });
+      if (first) { e.preventDefault(); first.focus(); return; }
+      e.submitter && e.submitter.classList.add('is-busy');
+    });
+    fields.forEach(f => f.addEventListener('input', () => f.getAttribute('aria-invalid') && show(f, '')));
+    document.querySelectorAll('[data-pw-toggle]').forEach(btn => btn.addEventListener('click', () => {
+      const input = document.getElementById(btn.getAttribute('aria-controls')), on = btn.getAttribute('aria-pressed') !== 'true';
+      input.type = on ? 'text' : 'password';
+      btn.setAttribute('aria-pressed', on);
+      btn.querySelector('span').textContent = on ? 'Hide' : 'Show';
+      btn.querySelector('i').className = on ? 'ri-eye-off-line' : 'ri-eye-line';
+    }));
+  })();
+</script>
+{% endblock %}

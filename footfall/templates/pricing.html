@@ -1,0 +1,134 @@
+{% extends "_site.html" %}
+{% block title %}Pricing · Footfall{% endblock %}
+{% block head %}<meta name="description" content="Footfall pricing: free for one location, €19 a month for unlimited refreshes and supplier messages, and plans for businesses with several locations.">{% endblock %}
+{% macro feature(text, planned=False) %}<li{% if planned %} class="is-planned"{% endif %}><i class="{{ 'ri-time-line' if planned else 'ri-check-line' }}" aria-hidden="true"></i><span>{{ text }}{% if planned %} <em>Planned</em>{% endif %}</span></li>{% endmacro %}
+{% block content %}
+<section class="pr-hero">
+  <p class="eyebrow">Pricing</p>
+  <h1>Simple pricing for busy owners</h1>
+  <p class="lp-lead">Start free with one location. Upgrade when Footfall is saving you more than it costs. No contracts, no hardware, no card to get started.</p>
+  <fieldset class="billing" data-billing>
+    <legend class="visually-hidden">Billing period</legend>
+    <label><input type="radio" name="billing" value="monthly" checked><span>Monthly</span></label>
+    <label><input type="radio" name="billing" value="yearly"><span>Yearly <b>Save 20%</b></span></label>
+  </fieldset>
+</section>
+
+<section class="plans" aria-label="Plans">
+  <article class="plan">
+    <h2>Starter</h2>
+    <p class="plan-for">Try Footfall with your own business.</p>
+    <p class="price"><strong>€0</strong><span>forever</span></p>
+    <a class="btn btn-ghost" href="{{ url_for('signup', plan='starter') }}">Start free</a>
+    <ul class="plan-list">
+      {{ feature("1 location") }}
+      {{ feature("7-day view of nearby events and weather") }}
+      {{ feature("Evidence and confidence for every insight") }}
+      {{ feature("3 refreshes a week") }}
+      {{ feature("3 supplier messages a month") }}
+    </ul>
+  </article>
+
+  <article class="plan plan-featured">
+    <span class="plan-badge">Most popular</span>
+    <h2>Essentials</h2>
+    <p class="plan-for">For a single shop, café or truck that orders every week.</p>
+    <p class="price"><strong data-monthly="€19" data-yearly="€15">€19</strong><span>per month<span data-yearly-note hidden>, billed €180 yearly</span></span></p>
+    <a class="btn" href="{{ url_for('signup', plan='essentials') }}">Start 14-day trial</a>
+    <ul class="plan-list">
+      {{ feature("Everything in Starter") }}
+      {{ feature("Unlimited refreshes") }}
+      {{ feature("Every supplier cutoff, with unlimited messages") }}
+      {{ feature("Special opening days and holidays") }}
+      {{ feature("Morning email of what's changed", planned=True) }}
+    </ul>
+  </article>
+
+  <article class="plan">
+    <h2>Multi-site</h2>
+    <p class="plan-for">For owners running a few locations.</p>
+    <p class="price"><strong data-monthly="€49" data-yearly="€39">€49</strong><span>per month, up to 5 locations<span data-yearly-note hidden>, billed €468 yearly</span></span></p>
+    <a class="btn btn-ghost" href="{{ url_for('signup', plan='multi') }}">Start 14-day trial</a>
+    <ul class="plan-list">
+      {{ feature("Everything in Essentials") }}
+      {{ feature("Up to 5 locations, each with its own hours and radius") }}
+      {{ feature("Request new local sources") }}
+      {{ feature("Logins for up to 5 team members", planned=True) }}
+      {{ feature("Priority email support") }}
+    </ul>
+  </article>
+
+  <article class="plan">
+    <h2>Group</h2>
+    <p class="plan-for">For chains, franchises and business districts.</p>
+    <p class="price"><strong>Custom</strong><span>6+ locations</span></p>
+    <a class="btn btn-ghost" href="{{ url_for('signup', plan='group') }}">Register interest</a>
+    <ul class="plan-list">
+      {{ feature("Everything in Multi-site") }}
+      {{ feature("Unlimited locations") }}
+      {{ feature("Data export and API access") }}
+      {{ feature("Till and sales data connections", planned=True) }}
+      {{ feature("Dedicated onboarding") }}
+    </ul>
+  </article>
+</section>
+<p class="pr-note"><i class="ri-information-line" aria-hidden="true"></i><span>Prices exclude VAT. Footfall is a hackathon prototype: these are proposed launch prices, no payments are taken, and sign-ups aren't saved. Features marked <em>Planned</em> aren't built yet.</span></p>
+
+<section class="lp-section pr-why" aria-labelledby="why-h">
+  <div>
+    <p class="eyebrow">How we set these prices</p>
+    <h2 id="why-h">Priced below the tools restaurants already pay for</h2>
+    <p class="lp-sub">Forecasting and scheduling software for hospitality usually costs €40–€200 per location each month and often needs till integrations. Footfall needs no hardware or setup, so we priced it for owners, not analysts.</p>
+    <div class="pr-value">
+      <i class="ri-calculator-line" aria-hidden="true"></i>
+      <p><b>Does it pay for itself?</b> Illustrative example: if one better-timed order a month avoids wasting a tray of 24 pastries at €3.50 each, that's €84 saved, more than four times the Essentials price.</p>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table class="table pr-table">
+      <caption class="visually-hidden">Prices of comparable tools</caption>
+      <thead><tr><th scope="col">Tool</th><th scope="col">What it does</th><th scope="col">Typical price</th></tr></thead>
+      <tbody>
+        <tr><th scope="row"><a href="https://www.gotenzo.com/">Tenzo</a></th><td>Restaurant analytics and forecasting</td><td>£80–£200 per location a month</td></tr>
+        <tr><th scope="row"><a href="https://us.fitgap.com/products/5-out-predictive-intelligence">5-Out</a></th><td>AI sales forecasting for restaurants</td><td>$50–$100 per location a month</td></tr>
+        <tr><th scope="row"><a href="https://www.softwareadvice.com/sales-forecasting/lineup-ai-profile/">Lineup.ai</a></th><td>Demand forecasting and scheduling</td><td>From $79 a month</td></tr>
+        <tr><th scope="row"><a href="https://www.noon.ai/blog/articles/452-7shifts-pricing-2026">7shifts</a></th><td>Staff scheduling for restaurants</td><td>$40–$150 per location a month</td></tr>
+        <tr><th scope="row"><a href="https://www.trustradius.com/products/predicthq/pricing">PredictHQ</a></th><td>Event data for demand forecasting</td><td>Free tier; paid from about $500 a year</td></tr>
+        <tr><th scope="row"><a href="https://sourceforge.net/software/foot-traffic-data/uk/">Footfall counters</a></th><td>In-store people counting</td><td>About $99 per location a month, plus hardware</td></tr>
+        <tr class="pr-us"><th scope="row">Footfall</th><td>Local events and weather, matched to your orders</td><td><b>€0–€19</b> for one location</td></tr>
+      </tbody>
+    </table>
+    <p class="small">Researched 7 November 2026 from vendor pages and software directories. Prices change and some are third-party estimates, so treat them as approximate.</p>
+  </div>
+</section>
+
+<section class="lp-section" aria-labelledby="faq-h">
+  <p class="eyebrow">Questions</p>
+  <h2 id="faq-h">Good to know</h2>
+  <div class="faq">
+    <details><summary>Do I need a till or POS integration?</summary><p>No. Footfall works from your location, opening hours and supplier cutoffs. You can be set up in a few minutes.</p></details>
+    <details><summary>What counts as a location?</summary><p>Any address you trade from with its own opening hours: a shop, a second café, or a regular pitch for a food truck.</p></details>
+    <details><summary>Is Footfall a sales forecast?</summary><p>No. It tells you which nearby events and weather are likely to make a day busier or quieter, shows the evidence and how sure it is, and leaves the quantities to you.</p></details>
+    <details><summary>Can I cancel any time?</summary><p>Yes. Monthly plans have no contract, and you can drop back to the free Starter plan whenever you like.</p></details>
+  </div>
+</section>
+
+<section class="lp-cta" aria-labelledby="cta-h">
+  <h2 id="cta-h">Start with one location, free</h2>
+  <p>See your next seven days in a few minutes, or explore our demo business first.</p>
+  <div class="lp-ctas">
+    <a class="btn btn-lg" href="{{ url_for('index') if user else url_for('signup') }}">{{ "Open your week" if user else "Start free" }}<i class="ri-arrow-right-line" aria-hidden="true"></i></a>
+    {% if not user %}<a class="btn btn-lg btn-on-brand" href="{{ url_for('login') }}">Try the demo business</a>{% endif %}
+  </div>
+</section>
+<script>
+  (() => {
+    const box = document.querySelector('[data-billing]');
+    box.addEventListener('change', () => {
+      const yearly = box.querySelector('input:checked').value === 'yearly';
+      document.querySelectorAll('[data-monthly]').forEach(el => el.textContent = yearly ? el.dataset.yearly : el.dataset.monthly);
+      document.querySelectorAll('[data-yearly-note]').forEach(el => el.hidden = !yearly);
+    });
+  })();
+</script>
+{% endblock %}

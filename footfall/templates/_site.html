@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block body_attrs %} class="site"{% endblock %}
+{% block header %}
+<header class="site-nav">
+  <a href="{{ url_for('landing') }}" class="wordmark" translate="no"><img src="{{ url_for('static', filename='brand/logo-mark.svg') }}" alt="" width="30" height="30">Footfall</a>
+  <nav aria-label="Main">
+    <a href="{{ url_for('landing') }}#how">How it works</a>
+    <a href="{{ url_for('landing') }}#who">Who it's for</a>
+    <a href="{{ url_for('pricing') }}"{% if request.endpoint == 'pricing' %} aria-current="page"{% endif %}>Pricing</a>
+  </nav>
+  <div class="site-nav-cta">
+    {% if user %}
+    <a class="btn btn-sm" href="{{ url_for('index') }}">Open your week<i class="ri-arrow-right-line" aria-hidden="true"></i></a>
+    {% else %}
+    <a class="btn btn-sm btn-ghost" href="{{ url_for('login') }}">Log in</a>
+    <a class="btn btn-sm" href="{{ url_for('signup') }}">Sign up</a>
+    {% endif %}
+  </div>
+</header>
+{% endblock %}
+{% block main_attrs %} class="site-main"{% endblock %}
+{% block footer %}
+<footer class="site-foot">
+  <div>
+    <span class="wordmark" translate="no"><img src="{{ url_for('static', filename='brand/logo-mark.svg') }}" alt="" width="24" height="24">Footfall</span>
+    <p>Built by Team 18 at Corkathon 2026, University College Cork.</p>
+  </div>
+  <p class="small">Python · Flask · SQLite/Turso · Azure AI · Vercel. Weather data by <a href="https://open-meteo.com/">Open-Meteo</a> (CC BY 4.0). The demo business, Bríd's Kitchen, is fictional.</p>
+  <nav aria-label="Project links">
+    <a href="{{ url_for('pricing') }}"><i class="ri-price-tag-3-line" aria-hidden="true"></i>Pricing</a>
+    <a href="https://github.com/meetdanielme/corkathon_team_18"><i class="ri-github-fill" aria-hidden="true"></i>GitHub</a>
+    <a href="https://corkathon.devpost.com/"><i class="ri-trophy-line" aria-hidden="true"></i>Devpost</a>
+  </nav>
+</footer>
+{% endblock %}

@@ -48,8 +48,10 @@ Also show one irrelevant event being filtered out, with its reason.
 ```
 
 - **Stack:** Python 3.11+, Flask 3, SQLite, Jinja server-rendered pages, `zoneinfo` (`tzdata` on Windows).
-- **AI:** behind `footfall/llm.py`. `FOOTFALL_LLM=azure` is primary. `anthropic` is a manual fallback, Daniel's
-  call. There is no automatic fallback. `none` keeps the app fully usable in prepared mode.
+- **AI:** behind `footfall/llm.py`. `FOOTFALL_LLM=azure` is primary. `ollama` runs a model locally and is the
+  option used when no Azure deployment is available: free, no API key, no billing, so it needs nobody's
+  spending approval. `anthropic` is a paid manual fallback, Daniel's call. There is no automatic fallback
+  between providers. `none` keeps the app fully usable in prepared mode.
 - **Insights are computed on read**, not stored. Each insight's `id` is `business:event:rule_version`, so drafts
   can reference it. That keeps rules changes instant and reproducible.
 - **Refresh is synchronous** with hard limits (`max_sources=15`, `max_seconds=90`, `max_llm_calls=15`). A

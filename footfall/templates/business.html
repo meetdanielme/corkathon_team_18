@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+{% block title %}{{ b.name }} · Footfall{% endblock %}
+{% macro err(name) %}{% if errors[name] %}<p class="field-error" id="{{ name }}-error"><i class="ri-error-warning-fill" aria-hidden="true"></i>{{ errors[name] }}</p>{% endif %}{% endmacro %}
+{% macro inv(name) %}{% if errors[name] %} aria-invalid="true" aria-describedby="{{ name }}-error"{% endif %}{% endmacro %}
+{% macro range_row(prefix, start="", end="") %}
+<div class="range" data-range>
+  <input type="time" name="{{ prefix }}_start" value="{{ start }}" aria-label="Opens" autocomplete="off">
+  <span aria-hidden="true">–</span>
+  <input type="time" name="{{ prefix }}_end" value="{{ end }}" aria-label="Closes" autocomplete="off">
+  <button type="button" class="icon-ghost" data-remove="[data-range]" aria-label="Remove these hours"><i class="ri-close-line" aria-hidden="true"></i></button>
+</div>
+{% endmacro %}
+{% macro special_row(key, i, s) %}
+<div class="special-row" data-special>
+  <div class="field">
+    <label for="{{ key }}_sd_{{ i }}">Date</label>
+    <input id="{{ key }}_sd_{{ i }}" type="date" name="{{ key }}_special_date" value="{{ s.date }}" autocomplete="off"{{ inv(key ~ '_special_' ~ i) }}>
+  </div>
+  <div class="field field-grow">
+    <label for="{{ key }}_sl_{{ i }}">Name</label>
+    <input id="{{ key }}_sl_{{ i }}" name="{{ key }}_special_label" value="{{ s.label }}" autocomplete="off" placeholder="e.g. Christmas Day…">
+  </div>
+  <div class="field">
+    <label for="{{ key }}_sm_{{ i }}">Hours</label>
+    <select id="{{ key }}_sm_{{ i }}" name="{{ key }}_special_mode" data-mode>
+      <option value="closed"{% if s.mode != "hours" %} selected{% endif %}>Closed</option>
+      <option value="hours"{% if s.mode == "hours" %} selected{% endif %}>Open, different hours</option>
+    </select>
+  </div>
+  <div class="range special-hours"{% if s.mode != "hours" %} hidden{% endif %}>
+    <input type="time" name="{{ key }}_special_start" value="{{ s.start }}" aria-label="Opens" autocomplete="off">
+    <span aria-hidden="true">–</span>
+    <input type="time" name="{{ key }}_special_end" value="{{ s.end }}" aria-label="Closes" autocomplete="off">
+  </div>
+  <button type="button" class="icon-ghost" data-remove="[data-special]" aria-label="Remove this special day"><i class="ri-delete-bin-line" aria-hidden="true"></i></button>
+  {{ err(key ~ '_special_' ~ i) }}
+</div>
+{% endmacro %}
+{% macro location_card(loc) %}
+<article class="loc-card" data-loc>
+  <input type="hidden" name="loc_key" value="{{ loc.key }}">
+  <div class="loc-head">
+    <span class="loc-badge" aria-hidden="true"><i class="ri-map-pin-2-fill"></i><span class="loc-num"></span></span>
+    <div class="field">
+      <label for="{{ loc.key }}_name">Name <span class="muted">(optional)</span></label>
+      <input id="{{ loc.key }}_name" name="{{ loc.key }}_name" value="{{ loc.name }}" autocomplete="off" placeholder="e.g. Washington St…">
+    </div>
+    <div class="field field-grow">
+      <label for="{{ loc.key }}_address">Address</label>
+      <input id="{{ loc.key }}_address" name="{{ loc.key }}_address" value="{{ loc.address }}" autocomplete="street-address" placeholder="e.g. Washington Street, Cork…"{{ inv(loc.key ~ '_address') }}>
+      {{ err(loc.key ~ '_address') }}
+    </div>
+    <button type="button" class="icon-ghost" data-remove="[data-loc]" aria-label="Remove this location"><i class="ri-delete-bin-line" aria-hidden="true"></i></button>
+  </div>
+  <div class="loc-section">
+    <h3 class="loc-sub"><i class="ri-time-line" aria-hidden="true"></i>Opening Hours</h3>
+    {{ err(loc.key ~ '_hours') }}
+    <div class="week">
+      {% for d in weekdays %}{% set rs = loc.hours.get(d, []) %}
+      <div class="day-row{% if not rs %} is-closed{% endif %}" data-prefix="{{ loc.key }}_{{ d }}">
+        <span class="day-name">{{ d|capitalize }}</span>
+        <div class="day-ranges" data-ranges>
+          {% for r in rs %}{{ range_row(loc.key ~ '_' ~ d, r[0], r[1]) }}{% endfor %}
+          <span class="closed-note">Closed</span>
+        </div>
+        <button type="button" class="btn btn-ghost btn-sm" data-add-range><i class="ri-add-line" aria-hidden="true"></i>Add Hours</button>
+        {{ err(loc.key ~ '_hours_' ~ d) }}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="loc-section">
+    <h3 class="loc-sub"><i class="ri-calendar-close-line" aria-hidden="true"></i>Holidays &amp; Special Days</h3>
+    <div class="rows" data-specials>
+      {% for s in loc.special %}{{ special_row(loc.key, loop.index0, s) }}{% endfor %}
+    </div>
+    <button type="button" class="btn btn-ghost btn-sm" data-add-special><i class="ri-add-line" aria-hidden="true"></i>Add Special Day</button>
+  </div>
+</article>
+{% endmacro %}
+{% block content %}
+<p class="back"><a href="{{ url_for('index') }}"><i class="ri-arrow-left-line" aria-hidden="true"></i>Back to the Week</a></p>
+<header class="dhead">
+  <span class="avatar avatar-biz" aria-hidden="true"><i class="ri-store-2-fill"></i></span>
+  <div>
+    <h1>{{ b.name }}</h1>
+    <p class="dhead-sub">Footfall uses these details to decide which events matter to you.</p>
+  </div>
+</header>
+
+{% if errors %}<p class="notice notice-error" role="alert"><i class="ri-error-warning-fill" aria-hidden="true"></i>Check the highlighted fields and save again.</p>{% endif %}
+
+<form method="post" action="{{ url_for('business') }}" class="settings" novalidate>
+  <section class="panel" aria-labelledby="profile-h">
+    <h2 id="profile-h"><i class="ri-store-2-line" aria-hidden="true"></i>Profile</h2>
+    <div class="field">
+      <label for="name">Business name</label>
+      <input id="name" name="name" value="{{ f.name }}" autocomplete="organization" required{{ inv('name') }}>
+      {{ err('name') }}
+    </div>
+  </section>
+
+  <section class="panel" id="location" aria-labelledby="location-h">
+    <h2 id="location-h"><i class="ri-map-pin-2-line" aria-hidden="true"></i>Locations &amp; Opening Hours</h2>
+    <p class="hint panel-intro">Each location has its own address and opening hours. We measure events from whichever location is closest.</p>
+    <div class="locs" data-locs>
+      {% for loc in f.locations %}{{ location_card(loc) }}{% endfor %}
+    </div>
+    {{ err('locations') }}
+    <button type="button" class="btn btn-ghost" data-add-loc><i class="ri-add-line" aria-hidden="true"></i>Add Location</button>
+    <div class="field radius">
+      <label for="radius_m">How far away should we look for events? (metres)</label>
+      <div class="range-row">
+        <input id="radius_range" type="range" min="100" max="5000" step="100" value="{{ f.radius_m }}" aria-label="Watch radius slider" aria-controls="radius_m">
+        <input id="radius_m" name="radius_m" type="number" min="100" max="5000" step="50" inputmode="numeric" autocomplete="off" value="{{ f.radius_m }}"{{ inv('radius_m') }}>
+      </div>
+      {{ err('radius_m') }}
+    </div>
+  </section>
+
+  <section class="panel" id="revenue" aria-labelledby="revenue-h">
+    <h2 id="revenue-h"><i class="ri-money-euro-circle-line" aria-hidden="true"></i>Your Numbers</h2>
+    <p class="hint panel-intro">Footfall uses these to estimate what an event could mean for your takings. They're your own estimates, not a prediction.</p>
+    <div class="field-row">
+      <div class="field">
+        <label for="customers_per_hour">Usual customers per hour</label>
+        <input id="customers_per_hour" name="customers_per_hour" type="number" min="1" max="1000" step="1" inputmode="numeric" autocomplete="off" placeholder="e.g. 12…" value="{{ f.customers_per_hour }}"{{ inv('customers_per_hour') }}>
+        {{ err('customers_per_hour') }}
+      </div>
+      <div class="field">
+        <label for="avg_spend">Average spend per customer (€)</label>
+        <input id="avg_spend" name="avg_spend" type="number" min="0" step="0.5" inputmode="decimal" autocomplete="off" placeholder="e.g. 7.50…" value="{{ f.avg_spend }}"{{ inv('avg_spend') }}>
+        {{ err('avg_spend') }}
+      </div>
+    </div>
+    <fieldset class="field">
+      <legend>How many more customers to expect, by effect size (%)</legend>
+      <div class="uplift-row">
+        {% for level in ["low", "medium", "high"] %}
+        <label class="uplift imp-{{ level }}">
+          <span class="impact"><span class="meter" aria-hidden="true"><i></i><i></i><i></i></span>{{ {"low": "Small", "medium": "Medium", "high": "Big"}[level] }} effect</span>
+          <span class="uplift-input"><input name="uplift_{{ level }}" type="number" min="0" max="100" step="1" inputmode="numeric" autocomplete="off" value="{{ f['uplift_' ~ level] }}"{{ inv('uplift_' ~ level) }}><span aria-hidden="true">%</span></span>
+          {{ err('uplift_' ~ level) }}
+        </label>
+        {% endfor %}
+      </div>
+      <p class="hint">For events that keep people away, like road closures, we use the same numbers as fewer customers.</p>
+    </fieldset>
+  </section>
+
+  <div class="settings-save"><button class="btn btn-lg"><i class="ri-save-3-line" aria-hidden="true"></i>Save Business Details</button></div>
+</form>
+
+{% set first_hours = f.locations[0].hours if f.locations else {} %}
+<template id="tpl-loc">{{ location_card({"key": "__K__", "name": "", "address": "", "hours": first_hours, "special": []}) }}</template>
+<template id="tpl-range">{{ range_row("__P__") }}</template>
+<template id="tpl-special">{{ special_row("__K__", "__I__", {"date": "", "label": "", "mode": "closed", "start": "", "end": ""}) }}</template>
+
+<section class="panel" aria-labelledby="sup-h">
+  <h2 id="sup-h"><i class="ri-truck-line" aria-hidden="true"></i>Supplier Order Deadlines</h2>
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th scope="col">Supplier</th><th scope="col">Contact</th><th scope="col">Delivers</th><th scope="col">Order by</th></tr></thead>
+      <tbody>
+        {% for s in suppliers|sort(attribute="supplier") %}
+        <tr>
+          <td>{{ s.supplier }}</td>
+          <td>{{ s.contact_label or "—" }}</td>
+          <td>{{ s.delivery_day|capitalize }}{% if s.delivery_window %} <span class="muted">{{ s.delivery_window }}</span>{% endif %}</td>
+          <td>{% set r = s.cutoff_rule %}{% if r.type == "business_days_before" %}{{ r.n }} working day{{ "s" if r.n != 1 }} before, {{ r.time }}{% else %}{{ r.time or "—" }}{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="hint">These are our best understanding of your order deadlines. Check them with your suppliers.</p>
+</section>
+
+<section class="panel" aria-labelledby="data-h">
+  <h2 id="data-h"><i class="ri-database-2-line" aria-hidden="true"></i>Event Updates</h2>
+  <dl class="facts">
+    <div><dt>Last checked</dt><dd>{% if run %}<time datetime="{{ run.started_at|iso }}">{{ run.started_at|when }}</time> {% if run.status != "ok" %} (some listings couldn't be checked){% endif %}{% else %}Never{% endif %}</dd></div>
+    <div><dt>Source</dt><dd>{{ "Example week" if run and run.mode == "prepared" else "Event listings" if run else "—" }}</dd></div>
+    <div><dt>Events found</dt><dd>{{ run.events_upserted if run else 0 }}</dd></div>
+    <div><dt>Event listings we follow</dt><dd>{{ sources }}{% if run and run.mode == "live" %} ({{ run.sources_succeeded }} checked last time){% endif %}</dd></div>
+  </dl>
+  {% if run and run.errors %}<details class="notice notice-warn"><summary>{{ run.errors|length }} event listing{{ "s" if run.errors|length != 1 }} couldn't be checked</summary><ul>{% for e in run.errors %}<li>{{ e }}</li>{% endfor %}</ul></details>{% endif %}
+  <div class="data-actions">
+    <form method="post" action="{{ url_for('refresh') }}" data-busy>
+      <input type="hidden" name="mode" value="prepared"><input type="hidden" name="next" value="{{ url_for('business') }}">
+      <button class="btn btn-ghost"><i class="ri-inbox-archive-line" aria-hidden="true"></i>Load Example Week</button>
+    </form>
+    <form method="post" action="{{ url_for('refresh') }}" data-busy>
+      <input type="hidden" name="mode" value="live"><input type="hidden" name="next" value="{{ url_for('business') }}">
+      <button class="btn btn-ghost" {% if not llm_enabled %}aria-describedby="live-why"{% endif %}><i class="ri-global-line" aria-hidden="true"></i>Check for New Events</button>
+    </form>
+  </div>
+  {% if not llm_enabled %}<p class="hint" id="live-why">Automatic event checking isn't switched on yet, so this won't find new events.</p>{% endif %}
+</section>
+
+<script>
+  const settings = document.querySelector('form.settings');
+  let dirty = false, uid = 0;
+  settings.addEventListener('input', () => { dirty = true; });
+  settings.addEventListener('submit', () => { dirty = false; });
+  window.addEventListener('beforeunload', e => { if (dirty) e.preventDefault(); });
+  const tpl = (id, swaps) => Object.entries(swaps).reduce((h, [k, v]) => h.replaceAll(k, v), document.getElementById(id).innerHTML);
+  const syncDay = row => row && row.classList.toggle('is-closed', !row.querySelector('[data-range]'));
+  const focusLast = box => box.lastElementChild?.querySelector('input, select')?.focus();
+  settings.addEventListener('click', e => {
+    const t = e.target;
+    if (t.closest('[data-add-loc]')) {
+      const box = settings.querySelector('[data-locs]');
+      box.insertAdjacentHTML('beforeend', tpl('tpl-loc', { __K__: 'n' + (++uid) })); focusLast(box); dirty = true;
+    } else if (t.closest('[data-add-range]')) {
+      const row = t.closest('.day-row'), box = row.querySelector('[data-ranges]');
+      box.querySelector('.closed-note').insertAdjacentHTML('beforebegin', tpl('tpl-range', { __P__: row.dataset.prefix }));
+      syncDay(row); box.querySelectorAll('[data-range]')[box.querySelectorAll('[data-range]').length - 1].querySelector('input').focus(); dirty = true;
+    } else if (t.closest('[data-add-special]')) {
+      const card = t.closest('[data-loc]'), box = card.querySelector('[data-specials]');
+      box.insertAdjacentHTML('beforeend', tpl('tpl-special', { __K__: card.querySelector('[name=loc_key]').value, __I__: 'n' + (++uid) }));
+      focusLast(box); dirty = true;
+    } else if (t.closest('[data-remove]')) {
+      const rm = t.closest('[data-remove]'), day = rm.closest('.day-row');
+      rm.closest(rm.dataset.remove).remove(); syncDay(day); dirty = true;
+    }
+  });
+  settings.addEventListener('change', e => {
+    if (e.target.matches('[data-mode]')) e.target.closest('[data-special]').querySelector('.special-hours').hidden = e.target.value !== 'hours';
+  });
+  const range = document.getElementById('radius_range'), num = document.getElementById('radius_m');
+  range.addEventListener('input', () => { num.value = range.value; });
+  num.addEventListener('input', () => { range.value = num.value; });
+  const firstError = document.querySelector('[aria-invalid="true"]');
+  (firstError?.matches('input') ? firstError : firstError?.querySelector('input'))?.focus();
+</script>
+{% endblock %}

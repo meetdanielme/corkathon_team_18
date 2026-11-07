@@ -1,0 +1,138 @@
+{% extends "_site.html" %}
+{% from "_bits.html" import effect, impact %}
+{% block title %}Footfall · See busy days coming before your order is due{% endblock %}
+{% block head %}<meta name="description" content="Footfall watches local events and the weather around your business, explains which ones matter, and helps you adjust stock orders before the supplier cutoff.">{% endblock %}
+{% block content %}
+<section class="lp-hero">
+  <div class="lp-hero-copy">
+    <p class="eyebrow"><i class="ri-store-2-line" aria-hidden="true"></i>For local businesses that live on foot traffic</p>
+    <h1>Know which days will be busy <span>before your order is due.</span></h1>
+    <p class="lp-lead">Cafés, restaurants, shops, pubs and food trucks: Footfall watches local events and the weather around your business, explains which ones matter for your opening hours, and shows you which supplier order to adjust before the cutoff.</p>
+    <div class="lp-ctas">
+      <a class="btn btn-lg" href="{{ url_for('index') if user else url_for('signup') }}">{{ "Open your week" if user else "Start free" }}<i class="ri-arrow-right-line" aria-hidden="true"></i></a>
+      <a class="btn btn-lg btn-ghost" href="{{ url_for('login') }}">Try the demo business</a>
+    </div>
+    <p class="lp-fine"><i class="ri-shield-check-line" aria-hidden="true"></i>Free for one location. No card needed. The demo uses a fictional Cork café.</p>
+  </div>
+
+  <figure class="mock" aria-label="Illustrative example of the Footfall week view">
+    <div class="mock-bar" aria-hidden="true"><i></i><i></i><i></i><span>footfall · The Week Ahead</span></div>
+    <div class="mock-body">
+      <div class="mock-head">
+        <strong>The Week Ahead</strong>
+        <span><i class="ri-calendar-2-line" aria-hidden="true"></i>Mon 9 – Sun 15 Nov</span>
+      </div>
+      <ol class="mock-week" aria-hidden="true">
+        {% for d, bar in [("Mon", none), ("Tue", none), ("Wed", "cut"), ("Thu", "up"), ("Fri", "down"), ("Sat", none), ("Sun", "closed")] %}
+        <li class="{{ 'is-closed' if bar == 'closed' }}"><b>{{ d }}</b><span class="mock-track">{% if bar == "up" %}<i class="mock-up"></i>{% elif bar == "down" %}<i class="mock-down"></i>{% elif bar == "cut" %}<i class="mock-cut"></i>{% endif %}</span></li>
+        {% endfor %}
+      </ol>
+      <div class="mock-card lvl-soon">
+        <p class="att"><i class="ri-alarm-warning-fill" aria-hidden="true"></i><span><strong>Order by Wed 16:00</strong><span>Bakery · Thursday delivery</span></span></p>
+        <div>
+          <h3><i class="ri-graduation-cap-line" aria-hidden="true"></i>Graduation ceremony nearby</h3>
+          <p class="meta"><span><i class="ri-time-line" aria-hidden="true"></i>Thu 10:00–14:00</span><span><i class="ri-walk-line" aria-hidden="true"></i>4 min walk</span></p>
+          <p class="mock-chips">{{ effect("increase") }}{{ impact("medium") }}</p>
+        </div>
+      </div>
+      <div class="mock-card lvl-later">
+        <p class="att"><i class="ri-calendar-check-line" aria-hidden="true"></i><span><strong>Order by Thu 12:00</strong><span>Dairy · Friday delivery</span></span></p>
+        <div>
+          <h3><i class="ri-showers-line" aria-hidden="true"></i>Heavy rain all afternoon</h3>
+          <p class="meta"><span><i class="ri-time-line" aria-hidden="true"></i>Fri 12:00–18:00</span></p>
+          <p class="mock-chips">{{ effect("decrease") }}{{ impact("low") }}</p>
+        </div>
+      </div>
+      <p class="mock-filtered"><i class="ri-filter-off-line" aria-hidden="true"></i><span><b>Filtered out:</b> late concert at 22:00 · after you close</span></p>
+    </div>
+    <figcaption>Illustrative example</figcaption>
+  </figure>
+</section>
+
+<section class="lp-section" id="problem" aria-labelledby="problem-h">
+  <p class="eyebrow">The problem</p>
+  <h2 id="problem-h">Your busiest days are decided by what happens down the street.</h2>
+  <ul class="lp-cards">
+    <li><i class="ri-calendar-event-line" aria-hidden="true"></i><h3>Events you never hear about</h3><p>Graduations, matches, gigs and conferences fill the streets nearby. Nobody tells the business on the corner.</p></li>
+    <li><i class="ri-showers-line" aria-hidden="true"></i><h3>Weather that changes the day</h3><p>A wet afternoon empties the street and a bright one fills it, often after you've placed your order.</p></li>
+    <li><i class="ri-truck-line" aria-hidden="true"></i><h3>Cutoffs that don't wait</h3><p>Stock, bakery and dairy orders close days ahead. By the time the crowd arrives, it's too late to order more.</p></li>
+  </ul>
+</section>
+
+<section class="lp-section" id="how" aria-labelledby="how-h">
+  <p class="eyebrow">How it works</p>
+  <h2 id="how-h">From a noisy city to one clear decision</h2>
+  <ol class="lp-steps">
+    <li><span class="lp-step-icon"><i class="ri-refresh-line" aria-hidden="true"></i></span><div><h3>Refresh your local picture</h3><p>In one tap, Footfall checks a curated set of Cork venue pages and the weather forecast for each of your locations.</p></div></li>
+    <li><span class="lp-step-icon"><i class="ri-calendar-2-line" aria-hidden="true"></i></span><div><h3>See your week, ranked</h3><p>Events within your walking radius and opening hours rise to the top. Anything that doesn't fit is shown as filtered out, with the reason.</p></div></li>
+    <li><span class="lp-step-icon"><i class="ri-file-search-line" aria-hidden="true"></i></span><div><h3>Check the evidence</h3><p>Each insight shows the source quote, when it was checked, how far away it is, the likely effect and how confident Footfall is.</p></div></li>
+    <li><span class="lp-step-icon"><i class="ri-chat-check-line" aria-hidden="true"></i></span><div><h3>Act before the cutoff</h3><p>Footfall links each insight to the supplier deadline it affects and drafts a message. You edit it, approve it and copy it. Nothing is sent for you.</p></div></li>
+  </ol>
+</section>
+
+<section class="lp-section lp-trust" id="trust" aria-labelledby="trust-h">
+  <div>
+    <p class="eyebrow">Honest by design</p>
+    <h2 id="trust-h">A second pair of eyes, not a crystal ball</h2>
+    <p class="lp-sub">Footfall shows its working, so you can decide how much to trust it.</p>
+  </div>
+  <ul class="lp-list">
+    <li><i class="ri-double-quotes-l" aria-hidden="true"></i><div><h3>Evidence on every card</h3><p>Every insight quotes its source page, with a link and the time it was checked.</p></div></li>
+    <li><i class="ri-scales-3-line" aria-hidden="true"></i><div><h3>Effect sizes are a guide, not a forecast</h3><p>Small, medium and big effect labels come from simple, visible rules. Footfall never invents attendance or sales figures.</p></div></li>
+    <li><i class="ri-user-settings-line" aria-hidden="true"></i><div><h3>You stay in control</h3><p>You choose the quantities. Footfall never places orders, sends messages or spends money for you.</p></div></li>
+    <li><i class="ri-eye-line" aria-hidden="true"></i><div><h3>Nothing quietly dropped</h3><p>Filtered-out events, out-of-date sources and failed refreshes are shown, not hidden.</p></div></li>
+  </ul>
+</section>
+
+<section class="lp-section" id="who" aria-labelledby="who-h">
+  <p class="eyebrow">Who it's for</p>
+  <h2 id="who-h">Built for small and medium businesses that live on foot traffic</h2>
+  <p class="lp-sub">If a match, a festival or a wet afternoon changes how many people walk through your door, Footfall is for you.</p>
+  <ul class="lp-types">
+    <li><i class="ri-cup-line" aria-hidden="true"></i><strong>Cafés and coffee shops</strong><span>Pastries, milk and staff for the morning rush</span></li>
+    <li><i class="ri-restaurant-2-line" aria-hidden="true"></i><strong>Restaurants and takeaways</strong><span>Prep and fresh stock ahead of busy evenings</span></li>
+    <li><i class="ri-cake-3-line" aria-hidden="true"></i><strong>Bakeries and delis</strong><span>Bake counts and early supplier cutoffs</span></li>
+    <li><i class="ri-goblet-line" aria-hidden="true"></i><strong>Pubs and bars</strong><span>Kegs and cover for match days and gigs</span></li>
+    <li><i class="ri-shopping-bag-3-line" aria-hidden="true"></i><strong>Independent shops</strong><span>Stock and opening hours around big events</span></li>
+    <li><i class="ri-truck-line" aria-hidden="true"></i><strong>Food trucks and market stalls</strong><span>Know which days are worth trading</span></li>
+  </ul>
+  <div class="lp-who">
+    <article class="lp-panel">
+      <span class="chip lp-chip-now"><i class="ri-checkbox-circle-fill" aria-hidden="true"></i>Working in the demo today</span>
+      <h3>Everything you need for one week ahead</h3>
+      <ul class="icon-list">
+        <li><i class="ri-store-2-line" aria-hidden="true"></i>One or more locations, each with its own opening hours and special days</li>
+        <li><i class="ri-walk-line" aria-hidden="true"></i>A walking radius you choose</li>
+        <li><i class="ri-truck-line" aria-hidden="true"></i>Supplier cutoffs for each delivery day, with a message ready to send</li>
+      </ul>
+    </article>
+    <article class="lp-panel lp-panel-next">
+      <span class="chip conf"><i class="ri-road-map-line" aria-hidden="true"></i>Future ideas, not in this demo</span>
+      <h3>Where Footfall goes next</h3>
+      <ul class="icon-list">
+        <li><i class="ri-map-pin-range-line" aria-hidden="true"></i>Suggested trading spots for food trucks and stalls</li>
+        <li><i class="ri-team-line" aria-hidden="true"></i>Staffing suggestions next to stock decisions</li>
+        <li><i class="ri-global-line" aria-hidden="true"></i>More sources and more towns and cities beyond Cork</li>
+      </ul>
+    </article>
+  </div>
+</section>
+
+<section class="lp-section lp-price-teaser" aria-labelledby="price-h">
+  <div>
+    <p class="eyebrow">Pricing</p>
+    <h2 id="price-h">Free for one location. €19 a month when you're ready for more.</h2>
+    <p class="lp-sub">One better-timed order a month can cover the cost. No contracts, cancel any time.</p>
+  </div>
+  <a class="btn btn-lg btn-ghost" href="{{ url_for('pricing') }}">See plans and pricing<i class="ri-arrow-right-line" aria-hidden="true"></i></a>
+</section>
+
+<section class="lp-cta" aria-labelledby="cta-h">
+  <h2 id="cta-h">See next week the way Footfall does</h2>
+  <p>Create a free account, or step into our demo business and follow one decision from a local event to the supplier message.</p>
+  <div class="lp-ctas">
+    <a class="btn btn-lg" href="{{ url_for('index') if user else url_for('signup') }}">{{ "Open your week" if user else "Start free" }}<i class="ri-arrow-right-line" aria-hidden="true"></i></a>
+    {% if not user %}<a class="btn btn-lg btn-on-brand" href="{{ url_for('login') }}">Try the demo business</a>{% endif %}
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% macro effect(direction) %}
+<span class="chip eff-{{ direction }}"><i class="ri-arrow-{{ 'up' if direction == 'increase' else 'down' }}-line" aria-hidden="true"></i>{{ "More customers" if direction == "increase" else "Fewer customers" }}</span>
+{% endmacro %}
+
+{% macro impact(level, label=True) %}
+<span class="impact imp-{{ level }}"><span class="meter" aria-hidden="true"><i></i><i></i><i></i></span>{% set words = {"low": "Small effect", "medium": "Medium effect", "high": "Big effect"}[level] %}{% if label %}{{ words }}{% else %}<span class="visually-hidden">{{ words }}</span>{% endif %}</span>
+{% endmacro %}
+
+{% macro confidence(level) %}
+<span class="chip conf conf-{{ level }}"><i class="{{ {'high': 'ri-shield-check-fill', 'medium': 'ri-shield-line', 'low': 'ri-shield-cross-line'}[level] }}" aria-hidden="true"></i>{{ {"high": "Very sure", "medium": "Fairly sure", "low": "Not sure yet"}[level] }}</span>
+{% endmacro %}
+
+{% macro status(cd) %}
+<span class="att lvl-{{ cd.level }}"><i class="{{ cd.icon }}" aria-hidden="true"></i><span><strong>{{ cd.label }}</strong>{% if cd.sub %}<span>{{ cd.sub }}</span>{% endif %}</span></span>
+{% endmacro %}
