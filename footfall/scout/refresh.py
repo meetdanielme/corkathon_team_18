@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -12,7 +13,11 @@ from .extract import extract_events
 from .fetch import FetchError, fetch_text
 from .validate import validate_finding
 
-DEFAULT_LIMITS = {"max_sources": 15, "max_seconds": 90, "max_llm_calls": 15}
+# A refresh stays bounded. 90 s suits a hosted model; a model running locally is slower, so the
+# wall-clock budget is overridable rather than silently truncating the run at two sources.
+DEFAULT_LIMITS = {"max_sources": int(os.getenv("FOOTFALL_MAX_SOURCES", "15")),
+                  "max_seconds": float(os.getenv("FOOTFALL_REFRESH_MAX_SECONDS", "90")),
+                  "max_llm_calls": int(os.getenv("FOOTFALL_MAX_LLM_CALLS", "15"))}
 PREPARED = Path(__file__).parent.parent / "seed" / "prepared_events.json"
 
 
