@@ -189,3 +189,9 @@ textarea:focus-visible { outline-offset:-3px; }
   .steps { flex-direction:column; gap:4px; }
 }
 @media (prefers-reduced-motion:reduce) { * { transition:none !important; } }
+
+/* Confidence is evidence quality, separate from impact rank. */
+.confidence-low, .measures .confidence-low b { color:var(--redpen); }
+.confidence-medium, .measures .confidence-medium b { color:#73551a; }
+.confidence-high, .measures .confidence-high b { color:var(--ink); }
+[class*="confidence-"] > span[aria-hidden] { display:inline-block; min-width:1em; font-weight:700; }

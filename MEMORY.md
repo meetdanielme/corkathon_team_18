@@ -70,3 +70,11 @@ Last updated: 7 November 2026. Shared project context, not a chat transcript.
 ## Maintaining this file
 
 Keep this a short current-state record. Update it when a decision, verified milestone or next step changes; distinguish proposals from agreements and date material changes. Do not paste chat logs, secrets, personal balances or a copy of the issue backlog. Link owning sources instead. Current user instructions and live verified sources take precedence over this snapshot.
+
+## Daniel handoff validation — 7 November 2026
+
+- Product is Footfall; implementation exists on main at `ede2446`. Earlier preparation-only entries above are historical.
+- Daniel selected Rajeev’s laptop with local Ollama for live extraction; prepared data is backup. No paid fallback authorized.
+- Supplied handoff contract: 1000 m radius, design §6 rules r1; Rajeev backend/templates, Daniel CSS/design, Olan sources/scout testing.
+- Isolated validation on Daniel’s machine: 46 tests, seven prepared events, expected relevance/deadline/conflicts, actual browser edit/approve/copy at 380 px, real seven-day weather persisted. See [acceptance and limitations](docs/team/daniel-acceptance.md) and [demo script v2](docs/team/demo-script-v2.md).
+- Actual demo laptop rehearsal, backup recording and team gate signoff remain outstanding. Live extraction results cited in the handoff were not rerun here. Preserve the separate dirty visual-design checkout.

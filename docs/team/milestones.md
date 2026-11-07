@@ -184,3 +184,7 @@ organisers).
 | 8 | Demo script and backup recording | Daniel | Video file linked in the issue |
 | 9 | Data story slide | Olan | Slide in the deck |
 | 10 | README verified on a clean clone | Rajeev | A teammate follows the README with no help |
+
+## Daniel acceptance record — 7 November, 14:00 hour
+
+See [the per-item M4 outcomes and known limitations](daniel-acceptance.md) and [demo script v2](demo-script-v2.md). This is Daniel-machine prepared-path validation, not all-team signoff or final-laptop live verification. The provider decision supersedes the older Azure-specific tasks above: Rajeev’s laptop, local Ollama, prepared backup. No milestone is declared complete by this record.

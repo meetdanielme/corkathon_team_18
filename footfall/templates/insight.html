@@ -23,7 +23,7 @@
       <dd class="impact-{{ i.impact }}"><span class="pips" aria-hidden="true"><i></i><i></i><i></i></span><b>{{ i.impact|capitalize }}</b>
         <p class="small">A ranking, not a forecast: distance {{ i.impact_points.distance }}, overlap {{ i.impact_points.overlap }}, attendance {{ i.impact_points.attendance }}, total {{ i.impact_points.total }} points.</p></dd>
       <dt>Confidence</dt>
-      <dd><b>{{ i.confidence|capitalize }}</b><ul>{% for r in i.confidence_reasons %}<li>{{ r }}</li>{% endfor %}</ul></dd>
+      <dd class="confidence-{{ i.confidence }}"><span aria-hidden="true">{{ {"low": "△", "medium": "◐", "high": "●"}[i.confidence] }}</span> <b>{{ i.confidence|capitalize }}</b><ul>{% for r in i.confidence_reasons %}<li>{{ r }}</li>{% endfor %}</ul></dd>
       <dt>Relevant window</dt>
       <dd>{{ i.window_label }}<p class="small">{{ i.window_basis }}</p></dd>
     </dl>

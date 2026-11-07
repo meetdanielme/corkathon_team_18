@@ -45,7 +45,7 @@
     <ul class="measures">
       <li>Expected <b>{{ i.direction }}</b></li>
       <li class="impact-{{ i.impact }}"><span class="pips" aria-hidden="true"><i></i><i></i><i></i></span>Impact <b>{{ i.impact }}</b></li>
-      <li>Confidence <b>{{ i.confidence }}</b></li>
+      <li class="confidence-{{ i.confidence }}"><span aria-hidden="true">{{ {"low": "△", "medium": "◐", "high": "●"}[i.confidence] }}</span> Confidence <b>{{ i.confidence }}</b></li>
     </ul>
   </a>
   {% else %}
