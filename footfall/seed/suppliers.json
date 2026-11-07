@@ -1,0 +1,203 @@
+[
+ {
+  "id": "bakery-mon",
+  "supplier": "Bakery",
+  "contact_label": "Declan (bakery)",
+  "delivery_day": "mon",
+  "delivery_window": "07:30-08:00",
+  "cutoff_rule": {
+   "type": "business_days_before",
+   "n": 2,
+   "time": "16:00",
+   "closed": [
+    "sun"
+   ]
+  },
+  "evidence": null,
+  "demo_label": "Demo assumption, not from a real supplier"
+ },
+ {
+  "id": "bakery-tue",
+  "supplier": "Bakery",
+  "contact_label": "Declan (bakery)",
+  "delivery_day": "tue",
+  "delivery_window": "07:30-08:00",
+  "cutoff_rule": {
+   "type": "business_days_before",
+   "n": 1,
+   "time": "16:00",
+   "closed": [
+    "sun"
+   ]
+  },
+  "evidence": null,
+  "demo_label": "Demo assumption, not from a real supplier"
+ },
+ {
+  "id": "bakery-wed",
+  "supplier": "Bakery",
+  "contact_label": "Declan (bakery)",
+  "delivery_day": "wed",
+  "delivery_window": "07:30-08:00",
+  "cutoff_rule": {
+   "type": "business_days_before",
+   "n": 1,
+   "time": "16:00",
+   "closed": [
+    "sun"
+   ]
+  },
+  "evidence": null,
+  "demo_label": "Demo assumption, not from a real supplier"
+ },
+ {
+  "id": "bakery-thu",
+  "supplier": "Bakery",
+  "contact_label": "Declan (bakery)",
+  "delivery_day": "thu",
+  "delivery_window": "07:30-08:00",
+  "cutoff_rule": {
+   "type": "business_days_before",
+   "n": 1,
+   "time": "16:00",
+   "closed": [
+    "sun"
+   ]
+  },
+  "evidence": null,
+  "demo_label": "Demo assumption, not from a real supplier"
+ },
+ {
+  "id": "bakery-fri",
+  "supplier": "Bakery",
+  "contact_label": "Declan (bakery)",
+  "delivery_day": "fri",
+  "delivery_window": "07:30-08:00",
+  "cutoff_rule": {
+   "type": "business_days_before",
+   "n": 1,
+   "time": "16:00",
+   "closed": [
+    "sun"
+   ]
+  },
+  "evidence": null,
+  "demo_label": "Demo assumption, not from a real supplier"
+ },
+ {
+  "id": "bakery-sat",
+  "supplier": "Bakery",
+  "contact_label": "Declan (bakery)",
+  "delivery_day": "sat",
+  "delivery_window": "07:30-08:00",
+  "cutoff_rule": {
+   "type": "weekday",
+   "day": "thu",
+   "time": "16:00"
+  },
+  "evidence": null,
+  "demo_label": "Demo assumption, not from a real supplier"
+ },
+ {
+  "id": "dairy-mon",
+  "supplier": "Dairy",
+  "contact_label": null,
+  "delivery_day": "mon",
+  "delivery_window": "08:30-09:00",
+  "cutoff_rule": {
+   "type": "business_days_before",
+   "n": 1,
+   "time": "16:00",
+   "closed": [
+    "sun"
+   ]
+  },
+  "evidence": null,
+  "demo_label": "Demo assumption, not from a real supplier"
+ },
+ {
+  "id": "dairy-tue",
+  "supplier": "Dairy",
+  "contact_label": null,
+  "delivery_day": "tue",
+  "delivery_window": "08:30-09:00",
+  "cutoff_rule": {
+   "type": "business_days_before",
+   "n": 1,
+   "time": "16:00",
+   "closed": [
+    "sun"
+   ]
+  },
+  "evidence": null,
+  "demo_label": "Demo assumption, not from a real supplier"
+ },
+ {
+  "id": "dairy-wed",
+  "supplier": "Dairy",
+  "contact_label": null,
+  "delivery_day": "wed",
+  "delivery_window": "08:30-09:00",
+  "cutoff_rule": {
+   "type": "business_days_before",
+   "n": 1,
+   "time": "16:00",
+   "closed": [
+    "sun"
+   ]
+  },
+  "evidence": null,
+  "demo_label": "Demo assumption, not from a real supplier"
+ },
+ {
+  "id": "dairy-thu",
+  "supplier": "Dairy",
+  "contact_label": null,
+  "delivery_day": "thu",
+  "delivery_window": "08:30-09:00",
+  "cutoff_rule": {
+   "type": "business_days_before",
+   "n": 1,
+   "time": "16:00",
+   "closed": [
+    "sun"
+   ]
+  },
+  "evidence": null,
+  "demo_label": "Demo assumption, not from a real supplier"
+ },
+ {
+  "id": "dairy-fri",
+  "supplier": "Dairy",
+  "contact_label": null,
+  "delivery_day": "fri",
+  "delivery_window": "08:30-09:00",
+  "cutoff_rule": {
+   "type": "business_days_before",
+   "n": 1,
+   "time": "16:00",
+   "closed": [
+    "sun"
+   ]
+  },
+  "evidence": null,
+  "demo_label": "Demo assumption, not from a real supplier"
+ },
+ {
+  "id": "dairy-sat",
+  "supplier": "Dairy",
+  "contact_label": null,
+  "delivery_day": "sat",
+  "delivery_window": "08:30-09:00",
+  "cutoff_rule": {
+   "type": "business_days_before",
+   "n": 1,
+   "time": "16:00",
+   "closed": [
+    "sun"
+   ]
+  },
+  "evidence": null,
+  "demo_label": "Demo assumption, not from a real supplier"
+ }
+]

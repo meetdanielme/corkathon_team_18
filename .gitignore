@@ -12,3 +12,8 @@ dist/
 build/
 .vercel/
 *.log
+.env
+*.sqlite3
+__pycache__/
+.pytest_cache/
+.venv/

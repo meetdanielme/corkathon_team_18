@@ -1,0 +1,121 @@
+[
+ {
+  "event": {
+   "title": "Graduation ceremony (fictional demo)",
+   "start_at": "2026-11-12T11:00:00+00:00",
+   "end_at": "2026-11-12T13:00:00+00:00",
+   "venue_name": "University campus hall (demo)",
+   "lat": 51.8935,
+   "lon": -8.4919,
+   "category": "conferring",
+   "access": "public",
+   "attendance": null
+  },
+  "evidence": {
+   "url": "https://example.org/footfall-demo/graduation",
+   "excerpt": "Graduation ceremony, Thursday 12 November, 11:00-13:00, campus hall."
+  }
+ },
+ {
+  "event": {
+   "title": "Street market (fictional demo)",
+   "start_at": "2026-11-13T10:00:00+00:00",
+   "end_at": null,
+   "venue_name": "Washington Street east (demo)",
+   "lat": 51.8978,
+   "lon": -8.477,
+   "category": "market",
+   "access": "public",
+   "attendance": 400
+  },
+  "evidence": {
+   "url": "https://example.org/footfall-demo/market",
+   "excerpt": "Street market from 10am Friday 13 November. Around 400 visitors expected."
+  }
+ },
+ {
+  "event": {
+   "title": "Road closure for filming (fictional demo)",
+   "start_at": "2026-11-13T08:00:00+00:00",
+   "end_at": "2026-11-13T12:00:00+00:00",
+   "venue_name": "Washington Street (demo)",
+   "lat": 51.8979,
+   "lon": -8.4805,
+   "category": "road_closure",
+   "access": "public",
+   "attendance": null
+  },
+  "evidence": {
+   "url": "https://example.org/footfall-demo/closure",
+   "excerpt": "Washington Street closed to traffic 8am-12pm Friday 13 November for filming."
+  }
+ },
+ {
+  "event": {
+   "title": "Evening concert (fictional demo)",
+   "start_at": "2026-11-11T20:00:00+00:00",
+   "end_at": "2026-11-11T22:30:00+00:00",
+   "venue_name": "Concert hall (demo)",
+   "lat": 51.8985,
+   "lon": -8.479,
+   "category": "concert",
+   "access": "public",
+   "attendance": 800
+  },
+  "evidence": {
+   "url": "https://example.org/footfall-demo/concert",
+   "excerpt": "Evening concert, Wednesday 11 November, doors 20:00."
+  }
+ },
+ {
+  "event": {
+   "title": "Suburban festival (fictional demo)",
+   "start_at": "2026-11-10T12:00:00+00:00",
+   "end_at": "2026-11-10T17:00:00+00:00",
+   "venue_name": "Suburb park (demo)",
+   "lat": 51.8879,
+   "lon": -8.5891,
+   "category": "festival",
+   "access": "public",
+   "attendance": 2000
+  },
+  "evidence": {
+   "url": "https://example.org/footfall-demo/faraway",
+   "excerpt": "Festival in the park, Tuesday 10 November, 12-5pm."
+  }
+ },
+ {
+  "event": {
+   "title": "Private function (fictional demo)",
+   "start_at": "2026-11-09T12:00:00+00:00",
+   "end_at": "2026-11-09T15:00:00+00:00",
+   "venue_name": "Hotel function room (demo)",
+   "lat": 51.898,
+   "lon": -8.4795,
+   "category": "other",
+   "access": "restricted",
+   "attendance": null
+  },
+  "evidence": {
+   "url": "https://example.org/footfall-demo/private",
+   "excerpt": "Private function, invitation only, Monday 9 November."
+  }
+ },
+ {
+  "event": {
+   "title": "Community talk, date to be confirmed (fictional demo)",
+   "start_at": null,
+   "end_at": null,
+   "venue_name": "Community hall (demo)",
+   "lat": null,
+   "lon": null,
+   "category": "community",
+   "access": "public",
+   "attendance": null
+  },
+  "evidence": {
+   "url": "https://example.org/footfall-demo/tbc",
+   "excerpt": "Community talk coming soon, date to be confirmed."
+  }
+ }
+]

@@ -1,0 +1,26 @@
+[
+ {
+  "id": "example-ucc",
+  "org_name": "University College Cork",
+  "venue_name": "UCC main campus",
+  "url": "https://www.ucc.ie/en/",
+  "type": "university",
+  "lat": 51.8935,
+  "lon": -8.4919,
+  "access_notes": null,
+  "refresh_interval_h": 24,
+  "provenance": "EXAMPLE ROW - Olan: replace with the verified events/calendar page URL"
+ },
+ {
+  "id": "example-council",
+  "org_name": "Cork City Council",
+  "venue_name": "Cork city centre",
+  "url": "https://www.corkcity.ie/en/",
+  "type": "council",
+  "lat": 51.8985,
+  "lon": -8.4756,
+  "access_notes": null,
+  "refresh_interval_h": 24,
+  "provenance": "EXAMPLE ROW - Olan: replace with the verified news/traffic notices page URL"
+ }
+]

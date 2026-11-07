@@ -1,0 +1,13 @@
+{
+  "id": "brids-kitchen",
+  "name": "Bríd's Kitchen (fictional demo café)",
+  "lat": 51.8977,
+  "lon": -8.4800,
+  "timezone": "Europe/Dublin",
+  "opens": "08:00",
+  "closes": "16:00",
+  "open_days": ["mon", "tue", "wed", "thu", "fri", "sat"],
+  "radius_m": 1000,
+  "avg_spend": null,
+  "demo_label": "Fictional business for the Corkathon demo"
+}

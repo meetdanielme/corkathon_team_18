@@ -1,0 +1,5 @@
+flask>=3.0
+tzdata          # required on Windows for zoneinfo('Europe/Dublin')
+pytest>=8.0
+openai>=1.40    # only needed when FOOTFALL_LLM=azure
+anthropic>=0.40 # only needed when FOOTFALL_LLM=anthropic (fallback, Daniel's call)
