@@ -78,3 +78,9 @@ Keep this a short current-state record. Update it when a decision, verified mile
 - Azure adapter verification and real-source refresh results are recorded in PR evidence. Future calls need to stay within Daniel’s authorized scope; request-token limits are not a currency hard cap.
 
 - Verified Luna live refresh: four fetched sources, six stored events, two relevant insights; partial with three rejected findings. Known date-range/evidence-association limits in [setup report](docs/team/azure-setup.md); not a completed accuracy gate. No background server left running.
+
+## Shared hosting — 7 November 2026
+
+- Daniel requested one shared hosted demo and explicitly chose Vercel with Azure Luna. Vercel project `footfall-team18` uses Hobby; Turso Starter database of the same name is provisioned in Dublin after Daniel accepted marketplace terms. No App Service hosting was provisioned.
+- Server-side secret configuration is in Vercel; remote libSQL preserves drafts/events across requests and instances. Public demo allowance is 20 lifetime Azure request reservations in the database, not a monetary hard cutoff. Do not raise/reset without Daniel’s direction.
+- See [hosting operations and validation](docs/team/vercel-hosting.md). Shared-code deployment excludes the separate uncommitted visual work; source repo remains private. Share-link expiry and final verification are reported in the session.

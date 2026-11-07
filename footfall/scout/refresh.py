@@ -65,14 +65,16 @@ def run_live(con, llm, at: datetime | None = None, fetcher=fetch_text, limits: d
     lim = {**DEFAULT_LIMITS, **(limits or {})}
     run_id = _start_run(con, "live", at)
     t0, errors, attempted, ok, upserted = time.monotonic(), [], 0, 0, 0
+    calls_before = llm.calls
     w0, w1 = at, at + timedelta(days=7)
     for src in db.get_sources(con)[: lim["max_sources"]]:
-        if time.monotonic() - t0 > lim["max_seconds"] or llm.calls >= lim["max_llm_calls"]:
+        if time.monotonic() - t0 > lim["max_seconds"] or llm.calls - calls_before >= lim["max_llm_calls"]:
             errors.append("Execution limit reached; remaining sources not checked")
             break
         attempted += 1
         stamp = tz_now().isoformat()
         con.execute("UPDATE sources SET last_attempt_at=? WHERE id=?", (stamp, src["id"]))
+        con.commit()  # release the write lock before network/model calls
         try:
             final_url, text = fetcher(src["url"])
             found = extract_events(llm, src, text, w0.date().isoformat(), w1.date().isoformat())
@@ -109,6 +111,6 @@ def run_live(con, llm, at: datetime | None = None, fetcher=fetch_text, limits: d
     status = "ok" if ok == attempted and not errors else "partial" if ok else "failed"
     con.execute("""UPDATE refresh_runs SET ended_at=?, status=?, sources_attempted=?, sources_succeeded=?,
                    events_upserted=?, llm_calls=?, errors=? WHERE id=?""",
-                (tz_now().isoformat(), status, attempted, ok, upserted, llm.calls, json.dumps(errors), run_id))
+                (tz_now().isoformat(), status, attempted, ok, upserted, llm.calls - calls_before, json.dumps(errors), run_id))
     con.commit()
     return db.last_run(con)

@@ -1,0 +1,12 @@
+.git
+.venv
+.env*
+context
+output
+tmp
+tests
+docs
+.agents
+.claude
+*.sqlite3
+**/__pycache__

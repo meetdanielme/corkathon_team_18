@@ -46,6 +46,15 @@ class LLM:
         return parse_json(text)
 
     def _azure(self, system: str, user: str) -> str:
+        if limit := os.getenv("FOOTFALL_AZURE_CALL_LIMIT"):
+            from . import db
+            with db.connect(os.getenv("FOOTFALL_DB", "footfall.sqlite3")) as con:
+                con.execute("CREATE TABLE IF NOT EXISTS ai_allowance (id INTEGER PRIMARY KEY, calls INTEGER NOT NULL)")
+                reserved = con.execute("""INSERT INTO ai_allowance (id,calls) VALUES (1,1)
+                    ON CONFLICT(id) DO UPDATE SET calls=calls+1 WHERE calls < ? RETURNING calls""",
+                    (int(limit),)).fetchone()
+                if reserved is None:
+                    raise ValueError("Shared demo AI allowance reached; prepared data remains available")
         from openai import AzureOpenAI  # pip install openai
 
         client = AzureOpenAI(azure_endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],
