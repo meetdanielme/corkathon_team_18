@@ -4,7 +4,7 @@
 
 Footfall helps small businesses spot local events that could affect demand, understand the evidence, and prepare before supplier deadlines.
 
-Built by **Daniel Marcinkowski, Olan Hennessy O'Flynn and Rajeev Shyam Kumar** at Corkathon on 7 November 2026, at University College Cork. Footfall was shortlisted among the **top 9 of 26 projects**, and we pitched it to a jury with representatives from the UCC Computer Science Society, IGNITE @ UCC and FRAME.
+Built by **[Daniel Marcinkowski](https://www.linkedin.com/in/meetdanielme/), [Olan Hennessy O'Flynn](https://www.linkedin.com/in/olan-hennessy-o-flynn-701a91373/) and [Rajeev Shyam Kumar](https://www.linkedin.com/in/rajeev-shyam-kumar-1859002a2/)** at Corkathon on 7 November 2026, at University College Cork. Footfall was shortlisted among the **top 9 of 26 projects**, and we pitched it to a jury with representatives from the UCC Computer Science Society, IGNITE @ UCC and FRAME.
 
 [Try Footfall](https://footfall-team18.vercel.app/) · [Devpost project and walkthrough](https://devpost.com/software/footfall-0srjti)
 
@@ -122,7 +122,7 @@ Some supporting documents record decisions and checks from the build day. This R
 
 ## Credits
 
-Built by Daniel Marcinkowski, Olan Hennessy O'Flynn and Rajeev Shyam Kumar.
+Built by [Daniel Marcinkowski](https://www.linkedin.com/in/meetdanielme/), [Olan Hennessy O'Flynn](https://www.linkedin.com/in/olan-hennessy-o-flynn-701a91373/) and [Rajeev Shyam Kumar](https://www.linkedin.com/in/rajeev-shyam-kumar-1859002a2/).
 
 Footfall uses Flask, the OpenAI Python SDK, Turso/libSQL, Vercel and the other libraries listed in [`requirements.txt`](requirements.txt). Local event information comes from the source pages linked within the app; those organisations are information sources, not project partners.
 
